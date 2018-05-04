@@ -1,0 +1,9 @@
+*.ccsproject
+*.cproject
+*.gitignore
+*.project
+/.launches/
+/.settings/
+/Debug/
+/targetConfigs/
+/Release/
