@@ -121,7 +121,7 @@ int main()
 //        	PWM_DISABLE;
 //            sendMsg(sendBuf,&backData);
 //        }
-        else
+      //  else
         {
         	/*ªªœ‡*/
         	if(0 != pwmUpdateSample)

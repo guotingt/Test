@@ -11,7 +11,7 @@ TIME_FLAG  flag100ms;
 TIME_FLAG  flag500ms;
 TIME_FLAG  flag1000ms;
 
-volatile Uint16 DMABuf1[30] = {0};///<DMA data
+volatile Uint16 DMABuf1[20] = {0};///<DMA data
 volatile Uint16 *DMADest;         ///<DMA DST_Addr
 volatile Uint16 *DMASource;       ///<DMA SRC_Addr
 
@@ -47,10 +47,10 @@ void EPwm1Setup(Uint16 period,Uint16 duty)
 	EPwm1Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
 	EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;  // load on CTR=Zero
 	EPwm1Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO;  // load on CTR=Zero
-	EPwm1Regs.AQCTLA.bit.CAU = AQ_SET;             // set actions for EPWM1A
-	EPwm1Regs.AQCTLA.bit.CAD = AQ_CLEAR;
-	EPwm1Regs.AQCTLB.bit.CBU = AQ_SET ;            // set actions for EPWM1B
-	EPwm1Regs.AQCTLB.bit.CBD = AQ_CLEAR;
+	EPwm1Regs.AQCTLA.bit.CAU = AQ_CLEAR;             // set actions for EPWM1A
+	EPwm1Regs.AQCTLA.bit.CAD = AQ_SET;
+	EPwm1Regs.AQCTLB.bit.CBU = AQ_CLEAR ;            // set actions for EPWM1B
+	EPwm1Regs.AQCTLB.bit.CBD = AQ_SET;
 	EPwm1Regs.CMPA.half.CMPA = duty;
 	EPwm1Regs.CMPB = duty;
 }
@@ -67,10 +67,10 @@ void EPwm2Setup(Uint16 period,Uint16 duty)
 	EPwm2Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
 	EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;     // load on CTR=Zero
 	EPwm2Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO;     // load on CTR=Zero
-	EPwm2Regs.AQCTLA.bit.CAU = AQ_SET;                // set actions for EPWM2A
-	EPwm2Regs.AQCTLA.bit.CAD = AQ_CLEAR;
-	EPwm2Regs.AQCTLB.bit.CBU = AQ_SET;                // set actions for EPWM2B
-	EPwm2Regs.AQCTLB.bit.CBD = AQ_CLEAR;
+	EPwm2Regs.AQCTLA.bit.CAU = AQ_CLEAR;                // set actions for EPWM2A
+	EPwm2Regs.AQCTLA.bit.CAD = AQ_SET;
+	EPwm2Regs.AQCTLB.bit.CBU = AQ_CLEAR;                // set actions for EPWM2B
+	EPwm2Regs.AQCTLB.bit.CBD = AQ_SET;
 	EPwm2Regs.CMPA.half.CMPA = duty;
 	EPwm2Regs.CMPB = duty;
 }
@@ -87,10 +87,10 @@ void EPwm3Setup(Uint16 period,Uint16 duty)
 	EPwm3Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
 	EPwm3Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;     // load on CTR=Zero
 	EPwm3Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO;     // load on CTR=Zero
-	EPwm3Regs.AQCTLA.bit.CAU = AQ_SET;                // set actions for EPWM3A
-	EPwm3Regs.AQCTLA.bit.CAD = AQ_CLEAR;
-	EPwm3Regs.AQCTLB.bit.CBU = AQ_SET;                // set actions for EPWM3B
-	EPwm3Regs.AQCTLB.bit.CBD = AQ_CLEAR;
+	EPwm3Regs.AQCTLA.bit.CAU = AQ_CLEAR;                // set actions for EPWM3A
+	EPwm3Regs.AQCTLA.bit.CAD = AQ_SET;
+	EPwm3Regs.AQCTLB.bit.CBU = AQ_CLEAR;                // set actions for EPWM3B
+	EPwm3Regs.AQCTLB.bit.CBD = AQ_SET;
 	EPwm3Regs.CMPA.half.CMPA = duty;
 	EPwm3Regs.CMPB = duty;
 }
@@ -172,7 +172,7 @@ void DMASetup()
 	DMADest=&DMABuf1[0];
 	DMASource= &AdcMirror.ADCRESULT0;
 	DMACH1AddrConfig(DMADest,DMASource);
-	DMACH1BurstConfig(2,1,10);        	//Will set up to use 32-bit datasize, pointers are based on 16-bit words
+	DMACH1BurstConfig(1,1,10);        	//Will set up to use 32-bit datasize, pointers are based on 16-bit words
 	DMACH1TransferConfig(9,0,0);      	//so need to increment by 2 to grab the correct location
 	DMACH1WrapConfig(0,0,0,1);
 	//Peripheral Interrupt Source Select: SEQ1INT
@@ -198,10 +198,10 @@ void AdcSetup()
     AdcRegs.ADCTRL2.bit.RST_SEQ1 = 1;        //Immediately reset sequencer to state CONV0
     AdcRegs.ADCTRL3.bit.SMODE_SEL = 0;       //Sequential sampling mode is selected
     AdcRegs.ADCTRL3.bit.ADCCLKPS = 3;        //Core clock divider.12.5Mh;
-    AdcRegs.ADCMAXCONV.bit.MAX_CONV1 = 0x2;  //The maximum number of conversions executed in an autoconversion is 3
+    AdcRegs.ADCMAXCONV.bit.MAX_CONV1 = 0x1;  //The maximum number of conversions executed in an auto conversion is 2
     AdcRegs.ADCCHSELSEQ1.bit.CONV00 = 0x0;   // A0 selected
     AdcRegs.ADCCHSELSEQ1.bit.CONV01 = 0x1;   // A1 selected
-    AdcRegs.ADCCHSELSEQ1.bit.CONV02 = 0x2;   // A2 selected
+    //AdcRegs.ADCCHSELSEQ1.bit.CONV02 = 0x2;   // A2 selected
     AdcRegs.ADCTRL2.bit.SOC_SEQ1 = 1;        //Software trigger-Start SEQ1 from currently stopped position (i.e., Idle mode)
 }
 void SCIASetup()
@@ -223,9 +223,10 @@ void SCIASetup()
 void configureLed(void)
 {
    EALLOW;
-   GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 0; // GPIO1复用为GPIO功能
-   GpioCtrlRegs.GPADIR.bit.GPIO1 = 1;  // GPIO1设置为输出
+   GpioCtrlRegs.GPCMUX2.bit.GPIO87 = 0; // GPIO87复用为GPIO功能
+   GpioCtrlRegs.GPCDIR.bit.GPIO87 = 1;  // GPIO1设置为输出
    EDIS;
+   GpioDataRegs.GPCCLEAR.bit.GPIO87 = 1;
 }
 void scia_xmit(Uint16 a)
 {
@@ -237,32 +238,35 @@ void currentRead()
 {
 //    while(1 == AdcRegs.ADCST.bit.SEQ1_BSY)
 //    {}
+	backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
+	backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
+	backData.currentW = -(backData.currentU+backData.currentV);
     if(0 == motorDir)//Forward
     {
 		switch(backData.hallPos)
 		{
-		case 6://UV
-			backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
+		case 5://UV
+			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
-		case 4://UW
-			backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
+		case 1://UW
+			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW - currentBaseW;
 			break;
-		case 5://VW
-			backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
+		case 3://VW
+			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW - currentBaseW;
 			break;
-		case 1://VU
-			backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
+		case 2://VU
+			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
-		case 3://WU
-			backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
+		case 6://WU
+			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
-		case 2://WV
-			backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
+		case 4://WV
+			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
 		default:
@@ -273,28 +277,28 @@ void currentRead()
     {
     	switch(backData.hallPos)
 		{
-		case 5://UV
-			backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
+		case 2://UV
+			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
-		case 4://UW
-			backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
+		case 6://UW
+			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW - currentBaseW;
 			break;
-		case 6://VW
-			backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
+		case 4://VW
+			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW - currentBaseW;
 			break;
-		case 2://VU
-			backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
+		case 5://VU
+			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
-		case 3://WU
-			backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
+		case 1://WU
+			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
-		case 1://WV
-			backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
+		case 3://WV
+			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
 		default:
@@ -315,7 +319,7 @@ void dsp28335Init()
 	InitECap3Gpio();							   //Configure GPIO9 as ECAP3
 	InitSciaGpio();								   //Configure GPIO28 as RX, GPIO29 as TX
 										   //ADC复位
-	//configureLed();
+	configureLed();
 	DMAInitialize();                               //DMA复位
 
 	DINT;										   //禁止CPU全局中断
@@ -325,8 +329,8 @@ void dsp28335Init()
 	IFR = 0x0000;
 	InitPieVectTable();                           //PIE 向量表指针指向中断服务程(ISR)完成其初始化.
 
-	MemCopy(&RamfuncsLoadStart,&RamfuncsLoadEnd,&RamfuncsRunStart);
-	InitFlash();
+//	MemCopy(&RamfuncsLoadStart,&RamfuncsLoadEnd,&RamfuncsRunStart);
+//	InitFlash();
 	InitAdc();
 	EALLOW;                                       //This is needed to write to EALLOW protected registers
 	PieVectTable.ECAP1_INT = &ISRCap1;            //将CAP1中断添加都中断向量表里
@@ -456,6 +460,7 @@ interrupt void ISRTimer0(void)
 			if(msCnt1000 >= 2)
 			{
 			  msCnt1000 = 0;
+			  LED_TOGGLE;
 			  flag1000msW = 0xffff;//1s
 			}
 		  }
@@ -530,32 +535,32 @@ void pwmUpdate()
 	{
 		switch(backData.hallPos)
 		{
-		case 6://UV
+		case 5://UV
 			PWM_DISABLE;
 			PWM_U1_ENABLE;
 			PWM_V2_ENABLE;
 			break;
-		case 4://UW
+		case 1://UW
 			PWM_DISABLE;
 			PWM_U1_ENABLE;
 			PWM_W2_ENABLE;
 			break;
-		case 5://VW
+		case 3://VW
 			PWM_DISABLE;
 			PWM_V1_ENABLE;
 			PWM_W2_ENABLE;
 			break;
-		case 1://VU
+		case 2://VU
 			PWM_DISABLE;
 			PWM_V1_ENABLE;
 			PWM_U2_ENABLE;
 			break;
-		case 3://WU
+		case 6://WU
 			PWM_DISABLE;
 			PWM_W1_ENABLE;
 			PWM_U2_ENABLE;
 			break;
-		case 2://WV
+		case 4://WV
 			PWM_DISABLE;
 			PWM_W1_ENABLE;
 			PWM_V2_ENABLE;
@@ -567,32 +572,32 @@ void pwmUpdate()
 	{
 		switch(backData.hallPos)
 		{
-		case 5://UV
+		case 2://UV
 			PWM_DISABLE;
 			PWM_U1_ENABLE;
 			PWM_V2_ENABLE;
 			break;
-		case 4://UW
+		case 6://UW
 			PWM_DISABLE;
 			PWM_U1_ENABLE;
 			PWM_W2_ENABLE;
 			break;
-		case 6://VW
+		case 4://VW
 			PWM_DISABLE;
 			PWM_V1_ENABLE;
 			PWM_W2_ENABLE;
 			break;
-		case 2://VU
+		case 5://VU
 			PWM_DISABLE;
 			PWM_V1_ENABLE;
 			PWM_U2_ENABLE;
 			break;
-		case 3://WU
+		case 1://WU
 			PWM_DISABLE;
 			PWM_W1_ENABLE;
 			PWM_U2_ENABLE;
 			break;
-		case 1://WV
+		case 3://WV
 			PWM_DISABLE;
 			PWM_W1_ENABLE;
 			PWM_V2_ENABLE;

@@ -5,24 +5,24 @@
 
 #define PWM_PERIOD    7500
 #define PWM_DUTY      6750
-#define PWM_U1_DISABLE  EPwm1Regs.AQCSFRC.bit.CSFA = 0x01
-#define PWM_U2_DISABLE  EPwm1Regs.AQCSFRC.bit.CSFB = 0x01
-#define PWM_U1_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFA = 0x00
-#define PWM_U2_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFB = 0x00
-#define PWM_V1_DISABLE  EPwm2Regs.AQCSFRC.bit.CSFA = 0x01
-#define PWM_V2_DISABLE  EPwm1Regs.AQCSFRC.bit.CSFB = 0x01
-#define PWM_V1_ENABLE   EPwm2Regs.AQCSFRC.bit.CSFA = 0x00
-#define PWM_V2_ENABLE   EPwm2Regs.AQCSFRC.bit.CSFB = 0x00
-#define PWM_W1_DISABLE  EPwm3Regs.AQCSFRC.bit.CSFA = 0x01
-#define PWM_W2_DISABLE  EPwm3Regs.AQCSFRC.bit.CSFB = 0x01
-#define PWM_W1_ENABLE   EPwm3Regs.AQCSFRC.bit.CSFA = 0x00
-#define PWM_W2_ENABLE   EPwm3Regs.AQCSFRC.bit.CSFB = 0x00
-#define PWM_DISABLE   {EPwm1Regs.AQCSFRC.bit.CSFA = 0x01;\
-					   EPwm2Regs.AQCSFRC.bit.CSFA = 0x01;\
-					   EPwm3Regs.AQCSFRC.bit.CSFA = 0x01;\
-					   EPwm1Regs.AQCSFRC.bit.CSFB = 0x01;\
-					   EPwm2Regs.AQCSFRC.bit.CSFB = 0x01;\
-					   EPwm3Regs.AQCSFRC.bit.CSFB = 0x01;}
+#define PWM_U1_DISABLE  EPwm1Regs.AQCSFRC.bit.CSFA = 2
+#define PWM_U2_DISABLE  EPwm1Regs.AQCSFRC.bit.CSFB = 2
+#define PWM_U1_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFA = 0
+#define PWM_U2_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFB = 0
+#define PWM_V1_DISABLE  EPwm2Regs.AQCSFRC.bit.CSFA = 2
+#define PWM_V2_DISABLE  EPwm2Regs.AQCSFRC.bit.CSFB = 2
+#define PWM_V1_ENABLE   EPwm2Regs.AQCSFRC.bit.CSFA = 0
+#define PWM_V2_ENABLE   EPwm2Regs.AQCSFRC.bit.CSFB = 0
+#define PWM_W1_DISABLE  EPwm3Regs.AQCSFRC.bit.CSFA = 2
+#define PWM_W2_DISABLE  EPwm3Regs.AQCSFRC.bit.CSFB = 2
+#define PWM_W1_ENABLE   EPwm3Regs.AQCSFRC.bit.CSFA = 0
+#define PWM_W2_ENABLE   EPwm3Regs.AQCSFRC.bit.CSFB = 0
+#define PWM_DISABLE   {EPwm1Regs.AQCSFRC.bit.CSFA = 2;\
+					   EPwm2Regs.AQCSFRC.bit.CSFA = 2;\
+					   EPwm3Regs.AQCSFRC.bit.CSFA = 2;\
+					   EPwm1Regs.AQCSFRC.bit.CSFB = 2;\
+					   EPwm2Regs.AQCSFRC.bit.CSFB = 2;\
+					   EPwm3Regs.AQCSFRC.bit.CSFB = 2;}
 #define SET_PWM(n)    {EPwm1Regs.CMPA.half.CMPA  = n;\
 					   EPwm1Regs.CMPB = n;\
 					   EPwm2Regs.CMPA.half.CMPA  = n;\
@@ -30,7 +30,7 @@
 					   EPwm3Regs.CMPA.half.CMPA  = n;\
 					   EPwm3Regs.CMPB = n;}
 
-#define LED_TOGGLE 	  GpioDataRegs.GPBTOGGLE.bit.GPIO1 = 1;
+#define LED_TOGGLE 	  GpioDataRegs.GPCTOGGLE.bit.GPIO87 = 1;
 
 /**
  * @brief EPWM1 initialize
