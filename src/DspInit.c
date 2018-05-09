@@ -27,7 +27,7 @@ volatile Uint16 currentBaseU = 0;
 volatile Uint16 currentBaseV = 0;
 
 Uint16 motorRuning = 0;
-Uint16 motorDir = 0;
+Uint16 motorDir = 0;//0:down 1:up
 Uint16 LastHallGpio = 0;
 Uint16 NewHallGpio = 0;
 Uint32 VirtualTimer = 0;
@@ -414,7 +414,7 @@ interrupt void ISRSCIARX(void)
 	PieCtrlRegs.PIEACK.all = PIEACK_GROUP9;        //Acknowledge this interrupt to receive more interrupts from group 1
 	Uint16 tmpChar;
 	static Uint16 ptr = 0;
-	static Uint16 xors = 0;
+	//static Uint16 xors = 0;
 	while(SciaRegs.SCIFFRX.bit.RXFFST !=0)
 	{
 		tmpChar = SciaRegs.SCIRXBUF.all;
@@ -432,28 +432,40 @@ interrupt void ISRSCIARX(void)
 			  break;
 		  }
 		}
-		else if(ptr < 6)
+//		else if(ptr < 6)
+//		{
+//		  reciveBuf[ptr++] = tmpChar;
+//		  xors ^= tmpChar;
+//		}
+		else if(ptr < 9)
 		{
 		  reciveBuf[ptr++] = tmpChar;
-		  xors ^= tmpChar;
-		}
-		else if(ptr < 7)
-		{
-		  reciveBuf[ptr] = tmpChar;
-		  if(0 == xors && 0xBF == reciveBuf[ptr])
+		  if(ptr == 6)
 		  {
-			  unPackMsg(reciveBuf,&upperCommand);
+			  if(0xBF == reciveBuf[5])
+			  {
+				  unPackMsg(reciveBuf,&upperCommand);
+				  ptr = 0;
+			  }
+		  }
+		  else if(ptr == 9)
+		  {
+			  if(0xBF == reciveBuf[8])
+			  {
+				  unPackMsg2(reciveBuf,&upperCommand);
+				  ptr = 0;
+			  }
 		  }
 		  else
 		  {
 			  ptr = 0;
-			  xors = 0;
+			 // xors = 0;
 		  }
 		}
 		else
 		{
 		  ptr = 0;
-		  xors = 0;
+		  //xors = 0;
 		}
 	}
 	SciaRegs.SCIFFRX.bit.RXFFINTCLR = 1;

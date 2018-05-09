@@ -71,10 +71,10 @@ typedef struct _command
 typedef struct _back_Data
 {
     //Uint32 msCnt;
-    Uint16 current;
-    Uint16 currentU;
-    Uint16 currentV;
-    Uint16 currentW;
+    int16 current;
+    int16 currentU;
+    int16 currentV;
+    int16 currentW;
     Uint16 speed;
     Uint16 hallPos;
     Uint16 upperOver;

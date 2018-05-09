@@ -90,9 +90,11 @@ void unPackMsg()
 		{
 		case LOW_SPEED:
 			backData.status = CHECK_STA;
+			motorDir = 0;//
 			break;
 		case HIGH_SPEED:
 			backData.status = BACKWARD_STA;
+			motorDir = 0;
 			break;
 		default:
 			break;
@@ -100,15 +102,32 @@ void unPackMsg()
 		break;
 	case DO_FOREWARD:
 		backData.status = FOREWARD_STA;
+		motorDir = 1;
 		break;
 	case DO_CHECK:
 		backData.status = CHECK_STA;
+		motorDir = 0;
 		break;
 	default:
 		break;
 	}
 }
-
+void unPackMsg2()
+{
+	int16 stmpL = 0;
+	int16 stmpH = 0;
+	Uint16 offset = 2;
+	stmpL = reciveBuf[offset]; offset++;
+	stmpH = reciveBuf[offset]; offset++;
+	speedPID.kp = stmpL + stmpH<<8;
+	stmpL = reciveBuf[offset]; offset++;
+	stmpH = reciveBuf[offset]; offset++;
+	speedPID.ki = stmpL + stmpH<<8;
+	stmpL = reciveBuf[offset]; offset++;
+	stmpH = reciveBuf[offset]; offset++;
+	speedPID.outMax = stmpL + stmpH<<8;
+	speedPID.outMin = -speedPID.outMax;
+}
 Uint16 packMsg()
 {
 	Uint16 offset = 0;
@@ -134,12 +153,18 @@ void sendTest()
 	Uint16 i = 0;
 	*(testBuf + offset) = 0xAA; offset++;
 	*(testBuf + offset) = 0x55; offset++;
-	*(testBuf + offset) = (Uint16)backData.status; offset++;
-	*(testBuf + offset) = (Uint16)backData.faultCode; offset++;
+	*(testBuf + offset) = backData.status; offset++;
+	*(testBuf + offset) = backData.faultCode; offset++;
 	*(testBuf + offset) = backData.current; offset++;
 	*(testBuf + offset) = backData.current>>8; offset++;
-	//memset(testBuf,0x00,2);
-	for (i = 2; i < 5;i++)
+	*(testBuf + offset) = backData.speed; offset++;
+	*(testBuf + offset) = backData.speed>>8;offset++;
+	*(testBuf + offset) = posCnt;offset++;
+	*(testBuf + offset) = posCnt>>8;offset++;
+	*(testBuf + offset) = posCnt>>16;offset++;
+	*(testBuf + offset) = posCnt>>24;offset++;
+ 	//memset(testBuf,0x00,2);
+	for (i = 2; i < offset;i++)
 	{
 		xors ^= testBuf[i];
 	}

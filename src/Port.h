@@ -37,9 +37,12 @@ extern void sendMsg();
 
 extern void sendTest();
 
-void unPackMsg();
+extern void unPackMsg();
+
+extern void unPackMsg2();
 
 static Uint16 packMsg();
+
 
 
 #endif

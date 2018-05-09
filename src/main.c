@@ -4,12 +4,11 @@
 #include "GlobalValue.h"
 #include "DSPInit.h"
 
-/*out max*/
-#define OUT_MIN_CURRENT -100
-#define OUT_MAX_CURRENT 100
-#define OUT_MIN_SPEED -100
-#define OUT_MAX_SPEED 100
-#define PWM_CHECK 10
+#define OPENLOOP 1
+#define CURRENT 0
+#define SPEED 0
+
+#define PWM_CHECK 6750
 
 /*golbal value def*/
 QUE_def uiQueue;///<Ui
@@ -72,19 +71,19 @@ Uint16 speedRamp(Uint16 speed,Uint16 stepT,Uint16 stepL,Uint16* pKeepCnt)
 	}
 	return rampSpeed;
 }
-///*selfCheck*/
-//void selfCheck()
-//{
-//    if (MANUAL_STA == backData.status)
-//    {
-//        return;
-//    }
-//    else
-//    {
-//        SET_PWM(PWM_CHECK);
-//        readSensor();
-//    }
-//}
+/*selfCheck*/
+void selfCheck()
+{
+    if (MANUAL_STA == backData.status)
+    {
+        return;
+    }
+    else
+    {
+        SET_PWM(PWM_CHECK);
+        readSensor();
+    }
+}
 int main()
 {
 
@@ -94,15 +93,26 @@ int main()
     /*initialize Controller*/
 	initPID();
 
-    /*read sensor data*/
-    readSensor();
-
-//    /*self check*/
-//    selfCheck();
-
-    /*send point 1*/
-    sendMsg();
-
+//    /*read sensor data*/
+//    readSensor();
+//   /*self check*/
+//    while(2 != posFlag)
+//    {
+//    	backData.status = CHECK_STA;
+//    	motorDir = 0;
+//    	readSensor();
+//    	selfCheck();
+//    	if(0 != pwmUpdateSample)
+//		{
+//			pwmUpdateSample = 0;
+//			if(STOP_STA != backData.status)
+//			{
+//				pwmUpdate();
+//			}
+//		}
+//    }
+//    /*send point 1*/
+//    sendMsg();
     while (1) 
     {
     	/*read sensor data*/
@@ -114,22 +124,26 @@ int main()
     		speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     	}
         /*check faultCode*/
-//        if (0x00 != (backData.faultCode&0x3F))
-//        {
-//        	PWM_DISABLE;
-//            sendMsg(sendBuf,&backData);
-//        }
-//      else
+        if (0x00 != (backData.faultCode&0x3F))
+        {
+        	PWM_DISABLE;
+            //sendMsg(sendBuf,&backData);
+        }
+        else
         {
         	/*»»Ïà*/
         	if(0 != pwmUpdateSample)
 			{
 				pwmUpdateSample = 0;
-				//if((STOP_STA != backData.status) && (MANUAL_STA != backData.status))
+				if((STOP_STA != backData.status) && (MANUAL_STA != backData.status))
 				{
 					pwmUpdate();
 				}
 			}
+#if OPENLOOP
+        	SET_PWM(speedPID.sumOut);
+#endif
+#if SPEED
             /*speed pid */
             if(0 != speedLoopSample)
             {
@@ -137,7 +151,10 @@ int main()
             	speedPID.setPoint = speedRamp(500,10,50,&keepCnt);
             	speedPID.input = backData.speed;
             	pidCalc(&speedPID);
+            	SET_PWM(speedPID.sumOut);
             }
+#endif
+#if CURRENT
             /*current pid */
             if(0 != currentLoopSample)
             {
@@ -147,10 +164,11 @@ int main()
             	pidCalc(&currentPID);
             	//SET_PWM(currentPID.sumOut);
             }
+#endif
         }
         if (1 == reciveFlag)
         {
-            sendMsg(sendBuf,&backData);
+            sendMsg();
             reciveFlag = 0;
         }
         if(0 != testSendSample)
