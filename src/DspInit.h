@@ -85,6 +85,10 @@ static void SCISetup(void);
  */
 static void configureLed(void);
 /***
+ * @brief configure input ISR port
+ */
+static void congigureSW(void);
+/***
  * @breif data initialize
  */
 static void dataInit();
@@ -112,6 +116,18 @@ interrupt void ISRSCIARX(void);
  * @brief ISR for DMA ch1
  */
 interrupt void local_DINTCH1_ISR(void);
+/**
+ * @brief ISR for GPIO21 HANDF
+ */
+interrupt void xintHand_isr(void);
+/**
+ * @brief ISR for GPIO22 DOWN
+ */
+interrupt void xintUp_isr(void);
+/**
+ * @brief ISR for GPIO23 UP
+ */
+interrupt void xintDown_isr(void);
 /**
  * @brief scia send
  */

@@ -229,6 +229,29 @@ void configureLed(void)
    EDIS;
    GpioDataRegs.GPCCLEAR.bit.GPIO87 = 1;
 }
+void congigureSW(void)
+{
+	EALLOW;
+    GpioCtrlRegs.GPAMUX2.bit.GPIO21 = 0;      // GPIO21
+    GpioCtrlRegs.GPADIR.bit.GPIO21 = 0;       // input
+    GpioCtrlRegs.GPAQSEL2.bit.GPIO21 = 0;     // Xint1 Synch to SYSCLKOUT only
+
+    GpioCtrlRegs.GPAMUX2.bit.GPIO22 = 0;      // GPIO22
+    GpioCtrlRegs.GPADIR.bit.GPIO22 = 0;       // input
+    GpioCtrlRegs.GPAQSEL2.bit.GPIO22 = 0;     // Xint1 Synch to SYSCLKOUT only
+
+    GpioCtrlRegs.GPAMUX2.bit.GPIO23 = 0;      // GPIO23
+    GpioCtrlRegs.GPADIR.bit.GPIO23 = 0;       // input
+    GpioCtrlRegs.GPAQSEL2.bit.GPIO23 = 0;     // Xint1 Synch to SYSCLKOUT only
+    EDIS;
+
+    EALLOW;
+    GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 21;   // Xint1 is GPIO0
+    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 22;   // XINT2 is GPIO1
+    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 23;   // XINT2 is GPIO1
+    EDIS;
+
+}
 void scia_xmit(Uint16 a)
 {
 	 while (SciaRegs.SCIFFTX.bit.TXFFST != 0)
@@ -340,6 +363,10 @@ void dsp28335Init()
     PieVectTable.TINT0 = &ISRTimer0;              //将定时器0中断添加都中断向量表里
     PieVectTable.SCIRXINTA =&ISRSCIARX;           //将串口接收中断添加都中断向量表里
     PieVectTable.DINTCH1= &local_DINTCH1_ISR;
+    PieVectTable.XINT1 = &xintHand_isr;			//外部中断GPIO21
+    PieVectTable.XINT2 = &xintUp_isr;           //外部中断GPIO22
+//    PieVectTable.XINT3 = &xintDown_isr;         //外部中断GPIO23
+
     EDIS;                                         //This is needed to disable write to EALLOW protected register
 
     InitCpuTimers();                              //定时器初始化
@@ -359,19 +386,23 @@ void dsp28335Init()
     AdcSetup();     							  //ADC初始化配置
     SCIASetup();     							  //SCIA初始化配置
 
+    congigureSW();
+
     IER |= M_INT1;   							  //使能第一组中断
     IER |= M_INT4;   							  //使能第四组中断
     IER |= M_INT9;   							  //使能第九组中断
     IER |= M_INT13; 						      //使能中断13
     IER |= M_INT7; 						          //使能第七组中断
 
-
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
+    PieCtrlRegs.PIEIER1.bit.INTx1 = 1;			  //使能第一组中断里的第1个中断--HAND中断
+    PieCtrlRegs.PIEIER1.bit.INTx2 = 1;			  //使能第一组中断里的第2个中断--UP/DOWN中断
     PieCtrlRegs.PIEIER1.bit.INTx7 = 1;            //使能第一组中断里的第七个中断--定时器0中断
     PieCtrlRegs.PIEIER4.bit.INTx1 = 1;            //使能第四组中断里的第一个中断--CAP1中断
     PieCtrlRegs.PIEIER4.bit.INTx2 = 1;            //使能第四组中断里的第二个中断--CAP2中断
     PieCtrlRegs.PIEIER4.bit.INTx3 = 1;            //使能第四组中断里的第三个中断--CAP3中断
     PieCtrlRegs.PIEIER9.bit.INTx1 = 1;            //使能第九组中断里的第一个中断--SCIARX接收中断
+
     /*DMA通道中断在配置中使能*/
     dataInit();
     EINT;                                         //中断使能
@@ -487,6 +518,18 @@ interrupt void ISRCap3(void)
 interrupt void local_DINTCH1_ISR(void)
 {
 	PieCtrlRegs.PIEACK.all = PIEACK_GROUP7;  //Acknowledge this interrupt to receive more interrupts from group 7
+}
+interrupt void xintHand_isr(void)
+{
+
+}
+interrupt void xintUp_isr(void)
+{
+
+}
+interrupt void xintDown_isr(void)
+{
+
 }
 void dataInit()
 {

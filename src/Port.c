@@ -14,7 +14,18 @@ void readSensor()
 
 	/*Process*/
     /*mode is manual or automatic*/
-
+	if(GpioDataRegs.GPADAT.bit.GPIO21)
+	{
+		backData.status = MANUAL_STA;
+	}
+	if(GpioDataRegs.GPADAT.bit.GPIO22)
+	{
+		backData.lowerOver = 1;
+	}
+	if(GpioDataRegs.GPADAT.bit.GPIO23)
+	{
+		backData.upperOver = 1;
+	}
 	/*Read GPIOX to define status*/
 	if (backData.current >= CURRENT_THRESHOLD_1)
 	{
