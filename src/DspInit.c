@@ -34,6 +34,7 @@ Uint32 VirtualTimer = 0;
 Uint32 SpeedNewTimer = 0;
 Uint32 SpeedLastTimer = 0;
 Uint16 modcnt = 0;
+Uint32 posCnt = 0;
 
 void EPwm1Setup(Uint16 period,Uint16 duty)
 {
@@ -639,7 +640,7 @@ void speedRead()
 	}
 	if(VirtualTimer!=0)
 	{
-		if(LastHallGpio!=NewHallGpio)
+		if(LastHallGpio != NewHallGpio)
 		{
 			NewHallGpio = LastHallGpio;
 			modcnt++;
@@ -647,20 +648,21 @@ void speedRead()
 	}
 	if(modcnt == 7)
 	{
-		SpeedNewTimer=VirtualTimer;
+		SpeedNewTimer = VirtualTimer;
 		backData.speed = speed_calc(SpeedNewTimer,SpeedLastTimer);
 		motorRuning = 1;
-		modcnt=1;
+		modcnt = 1;
+		posCnt++;
 	}
 	if(modcnt == 1)
 	{
-		SpeedLastTimer=VirtualTimer;
+		SpeedLastTimer = VirtualTimer;
 	}
 	VirtualTimer++;
 	VirtualTimer &= 0x00007FFF;
-	if (VirtualTimer==0x7FFF)
+	if (VirtualTimer == 0x7FFF)
 	{
-		VirtualTimer=1;
+		VirtualTimer = 1;
 	}
 }
 Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2)

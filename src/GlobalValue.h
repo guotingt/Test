@@ -49,5 +49,6 @@ extern Uint16 motorDir;
 extern Uint16 reciveBuf[];
 extern Uint16 sendBuf[];
 extern Uint16 reciveFlag;
-
+extern Uint16 posFlag;///<0:unkonwn 1:upper 2:down
+extern Uint32 posCnt;
 #endif

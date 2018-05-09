@@ -59,29 +59,42 @@ void unPackMsg()
     switch (upperCommand.motionCmd)
 	{
 	case DO_STOP:
-	   backData.status = STOP_STA;
-	   break;
+		if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
+		{
+			posFlag = 1;
+		}
+		else if(FOREWARD_STA == backData.status)
+		{
+			posFlag = 2;
+		}
+		else
+		{
+			posFlag = 0;
+		}
+	    backData.status = STOP_STA;
+	    posCnt = 0;
+	    break;
 	case DO_BACKWARD:
-	   switch (upperCommand.speedMode)
-	   {
-	   case LOW_SPEED:
-		   backData.status = CHECK_STA;
-		   break;
-	   case HIGH_SPEED:
-		   backData.status = BACKWARD_STA;
-		   break;
-	   default:
-		   break;
-	   }
-	   break;
+		switch (upperCommand.speedMode)
+		{
+		case LOW_SPEED:
+			backData.status = CHECK_STA;
+			break;
+		case HIGH_SPEED:
+			backData.status = BACKWARD_STA;
+			break;
+		default:
+			break;
+		}
+		break;
 	case DO_FOREWARD:
-	   backData.status = FOREWARD_STA;
-	   break;
+		backData.status = FOREWARD_STA;
+		break;
 	case DO_CHECK:
-	   backData.status = CHECK_STA;
-	   break;
+		backData.status = CHECK_STA;
+		break;
 	default:
-	   break;
+		break;
 	}
 }
 

@@ -10,21 +10,19 @@
 #define OUT_MIN_SPEED -100
 #define OUT_MAX_SPEED 100
 #define PWM_CHECK 10
-/*sample time*/
-#define CURRENT_SAMPLE 10
-#define SPEED_SAMPLE 100
 
 /*golbal value def*/
-PID speedPID;
-PID currentPID;
-COMMAND upperCommand;
-Uint16 reciveFlag = 0;
-
 QUE_def uiQueue;///<Ui
 QUE_def viQueue;///<Vi
 QUE_def wiQueue;///<Wi
+PID speedPID;
+PID currentPID;
+COMMAND upperCommand;
 
+Uint16 reciveFlag = 0;
+Uint16 posFlag = 0;
 Uint16 keepCnt = 0;
+
 void initPID()
 {
 	speedPID.outMax = 500*65536;
@@ -121,7 +119,7 @@ int main()
 //        	PWM_DISABLE;
 //            sendMsg(sendBuf,&backData);
 //        }
-      //  else
+//      else
         {
         	/*»»Ïà*/
         	if(0 != pwmUpdateSample)
