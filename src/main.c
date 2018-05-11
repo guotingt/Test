@@ -168,7 +168,8 @@ int main()
         }
         if (1 == reciveFlag)
         {
-            sendMsg();
+            //sendMsg();
+        	sendTest();
             reciveFlag = 0;
         }
         if(0 != testSendSample)

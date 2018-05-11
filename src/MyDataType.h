@@ -50,7 +50,7 @@ typedef struct _pid
     int32 pOut; ///<proportion_out
     int32 iOut; ///<integral_out
     int32 sumOut; ///<output_value
-    int32 outMax; ///<amplitude_limiting
+    Uint32 outMax; ///<amplitude_limiting
     int32 outMin; ///<amplitude_limiting
     int16 mode; ///<manual_or_automatic
 }PID;

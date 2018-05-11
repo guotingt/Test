@@ -5,7 +5,7 @@
 
 Uint16 sendBuf[10] = {0};
 Uint16 testBuf[80] = {0};
-Uint16 reciveBuf[10] = {0};
+Uint16 reciveBuf[9] = {0};
 BACK_DATA backData;
 
 void readSensor()
@@ -16,7 +16,7 @@ void readSensor()
     /*mode is manual or automatic*/
 	if(GpioDataRegs.GPADAT.bit.GPIO21)
 	{
-		backData.status = MANUAL_STA;
+	//	backData.status = MANUAL_STA;
 	}
 	if(GpioDataRegs.GPADAT.bit.GPIO22)
 	{
@@ -114,19 +114,87 @@ void unPackMsg()
 }
 void unPackMsg2()
 {
-	int16 stmpL = 0;
-	int16 stmpH = 0;
+	Uint16 stmpL = 0;
+	Uint16 stmpH = 0;
+	Uint32 ltmpL = 0;
+	Uint32 ltmpH = 0;
 	Uint16 offset = 2;
-	stmpL = reciveBuf[offset]; offset++;
-	stmpH = reciveBuf[offset]; offset++;
-	speedPID.kp = stmpL + stmpH<<8;
-	stmpL = reciveBuf[offset]; offset++;
-	stmpH = reciveBuf[offset]; offset++;
-	speedPID.ki = stmpL + stmpH<<8;
-	stmpL = reciveBuf[offset]; offset++;
-	stmpH = reciveBuf[offset]; offset++;
-	speedPID.outMax = stmpL + stmpH<<8;
-	speedPID.outMin = -speedPID.outMax;
+	upperCommand.motionCmd = *(reciveBuf + offset);offset++;//2
+	upperCommand.speedMode = *(reciveBuf + offset);offset++;//3
+	/*Process*/
+	switch (upperCommand.motionCmd)
+	{
+	case DO_STOP:
+		if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
+		{
+			posFlag = 1;
+		}
+		else if(FOREWARD_STA == backData.status)
+		{
+			posFlag = 2;
+		}
+		else
+		{
+			posFlag = 0;
+		}
+		backData.status = STOP_STA;
+		posCnt = 0;
+		break;
+	case DO_BACKWARD:
+		switch (upperCommand.speedMode)
+		{
+		case LOW_SPEED:
+			backData.status = CHECK_STA;
+			motorDir = 0;//
+			break;
+		case HIGH_SPEED:
+			backData.status = BACKWARD_STA;
+			motorDir = 0;
+			break;
+		default:
+			break;
+		}
+		break;
+	case DO_FOREWARD:
+		backData.status = FOREWARD_STA;
+		motorDir = 1;
+		break;
+	case DO_CHECK:
+		backData.status = CHECK_STA;
+		motorDir = 0;
+		break;
+	default:
+		break;
+	}
+	if(1 == reciveBuf[offset])
+	{
+		offset++;//
+		stmpL = reciveBuf[offset]; offset++;
+		stmpH = reciveBuf[offset]; offset++;
+		ltmpL = stmpL + (stmpH<<8);
+		stmpL = reciveBuf[offset]; offset++;
+		stmpH = reciveBuf[offset]; offset++;
+		ltmpH = stmpL + (stmpH<<8);
+		speedPID.kp = ltmpL + (ltmpH<<8);
+
+		stmpL = reciveBuf[offset]; offset++;
+		stmpH = reciveBuf[offset]; offset++;
+		ltmpL = stmpL + (stmpH<<8);
+		stmpL = reciveBuf[offset]; offset++;
+		stmpH = reciveBuf[offset]; offset++;
+		ltmpH = stmpL + (stmpH<<8);
+		speedPID.ki = ltmpL + (ltmpH<<8);
+
+		stmpL = reciveBuf[offset]; offset++;
+		stmpH = reciveBuf[offset]; offset++;
+		ltmpL = stmpL + (stmpH<<8);
+		stmpL = reciveBuf[offset]; offset++;
+		stmpH = reciveBuf[offset]; offset++;
+		ltmpH = stmpL + (stmpH<<8);
+		speedPID.outMax = ltmpL + (ltmpH<<8);
+
+		speedPID.outMin = -speedPID.outMax;
+	}
 }
 Uint16 packMsg()
 {
@@ -155,14 +223,26 @@ void sendTest()
 	*(testBuf + offset) = 0x55; offset++;
 	*(testBuf + offset) = backData.status; offset++;
 	*(testBuf + offset) = backData.faultCode; offset++;
-	*(testBuf + offset) = backData.current; offset++;
-	*(testBuf + offset) = backData.current>>8; offset++;
 	*(testBuf + offset) = backData.speed; offset++;
 	*(testBuf + offset) = backData.speed>>8;offset++;
+	*(testBuf + offset) = backData.current; offset++;
+	*(testBuf + offset) = backData.current>>8; offset++;
 	*(testBuf + offset) = posCnt;offset++;
 	*(testBuf + offset) = posCnt>>8;offset++;
 	*(testBuf + offset) = posCnt>>16;offset++;
 	*(testBuf + offset) = posCnt>>24;offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.kp);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.kp>>8);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.kp>>16);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.kp>>24);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.kp);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.ki>>8);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.ki>>16);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.ki>>24);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.kp);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.outMax>>8);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.outMax>>16);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.outMax>>24);offset++;
  	//memset(testBuf,0x00,2);
 	for (i = 2; i < offset;i++)
 	{

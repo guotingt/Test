@@ -217,6 +217,7 @@ void SCIASetup()
     SciaRegs.SCICTL1.all =0x0023;  		 // Relinquish SCI from Reset
     SciaRegs.SCIFFTX.all = 0xE040;
     SciaRegs.SCIFFRX.all = 0x204a;
+    SciaRegs.SCIFFRX.bit.RXFFIL = 1;
     SciaRegs.SCIFFRX.bit.RXFFIENA = 1;
     SciaRegs.SCIFFCT.all = 0x0;
 
@@ -234,22 +235,22 @@ void congigureSW(void)
 	EALLOW;
     GpioCtrlRegs.GPAMUX2.bit.GPIO21 = 0;      // GPIO21
     GpioCtrlRegs.GPADIR.bit.GPIO21 = 0;       // input
-    GpioCtrlRegs.GPAQSEL2.bit.GPIO21 = 0;     // Xint1 Synch to SYSCLKOUT only
+    //GpioCtrlRegs.GPAQSEL2.bit.GPIO21 = 0;     // Xint1 Synch to SYSCLKOUT only
 
     GpioCtrlRegs.GPAMUX2.bit.GPIO22 = 0;      // GPIO22
     GpioCtrlRegs.GPADIR.bit.GPIO22 = 0;       // input
-    GpioCtrlRegs.GPAQSEL2.bit.GPIO22 = 0;     // Xint1 Synch to SYSCLKOUT only
+   // GpioCtrlRegs.GPAQSEL2.bit.GPIO22 = 0;     // Xint1 Synch to SYSCLKOUT only
 
     GpioCtrlRegs.GPAMUX2.bit.GPIO23 = 0;      // GPIO23
     GpioCtrlRegs.GPADIR.bit.GPIO23 = 0;       // input
-    GpioCtrlRegs.GPAQSEL2.bit.GPIO23 = 0;     // Xint1 Synch to SYSCLKOUT only
+    //GpioCtrlRegs.GPAQSEL2.bit.GPIO23 = 0;     // Xint1 Synch to SYSCLKOUT only
     EDIS;
 
-    EALLOW;
-    GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 21;   // Xint1 is GPIO0
-    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 22;   // XINT2 is GPIO1
-    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 23;   // XINT2 is GPIO1
-    EDIS;
+//    EALLOW;
+//    GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 21;   // Xint1 is GPIO0
+//    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 22;   // XINT2 is GPIO1
+//    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 23;   // XINT2 is GPIO1
+//    EDIS;
 
 }
 void scia_xmit(Uint16 a)
@@ -345,6 +346,7 @@ void dsp28335Init()
 										   //ADC复位
 	configureLed();
 	DMAInitialize();                               //DMA复位
+	congigureSW();
 
 	DINT;										   //禁止CPU全局中断
 	InitPieCtrl();								   //初始化PIE中断向量表，并使其指向中断服务子程序（ISR）
@@ -363,8 +365,8 @@ void dsp28335Init()
     PieVectTable.TINT0 = &ISRTimer0;              //将定时器0中断添加都中断向量表里
     PieVectTable.SCIRXINTA =&ISRSCIARX;           //将串口接收中断添加都中断向量表里
     PieVectTable.DINTCH1= &local_DINTCH1_ISR;
-    PieVectTable.XINT1 = &xintHand_isr;			//外部中断GPIO21
-    PieVectTable.XINT2 = &xintUp_isr;           //外部中断GPIO22
+//    PieVectTable.XINT1 = &xintHand_isr;			//外部中断GPIO21
+//    PieVectTable.XINT2 = &xintUp_isr;           //外部中断GPIO22
 //    PieVectTable.XINT3 = &xintDown_isr;         //外部中断GPIO23
 
     EDIS;                                         //This is needed to disable write to EALLOW protected register
@@ -386,7 +388,7 @@ void dsp28335Init()
     AdcSetup();     							  //ADC初始化配置
     SCIASetup();     							  //SCIA初始化配置
 
-    congigureSW();
+
 
     IER |= M_INT1;   							  //使能第一组中断
     IER |= M_INT4;   							  //使能第四组中断
@@ -395,8 +397,8 @@ void dsp28335Init()
     IER |= M_INT7; 						          //使能第七组中断
 
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
-    PieCtrlRegs.PIEIER1.bit.INTx1 = 1;			  //使能第一组中断里的第1个中断--HAND中断
-    PieCtrlRegs.PIEIER1.bit.INTx2 = 1;			  //使能第一组中断里的第2个中断--UP/DOWN中断
+//    PieCtrlRegs.PIEIER1.bit.INTx1 = 1;			  //使能第一组中断里的第1个中断--HAND中断
+//    PieCtrlRegs.PIEIER1.bit.INTx2 = 1;			  //使能第一组中断里的第2个中断--UP/DOWN中断
     PieCtrlRegs.PIEIER1.bit.INTx7 = 1;            //使能第一组中断里的第七个中断--定时器0中断
     PieCtrlRegs.PIEIER4.bit.INTx1 = 1;            //使能第四组中断里的第一个中断--CAP1中断
     PieCtrlRegs.PIEIER4.bit.INTx2 = 1;            //使能第四组中断里的第二个中断--CAP2中断
@@ -411,7 +413,7 @@ void dsp28335Init()
 
 interrupt void ISRSCIARX(void)
 {
-	PieCtrlRegs.PIEACK.all = PIEACK_GROUP9;        //Acknowledge this interrupt to receive more interrupts from group 1
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9;        //Acknowledge this interrupt to receive more interrupts from group 1
 	Uint16 tmpChar;
 	static Uint16 ptr = 0;
 	//static Uint16 xors = 0;
@@ -437,30 +439,32 @@ interrupt void ISRSCIARX(void)
 //		  reciveBuf[ptr++] = tmpChar;
 //		  xors ^= tmpChar;
 //		}
-		else if(ptr < 9)
+		else if(ptr < 18)
 		{
 		  reciveBuf[ptr++] = tmpChar;
-		  if(ptr == 6)
+		  if(ptr == 18)
 		  {
-			  if(0xBF == reciveBuf[5])
+			  if(0x00BF == (0x00BF&reciveBuf[17]))
 			  {
-				  unPackMsg(reciveBuf,&upperCommand);
+				  //unPackMsg();
+				  unPackMsg2();
+				  reciveFlag = 1;
 				  ptr = 0;
 			  }
 		  }
-		  else if(ptr == 9)
-		  {
-			  if(0xBF == reciveBuf[8])
-			  {
-				  unPackMsg2(reciveBuf,&upperCommand);
-				  ptr = 0;
-			  }
-		  }
-		  else
-		  {
-			  ptr = 0;
-			 // xors = 0;
-		  }
+//		  else if(ptr == 9)
+//		  {
+//			  if(0x00BE == (0x00BE&reciveBuf[8]))
+//			  {
+//				  unPackMsg2();
+//				  ptr = 0;
+//			  }
+//		  }
+//		  else
+//		  {
+//			  ptr = 0;
+//			 // xors = 0;
+//		  }
 		}
 		else
 		{
@@ -468,13 +472,14 @@ interrupt void ISRSCIARX(void)
 		  //xors = 0;
 		}
 	}
-	SciaRegs.SCIFFRX.bit.RXFFINTCLR = 1;
+    //SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;      // Clear Overflow flag
+    SciaRegs.SCIFFRX.bit.RXFFINTCLR=1;      // Clear Interrupt flag
 }
 
 
 interrupt void ISRTimer0(void)
 {
-    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;  //Acknowledge this interrupt to receive more interrupts from group 1
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;  //Acknowledge this interrupt to receive more interrupts from group 1
     CpuTimer0Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
 //    interruptCnt++;
@@ -514,22 +519,22 @@ interrupt void ISRTimer0(void)
 }
 interrupt void ISRCap1(void)
 {
-    PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
 }
 
 interrupt void ISRCap2(void)
 {
-	PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
 }
 
 interrupt void ISRCap3(void)
 {
-    PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
 }
 
 interrupt void local_DINTCH1_ISR(void)
 {
-	PieCtrlRegs.PIEACK.all = PIEACK_GROUP7;  //Acknowledge this interrupt to receive more interrupts from group 7
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP7;  //Acknowledge this interrupt to receive more interrupts from group 7
 }
 interrupt void xintHand_isr(void)
 {
