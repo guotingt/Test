@@ -141,7 +141,7 @@ int main()
 				}
 			}
 #if OPENLOOP
-        	SET_PWM(speedPID.sumOut);
+        	SET_PWM(800);
 #endif
 #if SPEED
             /*speed pid */
