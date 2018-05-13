@@ -355,15 +355,15 @@ InitPeripheralClocks(void)
     //
     ADC_cal();
 
-    SysCtrlRegs.PCLKCR0.bit.I2CAENCLK = 1;   // I2C
+    SysCtrlRegs.PCLKCR0.bit.I2CAENCLK = 0;   // I2C
     SysCtrlRegs.PCLKCR0.bit.SCIAENCLK = 1;   // SCI-A
-    SysCtrlRegs.PCLKCR0.bit.SCIBENCLK = 1;   // SCI-B
-    SysCtrlRegs.PCLKCR0.bit.SCICENCLK = 1;   // SCI-C
-    SysCtrlRegs.PCLKCR0.bit.SPIAENCLK = 1;   // SPI-A
-    SysCtrlRegs.PCLKCR0.bit.MCBSPAENCLK = 1; // McBSP-A
-    SysCtrlRegs.PCLKCR0.bit.MCBSPBENCLK = 1; // McBSP-B
-    SysCtrlRegs.PCLKCR0.bit.ECANAENCLK=1;    // eCAN-A
-    SysCtrlRegs.PCLKCR0.bit.ECANBENCLK=1;    // eCAN-B
+    SysCtrlRegs.PCLKCR0.bit.SCIBENCLK = 0;   // SCI-B
+    SysCtrlRegs.PCLKCR0.bit.SCICENCLK = 0;   // SCI-C
+    SysCtrlRegs.PCLKCR0.bit.SPIAENCLK = 0;   // SPI-A
+    SysCtrlRegs.PCLKCR0.bit.MCBSPAENCLK = 0; // McBSP-A
+    SysCtrlRegs.PCLKCR0.bit.MCBSPBENCLK = 0; // McBSP-B
+    SysCtrlRegs.PCLKCR0.bit.ECANAENCLK=0;    // eCAN-A
+    SysCtrlRegs.PCLKCR0.bit.ECANBENCLK=0;    // eCAN-B
 
     SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 0;   // Disable TBCLK within the ePWM
     SysCtrlRegs.PCLKCR1.bit.EPWM1ENCLK = 1;  // ePWM1
@@ -375,20 +375,20 @@ InitPeripheralClocks(void)
     SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1;   // Enable TBCLK within the ePWM
 
     SysCtrlRegs.PCLKCR1.bit.ECAP3ENCLK = 1;  // eCAP3
-    SysCtrlRegs.PCLKCR1.bit.ECAP4ENCLK = 1;  // eCAP4
-    SysCtrlRegs.PCLKCR1.bit.ECAP5ENCLK = 1;  // eCAP5
-    SysCtrlRegs.PCLKCR1.bit.ECAP6ENCLK = 1;  // eCAP6
+    SysCtrlRegs.PCLKCR1.bit.ECAP4ENCLK = 0;  // eCAP4
+    SysCtrlRegs.PCLKCR1.bit.ECAP5ENCLK = 0;  // eCAP5
+    SysCtrlRegs.PCLKCR1.bit.ECAP6ENCLK = 0;  // eCAP6
     SysCtrlRegs.PCLKCR1.bit.ECAP1ENCLK = 1;  // eCAP1
     SysCtrlRegs.PCLKCR1.bit.ECAP2ENCLK = 1;  // eCAP2
-    SysCtrlRegs.PCLKCR1.bit.EQEP1ENCLK = 1;  // eQEP1
-    SysCtrlRegs.PCLKCR1.bit.EQEP2ENCLK = 1;  // eQEP2
+    SysCtrlRegs.PCLKCR1.bit.EQEP1ENCLK = 0;  // eQEP1
+    SysCtrlRegs.PCLKCR1.bit.EQEP2ENCLK = 0;  // eQEP2
 
     SysCtrlRegs.PCLKCR3.bit.CPUTIMER0ENCLK = 1; // CPU Timer 0
-    SysCtrlRegs.PCLKCR3.bit.CPUTIMER1ENCLK = 1; // CPU Timer 1
-    SysCtrlRegs.PCLKCR3.bit.CPUTIMER2ENCLK = 1; // CPU Timer 2
+    SysCtrlRegs.PCLKCR3.bit.CPUTIMER1ENCLK = 0; // CPU Timer 1
+    SysCtrlRegs.PCLKCR3.bit.CPUTIMER2ENCLK = 0; // CPU Timer 2
 
     SysCtrlRegs.PCLKCR3.bit.DMAENCLK = 1;       // DMA Clock
-    SysCtrlRegs.PCLKCR3.bit.XINTFENCLK = 1;     // XTIMCLK
+    SysCtrlRegs.PCLKCR3.bit.XINTFENCLK = 0;     // XTIMCLK
     SysCtrlRegs.PCLKCR3.bit.GPIOINENCLK = 1;    // GPIO input clock
 
     EDIS;
