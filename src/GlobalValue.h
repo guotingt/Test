@@ -8,7 +8,7 @@ extern TIME_FLAG  flagDot1ms;
 #define flagDot1msW flagDot1ms.word
 #define currentLoopSample flagDot1ms.bit.bit0
 #define sensorReadSample flagDot1ms.bit.bit1
-#define pwmUpdateSample flagDot1ms.bit.bit2
+//#define pwmUpdateSample flagDot1ms.bit.bit2
 
 extern TIME_FLAG  flag1ms;
 #define flag1msW flag1ms.word
@@ -49,6 +49,6 @@ extern Uint16 motorDir;
 extern Uint16 reciveBuf[];
 extern Uint16 sendBuf[];
 extern Uint16 reciveFlag;
-extern Uint16 posFlag;///<0:unkonwn 1:upper 2:down
-extern Uint32 posCnt;
+extern Uint16 moveCnt;
+extern Uint16 timeFlag;
 #endif

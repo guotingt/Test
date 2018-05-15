@@ -29,6 +29,12 @@
 					   EPwm2Regs.CMPB = n;\
 					   EPwm3Regs.CMPA.half.CMPA  = n;\
 					   EPwm3Regs.CMPB = n;}
+#define SET_PWM_PERCENT(n) {EPwm1Regs.CMPA.half.CMPA  = 75 * (100 -n);\
+					   EPwm1Regs.CMPB = 75 * (100 -n);\
+					   EPwm2Regs.CMPA.half.CMPA  = 75 * (100 -n);\
+					   EPwm2Regs.CMPB = 75 * (100 -n);\
+					   EPwm3Regs.CMPA.half.CMPA  = 75 * (100 -n);\
+					   EPwm3Regs.CMPB = 75 * (100 -n);}
 
 #define LED_TOGGLE 	  GpioDataRegs.GPCTOGGLE.bit.GPIO87 = 1;
 
@@ -149,7 +155,11 @@ extern void speedRead(void);
  */
 extern void pwmUpdate();
 /**
- * @brief
+ * @biref read hall state
+ */
+extern void readHall();
+/**
+ * @brief calc speed
  */
 static Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2);
 #endif

@@ -27,6 +27,8 @@
 #define IS_MANUAL    0
 #define IS_AUTOMATIC 1
 
+#define MAX_CNT 4725//(420/8*90) //2925(260/8*90)
+
 /*current threshold*/
 #define CURRENT_THRESHOLD_1 10
 #define CURRENT_THRESHOLD_2 20

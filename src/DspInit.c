@@ -21,20 +21,21 @@ volatile Uint16 msCnt100 = 0; ///<100ms
 volatile Uint16 msCnt500 = 0; ///<0.5s
 volatile Uint16 msCnt1000 = 0;///<1s
 
-Uint32 interruptCnt = 0;
 volatile Uint16 currentBaseW = 0;
 volatile Uint16 currentBaseU = 0;
 volatile Uint16 currentBaseV = 0;
 
+Uint16 cap1OverCnt = 0;
+Uint16 cap2OverCnt = 0;
+Uint16 cap3OverCnt = 0;
+Uint16 cap4OverCnt = 0;
 Uint16 motorRuning = 0;
-Uint16 motorDir = 0;//0:down 1:up
 Uint16 LastHallGpio = 0;
 Uint16 NewHallGpio = 0;
 Uint32 VirtualTimer = 0;
 Uint32 SpeedNewTimer = 0;
 Uint32 SpeedLastTimer = 0;
 Uint16 modcnt = 0;
-Uint32 posCnt = 0;
 
 void EPwm1Setup(Uint16 period,Uint16 duty)
 {
@@ -99,13 +100,13 @@ void EPwm3Setup(Uint16 period,Uint16 duty)
 void ECap1Setup()
 {
 	ECap1Regs.ECCTL1.bit.CAP1POL = EC_FALLING;           //CAP1: falling
-	ECap1Regs.ECCTL1.bit.CAP2POL = EC_FALLING;           //CAP2: falling
+	ECap1Regs.ECCTL1.bit.CAP2POL = EC_RISING;           //CAP2: rising
 	ECap1Regs.ECCTL1.bit.CAP3POL = EC_FALLING;           //CAP3: falling
-	ECap1Regs.ECCTL1.bit.CAP4POL = EC_FALLING;           //CAP4: falling
-	ECap1Regs.ECCTL1.bit.CTRRST1 = EC_ABS_MODE;          //absolute time stamp operation
-	ECap1Regs.ECCTL1.bit.CTRRST2 = EC_ABS_MODE;          //absolute time stamp operation
-	ECap1Regs.ECCTL1.bit.CTRRST3 = EC_ABS_MODE;          //absolute time stamp operation
-	ECap1Regs.ECCTL1.bit.CTRRST4 = EC_ABS_MODE;          //absolute time stamp operation
+	ECap1Regs.ECCTL1.bit.CAP4POL = EC_RISING;           //CAP4: rising
+	ECap1Regs.ECCTL1.bit.CTRRST1 = EC_DELTA_MODE;          //difference time stamp operation
+	ECap1Regs.ECCTL1.bit.CTRRST2 = EC_DELTA_MODE;          //difference time stamp operation
+	ECap1Regs.ECCTL1.bit.CTRRST3 = EC_DELTA_MODE;          //difference time stamp operation
+	ECap1Regs.ECCTL1.bit.CTRRST4 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap1Regs.ECCTL1.bit.CAPLDEN = EC_ENABLE;            //Enable Loading of CAP1-4 registers on a capture even
 	ECap1Regs.ECCTL1.bit.PRESCALE = EC_DIV1;             //no prescale, by-pass the prescaler
 	ECap1Regs.ECCTL2.bit.CAP_APWM = EC_CAP_MODE;         //capture operating mode select
@@ -116,20 +117,23 @@ void ECap1Setup()
 	ECap1Regs.CTRPHS = 0;
 	ECap1Regs.ECEINT.all = 0x0000;                       //stop all interrupt
 	ECap1Regs.ECCLR.all = 0xFFFF;                        //clear all flag
+	ECap1Regs.ECEINT.bit.CEVT1=1;
+	ECap1Regs.ECEINT.bit.CEVT2=1;
+	ECap1Regs.ECEINT.bit.CEVT3=1;
 	ECap1Regs.ECEINT.bit.CEVT4=1;  	                     // Enable cevt4 interrupt
 	ECap1Regs.ECEINT.bit.CTROVF=1;                       //Enable CTROVF interrupt
 	ECap1Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;             // start to run ECap1
 }
 void ECap2Setup()
 {
-	ECap2Regs.ECCTL1.bit.CAP1POL = EC_FALLING;           //CAP1: rising
-	ECap2Regs.ECCTL1.bit.CAP2POL = EC_FALLING;           //CAP2: falling
-	ECap2Regs.ECCTL1.bit.CAP3POL = EC_FALLING;           //CAP3: rising
-	ECap2Regs.ECCTL1.bit.CAP4POL = EC_FALLING;           //CAP4: falling
-	ECap2Regs.ECCTL1.bit.CTRRST1 = EC_ABS_MODE;          //absolute time stamp operation
-	ECap2Regs.ECCTL1.bit.CTRRST2 = EC_ABS_MODE;          //absolute time stamp operation
-	ECap2Regs.ECCTL1.bit.CTRRST3 = EC_ABS_MODE;          //absolute time stamp operation
-	ECap2Regs.ECCTL1.bit.CTRRST4 = EC_ABS_MODE;          //absolute time stamp operation
+	ECap2Regs.ECCTL1.bit.CAP1POL = EC_FALLING;           //CAP1: falling
+	ECap2Regs.ECCTL1.bit.CAP2POL = EC_RISING;           //CAP2: rising
+	ECap2Regs.ECCTL1.bit.CAP3POL = EC_FALLING;           //CAP3: falling
+	ECap2Regs.ECCTL1.bit.CAP4POL = EC_RISING;           //CAP4: rising
+	ECap2Regs.ECCTL1.bit.CTRRST1 = EC_DELTA_MODE;          //difference time stamp operation
+	ECap2Regs.ECCTL1.bit.CTRRST2 = EC_DELTA_MODE;          //difference time stamp operation
+	ECap2Regs.ECCTL1.bit.CTRRST3 = EC_DELTA_MODE;          //difference time stamp operation
+	ECap2Regs.ECCTL1.bit.CTRRST4 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap2Regs.ECCTL1.bit.CAPLDEN = EC_ENABLE;            //Enable Loading of CAP1-4 registers on a capture even
 	ECap2Regs.ECCTL1.bit.PRESCALE = EC_DIV1;             //no prescale, by-pass the prescaler
 	ECap2Regs.ECCTL2.bit.CAP_APWM = EC_CAP_MODE;         //capture operating mode select
@@ -140,6 +144,9 @@ void ECap2Setup()
 	ECap2Regs.CTRPHS = 0;
 	ECap2Regs.ECEINT.all = 0x0000;						 //stop all interrupt
 	ECap2Regs.ECCLR.all = 0xFFFF;						 //clear all flag
+	ECap2Regs.ECEINT.bit.CEVT1=1;
+	ECap2Regs.ECEINT.bit.CEVT2=1;
+	ECap2Regs.ECEINT.bit.CEVT3=1;
 	ECap2Regs.ECEINT.bit.CEVT4 = 1;						 //Enable cevt4 interrupt
 	ECap2Regs.ECEINT.bit.CTROVF = 1;					 //Enable CTROVF interrupt
 	ECap2Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;		     //start to run ECap2
@@ -147,13 +154,13 @@ void ECap2Setup()
 void ECap3Setup()
 {
 	ECap3Regs.ECCTL1.bit.CAP1POL = EC_FALLING;           //CAP1: rising
-	ECap3Regs.ECCTL1.bit.CAP2POL = EC_FALLING;           //CAP2: falling
+	ECap3Regs.ECCTL1.bit.CAP2POL = EC_RISING;           //CAP2: falling
 	ECap3Regs.ECCTL1.bit.CAP3POL = EC_FALLING;           //CAP3: rising
-	ECap3Regs.ECCTL1.bit.CAP4POL = EC_FALLING;           //CAP4: falling
-	ECap3Regs.ECCTL1.bit.CTRRST1 = EC_ABS_MODE;          //absolute time stamp operation
-	ECap3Regs.ECCTL1.bit.CTRRST2 = EC_ABS_MODE;          //absolute time stamp operation
-	ECap3Regs.ECCTL1.bit.CTRRST3 = EC_ABS_MODE;          //absolute time stamp operation
-	ECap3Regs.ECCTL1.bit.CTRRST4 = EC_ABS_MODE;          //absolute time stamp operation
+	ECap3Regs.ECCTL1.bit.CAP4POL = EC_RISING;           //CAP4: falling
+	ECap3Regs.ECCTL1.bit.CTRRST1 = EC_DELTA_MODE;          //difference time stamp operation
+	ECap3Regs.ECCTL1.bit.CTRRST2 = EC_DELTA_MODE;          //difference time stamp operation
+	ECap3Regs.ECCTL1.bit.CTRRST3 = EC_DELTA_MODE;          //difference time stamp operation
+	ECap3Regs.ECCTL1.bit.CTRRST4 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap3Regs.ECCTL1.bit.CAPLDEN = EC_ENABLE;            //Enable Loading of CAP1-4 registers on a capture even
 	ECap3Regs.ECCTL1.bit.PRESCALE = EC_DIV1;             //no prescale, by-pass the prescaler
 	ECap3Regs.ECCTL2.bit.CAP_APWM = EC_CAP_MODE;         //capture operating mode select
@@ -164,6 +171,9 @@ void ECap3Setup()
 	ECap3Regs.CTRPHS = 0;
 	ECap3Regs.ECEINT.all = 0x0000;   					//stop all interrupt
 	ECap3Regs.ECCLR.all = 0xFFFF;    					//clear all flag
+	ECap3Regs.ECEINT.bit.CEVT1=1;
+	ECap3Regs.ECEINT.bit.CEVT2=1;
+	ECap3Regs.ECEINT.bit.CEVT3=1;
 	ECap3Regs.ECEINT.bit.CEVT4 = 1;  					//Enable cevt4 interrupt
 	ECap3Regs.ECEINT.bit.CTROVF = 1; 				    //Enable CTROVF interrupt
 	ECap3Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;            //start to run ECap3
@@ -239,19 +249,22 @@ void congigureSW(void)
 
     GpioCtrlRegs.GPAMUX2.bit.GPIO22 = 0;      // GPIO22
     GpioCtrlRegs.GPADIR.bit.GPIO22 = 0;       // input
-   // GpioCtrlRegs.GPAQSEL2.bit.GPIO22 = 0;     // Xint1 Synch to SYSCLKOUT only
+    GpioCtrlRegs.GPAQSEL2.bit.GPIO22 = 0;     // Xint1 Synch to SYSCLKOUT only
 
     GpioCtrlRegs.GPAMUX2.bit.GPIO23 = 0;      // GPIO23
     GpioCtrlRegs.GPADIR.bit.GPIO23 = 0;       // input
-    //GpioCtrlRegs.GPAQSEL2.bit.GPIO23 = 0;     // Xint1 Synch to SYSCLKOUT only
+    GpioCtrlRegs.GPAQSEL2.bit.GPIO23 = 0;     // Xint1 Synch to SYSCLKOUT only
     EDIS;
 
-//    EALLOW;
-//    GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 21;   // Xint1 is GPIO0
-//    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 22;   // XINT2 is GPIO1
-//    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 23;   // XINT2 is GPIO1
-//    EDIS;
-
+    EALLOW;
+   // GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 21;   // Xint1 is GPIO0
+    GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 22;   // XINT2 is GPIO1
+    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 23;   // XINT2 is GPIO1
+    EDIS;
+//    XIntruptRegs.XINT1CR.bit.POLARITY = 0;
+//    XIntruptRegs.XINT2CR.bit.POLARITY = 0;
+//    XIntruptRegs.XINT1CR.bit.ENABLE = 1;
+//    XIntruptRegs.XINT2CR.bit.ENABLE = 1;
 }
 void scia_xmit(Uint16 a)
 {
@@ -266,7 +279,7 @@ void currentRead()
 	backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 	backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 	backData.currentW = -(backData.currentU+backData.currentV);
-    if(0 == motorDir)//Forward
+    if(0 == backData.motorDir)//Forward
     {
 		switch(backData.hallPos)
 		{
@@ -298,7 +311,7 @@ void currentRead()
 			break;
 		}
     }
-    else if(1 == motorDir)//Backward
+    else if(1 == backData.motorDir)//Backward
     {
     	switch(backData.hallPos)
 		{
@@ -363,7 +376,7 @@ void dsp28335Init()
 	PieVectTable.ECAP2_INT = &ISRCap2;            //将CAP2中断添加都中断向量表里
     PieVectTable.ECAP3_INT = &ISRCap3;   	      //将CAP3中断添加都中断向量表里
     PieVectTable.TINT0 = &ISRTimer0;              //将定时器0中断添加都中断向量表里
-    PieVectTable.SCIRXINTA =&ISRSCIARX;           //将串口接收中断添加都中断向量表里
+    PieVectTable.SCIRXINTA = &ISRSCIARX;           //将串口接收中断添加都中断向量表里
     PieVectTable.DINTCH1= &local_DINTCH1_ISR;
 //    PieVectTable.XINT1 = &xintHand_isr;			//外部中断GPIO21
 //    PieVectTable.XINT2 = &xintUp_isr;           //外部中断GPIO22
@@ -375,10 +388,11 @@ void dsp28335Init()
     ConfigCpuTimer(&CpuTimer0, 150, 100);       //定时器0初始化/10KHz
     StartCpuTimer0();                             //开启定时器0
 
+    PWM_DISABLE;
     EPwm1Setup(PWM_PERIOD,PWM_DUTY);    		  //EPWM1配置
     EPwm2Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM2配置
     EPwm3Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM3配置
-    //PWM_DISABLE;
+
 
     ECap1Setup();    							  //ECAP1配置
     ECap2Setup();    							  //ECAP2配置
@@ -397,8 +411,8 @@ void dsp28335Init()
     IER |= M_INT7; 						          //使能第七组中断
 
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
-//    PieCtrlRegs.PIEIER1.bit.INTx1 = 1;			  //使能第一组中断里的第1个中断--HAND中断
-//    PieCtrlRegs.PIEIER1.bit.INTx2 = 1;			  //使能第一组中断里的第2个中断--UP/DOWN中断
+    PieCtrlRegs.PIEIER1.bit.INTx1 = 1;			  //使能第一组中断里的第1个中断--UP中断
+    PieCtrlRegs.PIEIER1.bit.INTx2 = 1;			  //使能第一组中断里的第2个中断--DOWN中断
     PieCtrlRegs.PIEIER1.bit.INTx7 = 1;            //使能第一组中断里的第七个中断--定时器0中断
     PieCtrlRegs.PIEIER4.bit.INTx1 = 1;            //使能第四组中断里的第一个中断--CAP1中断
     PieCtrlRegs.PIEIER4.bit.INTx2 = 1;            //使能第四组中断里的第二个中断--CAP2中断
@@ -519,42 +533,184 @@ interrupt void ISRTimer0(void)
 }
 interrupt void ISRCap1(void)
 {
+	Uint32 t1= 0;
+	Uint32 t2 = 0;
+	Uint32 t3 = 0;
+	Uint32 t4 = 0;
+
     PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+
+    if(1 == backData.motorDir)
+    {
+    	backData.posCnt++;
+    }
+    else
+    {
+    	backData.posCnt--;
+    }
+
+    if(1 == ECap1Regs.ECFLG.bit.CEVT1)
+    {
+    	backData.hallPos &= (~(0x0001<<0));
+    	ECap1Regs.ECCLR.bit.CEVT1 = 1;
+    	t4 = ECap1Regs.CAP1;
+    	t1 = ECap1Regs.CAP2;
+    	t2 = ECap1Regs.CAP3;
+    	t3 = ECap1Regs.CAP4;
+    	backData.speedCapture = (5000000/(t1 + t2 + t3 + t4));
+    }
+    if(1 == ECap1Regs.ECFLG.bit.CEVT2)
+    {
+    	backData.hallPos |= (0x0001<<0);
+    	ECap1Regs.ECCLR.bit.CEVT2 = 1;
+
+    }
+    if(1 == ECap1Regs.ECFLG.bit.CEVT3)
+    {
+    	backData.hallPos &= (~(0x0001<<0));
+    	ECap1Regs.ECCLR.bit.CEVT3 = 1;
+
+    }
+    if(1 == ECap1Regs.ECFLG.bit.CEVT4)
+    {
+    	backData.hallPos |= (0x0001<<0);
+    	ECap1Regs.ECCLR.bit.CEVT4 = 1;
+    }
+    if(1 == ECap1Regs.ECFLG.bit.CTROVF)
+    {
+    	ECap1Regs.ECCLR.bit.CTROVF = 1;
+    	cap1OverCnt++;
+    	if(cap1OverCnt > 2)
+    	{
+    		cap1OverCnt = 0;
+    		backData.motorRuning = 0;
+    	}
+    }
+    pwmUpdate();
+    ECap1Regs.ECCLR.bit.INT = 1;
+
+
 }
 
 interrupt void ISRCap2(void)
 {
+	Uint32 t1= 0;
+	Uint32 t2 = 0;
+	Uint32 t3 = 0;
+	Uint32 t4 = 0;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+    if(1 == backData.motorDir)
+    {
+    	backData.posCnt++;
+    }
+    else
+    {
+    	backData.posCnt--;
+    }
+	if(1 == ECap2Regs.ECFLG.bit.CEVT1)
+	{
+		backData.hallPos &= (~(0x0001<<1));
+		ECap2Regs.ECCLR.bit.CEVT1 = 1;
+    	t4 = ECap2Regs.CAP1;
+    	t1 = ECap2Regs.CAP2;
+    	t2 = ECap2Regs.CAP3;
+    	t3 = ECap2Regs.CAP4;
+    	backData.speedCapture = 5000000/(t1 + t2 + t3 + t4);
+	}
+	if(1 == ECap2Regs.ECFLG.bit.CEVT2)
+	{
+		backData.hallPos |= (0x0001<<1);
+		ECap2Regs.ECCLR.bit.CEVT2 = 1;
+	}
+	if(1 == ECap2Regs.ECFLG.bit.CEVT3)
+	{
+		backData.hallPos &= (~(0x0001<<1));
+		ECap2Regs.ECCLR.bit.CEVT3 = 1;
+	}
+	if(1 == ECap2Regs.ECFLG.bit.CEVT4)
+	{
+		backData.hallPos |= (0x0001<<1);
+		ECap2Regs.ECCLR.bit.CEVT4 = 1;
+	}
+	if(1 == ECap2Regs.ECFLG.bit.CTROVF)
+	{
+		ECap2Regs.ECCLR.bit.CTROVF = 1;
+	}
+	pwmUpdate();
+	ECap2Regs.ECCLR.bit.INT = 1;
 }
 
 interrupt void ISRCap3(void)
 {
+	Uint32 t1= 0;
+	Uint32 t2 = 0;
+	Uint32 t3 = 0;
+	Uint32 t4 = 0;
     PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+    if(1 == backData.motorDir)
+    {
+    	backData.posCnt++;
+    }
+    else
+    {
+    	backData.posCnt--;
+    }
+    if(1 == ECap3Regs.ECFLG.bit.CEVT1)
+	{
+    	backData.hallPos &= (~(0x0001<<2));
+    	ECap3Regs.ECCLR.bit.CEVT1 = 1;
+    	t4 = ECap3Regs.CAP1;
+		t1 = ECap3Regs.CAP2;
+		t2 = ECap3Regs.CAP3;
+		t3 = ECap3Regs.CAP4;
+		backData.speedCapture = 5000000/(t1 + t2 + t3 + t4);
+	}
+	if(1 == ECap3Regs.ECFLG.bit.CEVT2)
+	{
+		backData.hallPos |= (0x0001<<2);
+		ECap3Regs.ECCLR.bit.CEVT2 = 1;
+	}
+	if(1 == ECap3Regs.ECFLG.bit.CEVT3)
+	{
+		backData.hallPos &= (~(0x0001<<2));
+		ECap3Regs.ECCLR.bit.CEVT3 = 1;
+	}
+	if(1 == ECap3Regs.ECFLG.bit.CEVT4)
+	{
+		backData.hallPos |= (0x0001<<2);
+		ECap3Regs.ECCLR.bit.CEVT4 = 1;
+	}
+	if(1 == ECap3Regs.ECFLG.bit.CTROVF)
+	{
+		ECap3Regs.ECCLR.bit.CTROVF = 1;
+	}
+	pwmUpdate();
+	ECap2Regs.ECCLR.bit.INT = 1;
 }
 
 interrupt void local_DINTCH1_ISR(void)
 {
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP7;  //Acknowledge this interrupt to receive more interrupts from group 7
 }
-interrupt void xintHand_isr(void)
-{
 
-}
+
 interrupt void xintUp_isr(void)
 {
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
+	backData.upperOver = 1;
 
 }
 interrupt void xintDown_isr(void)
 {
-
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP2;
+	backData.lowerOver = 1;
 }
+
 void dataInit()
 {
 	//Uint16 i;
 	memset(&backData,0x00,sizeof(BACK_DATA));
 	memset(&upperCommand,0x00,sizeof(BACK_DATA));
-	motorRuning = 0;
-	motorDir = 0;
 	upperCommand.motionCmd = DO_STOP;
 	backData.status = STOP_STA;
 //	/*Current_Base*/
@@ -564,7 +720,9 @@ void dataInit()
 //		currentBaseV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 //		currentBaseU = FILTERcon(&uiQueue,DMABuf1[20],QUE_MAX);
 //	}
-	/*HallPos*/
+}
+void readHall()
+{
 	if(GpioDataRegs.GPADAT.bit.GPIO24)
 	{
 		backData.hallPos |= (0x0001<<0);
@@ -592,7 +750,11 @@ void dataInit()
 }
 void pwmUpdate()
 {
-	if(0 == motorDir)
+	if((STOP_STA == backData.status) || (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x003F)))
+	{
+		return;
+	}
+	if(0 == backData.motorDir)
 	{
 		switch(backData.hallPos)
 		{
@@ -629,7 +791,7 @@ void pwmUpdate()
 		default:;
 		}
 	}
-	else if(1 == motorDir)
+	else if(1 == backData.motorDir)
 	{
 		switch(backData.hallPos)
 		{
@@ -669,30 +831,7 @@ void pwmUpdate()
 }
 void speedRead()
 {
-	if(GpioDataRegs.GPADAT.bit.GPIO24)
-	{
-		backData.hallPos |= (0x0001<<0);
-	}
-	else
-	{
-		backData.hallPos &= ~(0x0001<<0);
-	}
-	if(GpioDataRegs.GPADAT.bit.GPIO7)
-	{
-		backData.hallPos |= (0x0001<<1);
-	}
-	else
-	{
-		backData.hallPos &= ~(0x0001<<1);
-	}
-	if(GpioDataRegs.GPADAT.bit.GPIO9)
-	{
-		backData.hallPos |= (0x0001<<2);
-	}
-	else
-	{
-		backData.hallPos &= ~(0x0001<<2);
-	}
+	readHall();
 	LastHallGpio = backData.hallPos;
 	if(VirtualTimer==0)
 	{
@@ -710,9 +849,8 @@ void speedRead()
 	{
 		SpeedNewTimer = VirtualTimer;
 		backData.speed = speed_calc(SpeedNewTimer,SpeedLastTimer);
-		motorRuning = 1;
 		modcnt = 1;
-		posCnt++;
+		//posCnt++;
 	}
 	if(modcnt == 1)
 	{
@@ -737,6 +875,6 @@ Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2)
 	{
 		TimerDelay=Timer1-Timer2;
 	}
-	ret = (Uint16)(10000/TimerDelay);
+	ret = (Uint16)(40000/TimerDelay);
 	return ret;
 }

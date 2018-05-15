@@ -76,11 +76,17 @@ typedef struct _back_Data
     int16 currentV;
     int16 currentW;
     Uint16 speed;
+    Uint16 speedCapture;
     Uint16 hallPos;
     Uint16 upperOver;
     Uint16 lowerOver;
     Uint16 faultCode;
     Uint16 status;
+    Uint16 motorDir;
+    Uint16 motorRuning;
+    Uint16 posFlag;
+    Uint32 posCnt;
+    Uint16 loadType;
 }BACK_DATA;
 
 #endif

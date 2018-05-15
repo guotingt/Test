@@ -8,7 +8,20 @@
 #define CURRENT 0
 #define SPEED 0
 
-#define PWM_CHECK 6750
+#define PWM_CHECK_PERC 10
+#define NOMAL_RATE_DOWN 30000
+#define NOMAL_RATE_UP 24000
+#define T8 8000
+#define T8_T1 1700
+#define T8_T2 6300
+#define T7 7000
+#define T7_T1  700
+#define T7_T2  6300
+#define T6 6000
+#define KR_UP_MS 17.64
+#define KR_DOWN_MS 42.84
+#define LOAD_TEST_V 30000/8
+#define BIG_LOAD_I 40
 
 /*golbal value def*/
 QUE_def uiQueue;///<Ui
@@ -19,8 +32,9 @@ PID currentPID;
 COMMAND upperCommand;
 
 Uint16 reciveFlag = 0;
-Uint16 posFlag = 0;
 Uint16 keepCnt = 0;
+Uint16 moveCnt = 0;
+Uint16 timeOutFlag = 0;
 
 void initPID()
 {
@@ -80,7 +94,7 @@ void selfCheck()
     }
     else
     {
-        SET_PWM(PWM_CHECK);
+        SET_PWM_PERCENT(10);
         readSensor();
     }
 }
@@ -120,52 +134,141 @@ int main()
     	{
     		sensorReadSample = 0;
     		readSensor();
+    		/*pid calc mode set*/
     		currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     		speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
-    	}
-        /*check faultCode*/
-        if (0x00 != (backData.faultCode&0x3F))
-        {
-        	PWM_DISABLE;
-            //sendMsg(sendBuf,&backData);
-        }
-        else
-        {
-        	/*»»Ïà*/
-        	if(0 != pwmUpdateSample)
-			{
-				pwmUpdateSample = 0;
-				if((STOP_STA != backData.status) && (MANUAL_STA != backData.status))
+    		 /*check faultCode*/
+    		if(STOP_STA == backData.status || 0x0000 != (backData.faultCode&0x003F))
+    		{
+    			PWM_DISABLE;
+    		}
+    		/*load test*/
+    		if((backData.speedCapture - LOAD_TEST_V) <= LOAD_TEST_V/10)
+    		{
+    			if((abs(backData.current) - BIG_LOAD_I) < BIG_LOAD_I/10)
 				{
-					pwmUpdate();
+    				backData.loadType = 1;
+				}
+    		}
+    	 }
+
+//        /*check faultCode*/
+//        if (0x0000 != (backData.faultCode&0x003F))
+//        {
+//        	PWM_DISABLE;
+//            sendMsg(sendBuf,&backData);
+//        }
+//        else
+//        {
+//        	/*»»Ïà*/
+//        	if(0 != pwmUpdateSample)
+//			{
+//				pwmUpdateSample = 0;
+//				if((STOP_STA != backData.status) && (MANUAL_STA != backData.status))
+//				{
+//					pwmUpdate();
+//				}
+//			}
+
+#if OPENLOOP
+    	SET_PWM_PERCENT(10);
+#endif
+
+#if SPEED
+    	speedPID.setPoint = (Uint16)(NOMAL_RATE_UP / 8);
+    	speedPID.input = backData.speedCapture;
+		pidCalc(&speedPID);
+		SET_PWM(speedPID.sumOut);
+#endif
+
+#if SPEED_CURVE
+        /*speed pid */
+		if(0 != speedLoopSample)
+		{
+			speedLoopSample = 0;
+			if(0 == backData.loadType)
+			{
+				if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
+				{
+					moveCnt++;
+					if(1 == backData.motorDir)
+					{
+						if(moveCnt <= T8_T1)
+						{
+							speedPID.setPoint =(Uint16)(KR_UP_MS * moveCnt);
+						}
+						else if(moveCnt <= T8_T2)
+						{
+
+							speedPID.setPoint = NOMAL_RATE_UP;
+						}
+						else if(moveCnt <= T8)
+						{
+							speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(KR_UP_MS * (moveCnt - T8_T2));
+						}
+						else
+						{
+							speedPID.setPoint = (Uint16)(NOMAL_RATE_UP / 8);
+							timeOutFlag |= 0x0001;
+						}
+					}
+					else
+					{
+						if(moveCnt <= T7_T1)
+						{
+							speedPID.setPoint =(Uint16)(KR_DOWN_MS * moveCnt);
+						}
+						else if(moveCnt <= T7_T2)
+						{
+
+							speedPID.setPoint = NOMAL_RATE_DOWN;
+						}
+						else if(moveCnt <= T7)
+						{
+							speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(KR_DOWN_MS * (moveCnt - T7_T2));
+						}
+						else
+						{
+							speedPID.setPoint = (Uint16)(NOMAL_RATE_DOWN / 8);
+							timeOutFlag |= 0x0001;
+						}
+
+					}
+					//speedPID.setPoint = speedRamp(500,10,50,&keepCnt);
+					speedPID.input = backData.speedCapture;
+					pidCalc(&speedPID);
+					SET_PWM(speedPID.sumOut);
+				}
+				else if(CHECK_STA == backData.status)
+				{
+					speedPID.setPoint = (Uint16)(NOMAL_RATE_UP / 8);
+					speedPID.input = backData.speedCapture;
+					pidCalc(&speedPID);
+					SET_PWM(speedPID.sumOut);
 				}
 			}
-#if OPENLOOP
-        	SET_PWM(800);
+			else
+			{
+				speedPID.setPoint = (Uint16)(NOMAL_RATE_UP / 8);
+				speedPID.input = backData.speedCapture;
+				pidCalc(&speedPID);
+				SET_PWM(speedPID.sumOut);
+			}
+		}
 #endif
-#if SPEED
-            /*speed pid */
-            if(0 != speedLoopSample)
-            {
-            	speedLoopSample = 0;
-            	speedPID.setPoint = speedRamp(500,10,50,&keepCnt);
-            	speedPID.input = backData.speed;
-            	pidCalc(&speedPID);
-            	SET_PWM(speedPID.sumOut);
-            }
-#endif
+
 #if CURRENT
-            /*current pid */
-            if(0 != currentLoopSample)
-            {
-                currentPID.setPoint = speedPID.sumOut;
-                currentPID.input = backData.current;
-            	currentLoopSample = 0;
-            	pidCalc(&currentPID);
-            	//SET_PWM(currentPID.sumOut);
-            }
+        /*current pid */
+		if(0 != currentLoopSample)
+		{
+			currentPID.setPoint = speedPID.sumOut;
+			currentPID.input = backData.current;
+			currentLoopSample = 0;
+			pidCalc(&currentPID);
+			//SET_PWM(currentPID.sumOut);
+		}
 #endif
-        }
+
         if (1 == reciveFlag)
         {
             //sendMsg();
