@@ -133,23 +133,24 @@ int main()
     	if(0 != sensorReadSample)
     	{
     		sensorReadSample = 0;
-    		readSensor();
+    		//readSensor();
+    		//readHall();
     		/*pid calc mode set*/
     		currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     		speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     		 /*check faultCode*/
-    		if(STOP_STA == backData.status || 0x0000 != (backData.faultCode&0x003F))
-    		{
-    			PWM_DISABLE;
-    		}
+//    		if(STOP_STA == backData.status || 0x0000 != (backData.faultCode&0x003F))
+//    		{
+//    			PWM_DISABLE;
+//    		}
     		/*load test*/
-    		if((backData.speedCapture - LOAD_TEST_V) <= LOAD_TEST_V/10)
-    		{
-    			if((abs(backData.current) - BIG_LOAD_I) < BIG_LOAD_I/10)
-				{
-    				backData.loadType = 1;
-				}
-    		}
+//    		if((backData.speedCapture - LOAD_TEST_V) <= LOAD_TEST_V/10)
+//    		{
+//    			if((abs(backData.current) - BIG_LOAD_I) < BIG_LOAD_I/10)
+//				{
+//    				backData.loadType = 1;
+//				}
+//    		}
     	 }
 
 //        /*check faultCode*/
