@@ -153,8 +153,8 @@ InitECap2Gpio(void)
     // Inputs are synchronized to SYSCLKOUT by default.
     // Comment out other unwanted lines.
     //
-    GpioCtrlRegs.GPAQSEL1.bit.GPIO7 = 0;    //Synch to SYSCLKOUT GPIO7 (CAP2)
-    //GpioCtrlRegs.GPAQSEL2.bit.GPIO25 = 0;  //Synch to SYSCLKOUT GPIO25 (CAP2)
+    //GpioCtrlRegs.GPAQSEL1.bit.GPIO7 = 0;    //Synch to SYSCLKOUT GPIO7 (CAP2)
+    GpioCtrlRegs.GPAQSEL2.bit.GPIO25 = 0;  //Synch to SYSCLKOUT GPIO25 (CAP2)
     //GpioCtrlRegs.GPBQSEL1.bit.GPIO37 = 0;  //Synch to SYSCLKOUT GPIO37 (CAP2)
 
     //
@@ -162,8 +162,8 @@ InitECap2Gpio(void)
     // This specifies which of the possible GPIO pins will be eCAP2 functional 
     // pins. Comment out other unwanted lines.
     //
-    GpioCtrlRegs.GPAMUX1.bit.GPIO7 = 3;    // Configure GPIO7 as CAP2
-    //GpioCtrlRegs.GPAMUX2.bit.GPIO25 = 1;   // Configure GPIO25 as CAP2
+    //GpioCtrlRegs.GPAMUX1.bit.GPIO7 = 3;    // Configure GPIO7 as CAP2
+    GpioCtrlRegs.GPAMUX2.bit.GPIO25 = 2;   // Configure GPIO25 as CAP2
     //GpioCtrlRegs.GPBMUX1.bit.GPIO37 = 3;   // Configure GPIO37 as CAP2
 
     EDIS;
@@ -184,21 +184,21 @@ InitECap3Gpio(void)
 // This will enable the pullups for the specified pins.
 // Comment out other unwanted lines.
 
-   GpioCtrlRegs.GPAPUD.bit.GPIO9 = 0;      // Enable pull-up on GPIO9 (CAP3)
-// GpioCtrlRegs.GPAPUD.bit.GPIO26 = 0;     // Enable pull-up on GPIO26 (CAP3)
+   //GpioCtrlRegs.GPAPUD.bit.GPIO9 = 0;      // Enable pull-up on GPIO9 (CAP3)
+   GpioCtrlRegs.GPAPUD.bit.GPIO26 = 0;     // Enable pull-up on GPIO26 (CAP3)
 
 // Inputs are synchronized to SYSCLKOUT by default.
 // Comment out other unwanted lines.
 
-   GpioCtrlRegs.GPAQSEL1.bit.GPIO9 = 0;    // Synch to SYSCLKOUT GPIO9 (CAP3)
-// GpioCtrlRegs.GPAQSEL2.bit.GPIO26 = 0;   // Synch to SYSCLKOUT GPIO26 (CAP3)
+   //GpioCtrlRegs.GPAQSEL1.bit.GPIO9 = 0;    // Synch to SYSCLKOUT GPIO9 (CAP3)
+   GpioCtrlRegs.GPAQSEL2.bit.GPIO26 = 0;   // Synch to SYSCLKOUT GPIO26 (CAP3)
 
 /* Configure eCAP-3 pins using GPIO regs*/
 // This specifies which of the possible GPIO pins will be eCAP3 functional pins.
 // Comment out other unwanted lines.
 
-   GpioCtrlRegs.GPAMUX1.bit.GPIO9 = 3;     // Configure GPIO9 as CAP3
-// GpioCtrlRegs.GPAMUX2.bit.GPIO26 = 1;    // Configure GPIO26 as CAP3
+   //GpioCtrlRegs.GPAMUX1.bit.GPIO9 = 3;     // Configure GPIO9 as CAP3
+   GpioCtrlRegs.GPAMUX2.bit.GPIO26 = 3;    // Configure GPIO26 as CAP3
 
     EDIS;
 }
