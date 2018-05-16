@@ -55,16 +55,17 @@ void EPwm1Setup(Uint16 period,Uint16 duty)
 	EPwm1Regs.AQCTLB.bit.CBD = AQ_SET;
 	EPwm1Regs.CMPA.half.CMPA = duty;
 	EPwm1Regs.CMPB = duty;
+	EPwm1Regs.AQSFRC.bit.RLDCSF = 3;
 }
 void EPwm2Setup(Uint16 period,Uint16 duty)
 {
 	EPwm2Regs.TBPRD = period;                         // Period =1600 TBCLK counts  up-down mode
 	EPwm2Regs.TBPHS.half.TBPHS = 0;                   // Set Phase register to zero
 	EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;    // Symmetrical mode
-	EPwm2Regs.TBCTL.bit.PHSEN = TB_ENABLE;            // Slave module
-	EPwm2Regs.TBCTL.bit.PHSDIR = TB_DOWN;
-	EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
-	EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;        // sync flow-through
+	EPwm2Regs.TBCTL.bit.PHSEN = TB_DISABLE;            // master module
+	//EPwm2Regs.TBCTL.bit.PHSDIR = TB_DOWN;
+	//EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+	EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_CTR_ZERO;        // sync flow-through
 	EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
 	EPwm2Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
 	EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;     // load on CTR=Zero
@@ -75,16 +76,17 @@ void EPwm2Setup(Uint16 period,Uint16 duty)
 	EPwm2Regs.AQCTLB.bit.CBD = AQ_SET;
 	EPwm2Regs.CMPA.half.CMPA = duty;
 	EPwm2Regs.CMPB = duty;
+	EPwm2Regs.AQSFRC.bit.RLDCSF = 3;
 }
 void EPwm3Setup(Uint16 period,Uint16 duty)
 {
 	EPwm3Regs.TBPRD = period;                         // Period = 1600 TBCLK counts,up-down mode
 	EPwm3Regs.TBPHS.half.TBPHS = 0;                   // Set Phase register to 50000
 	EPwm3Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;    // Symmetrical mode
-	EPwm3Regs.TBCTL.bit.PHSEN = TB_ENABLE;            // Slave module
-	EPwm3Regs.TBCTL.bit.PHSDIR = TB_UP;
-	EPwm3Regs.TBCTL.bit.PRDLD = TB_SHADOW;
-	EPwm3Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;        // sync flow-through
+	EPwm3Regs.TBCTL.bit.PHSEN = TB_DISABLE;            // Slave module
+	//EPwm3Regs.TBCTL.bit.PHSDIR = TB_UP;
+	//EPwm3Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+	EPwm3Regs.TBCTL.bit.SYNCOSEL = TB_CTR_ZERO;        // sync flow-through
 	EPwm3Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
 	EPwm3Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
 	EPwm3Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;     // load on CTR=Zero
@@ -95,6 +97,7 @@ void EPwm3Setup(Uint16 period,Uint16 duty)
 	EPwm3Regs.AQCTLB.bit.CBD = AQ_SET;
 	EPwm3Regs.CMPA.half.CMPA = duty;
 	EPwm3Regs.CMPB = duty;
+	EPwm3Regs.AQSFRC.bit.RLDCSF = 3;
 }
 
 void ECap1Setup()
@@ -121,7 +124,7 @@ void ECap1Setup()
 	ECap1Regs.ECEINT.bit.CEVT2=1;
 	ECap1Regs.ECEINT.bit.CEVT3=1;
 	ECap1Regs.ECEINT.bit.CEVT4=1;  	                     // Enable cevt4 interrupt
-	ECap1Regs.ECEINT.bit.CTROVF=1;                       //Enable CTROVF interrupt
+	//ECap1Regs.ECEINT.bit.CTROVF=1;                       //Enable CTROVF interrupt
 	ECap1Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;             // start to run ECap1
 }
 void ECap2Setup()
@@ -148,7 +151,7 @@ void ECap2Setup()
 	ECap2Regs.ECEINT.bit.CEVT2=1;
 	ECap2Regs.ECEINT.bit.CEVT3=1;
 	ECap2Regs.ECEINT.bit.CEVT4 = 1;						 //Enable cevt4 interrupt
-	ECap2Regs.ECEINT.bit.CTROVF = 1;					 //Enable CTROVF interrupt
+	//ECap2Regs.ECEINT.bit.CTROVF = 1;					 //Enable CTROVF interrupt
 	ECap2Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;		     //start to run ECap2
 }
 void ECap3Setup()
@@ -175,7 +178,7 @@ void ECap3Setup()
 	ECap3Regs.ECEINT.bit.CEVT2=1;
 	ECap3Regs.ECEINT.bit.CEVT3=1;
 	ECap3Regs.ECEINT.bit.CEVT4 = 1;  					//Enable cevt4 interrupt
-	ECap3Regs.ECEINT.bit.CTROVF = 1; 				    //Enable CTROVF interrupt
+	//ECap3Regs.ECEINT.bit.CTROVF = 1; 				    //Enable CTROVF interrupt
 	ECap3Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;            //start to run ECap3
 }
 void DMASetup()
@@ -204,8 +207,8 @@ void AdcSetup()
     AdcRegs.ADCTRL1.bit.CONT_RUN = 1;        //Continuous conversion mode
     AdcRegs.ADCTRL1.bit.CPS = 0;             //ADCCLK = Fclk/1
     AdcRegs.ADCTRL1.bit.ACQ_PS = 0x0F;       //The width of SOC pulse is ADCTRL1[11:8] + 1 times the ADCLK period
-    AdcRegs.ADCTRL2.bit.INT_ENA_SEQ1 = 1;    //Interrupt request by INT_SEQ1 is enable
-    AdcRegs.ADCTRL2.bit.INT_MOD_SEQ1 = 0;    //INT_SEQ1 is set at the end of every SEQ1 sequence
+    //AdcRegs.ADCTRL2.bit.INT_ENA_SEQ1 = 1;    //Interrupt request by INT_SEQ1 is enable
+    //AdcRegs.ADCTRL2.bit.INT_MOD_SEQ1 = 0;    //INT_SEQ1 is set at the end of every SEQ1 sequence
     AdcRegs.ADCTRL2.bit.RST_SEQ1 = 1;        //Immediately reset sequencer to state CONV0
     AdcRegs.ADCTRL3.bit.SMODE_SEL = 0;       //Sequential sampling mode is selected
     AdcRegs.ADCTRL3.bit.ADCCLKPS = 3;        //Core clock divider.12.5Mh;
@@ -213,7 +216,7 @@ void AdcSetup()
     AdcRegs.ADCCHSELSEQ1.bit.CONV00 = 0x0;   // A0 selected
     AdcRegs.ADCCHSELSEQ1.bit.CONV01 = 0x1;   // A1 selected
     //AdcRegs.ADCCHSELSEQ1.bit.CONV02 = 0x2;   // A2 selected
-    AdcRegs.ADCTRL2.bit.SOC_SEQ1 = 1;        //Software trigger-Start SEQ1 from currently stopped position (i.e., Idle mode)
+   AdcRegs.ADCTRL2.bit.SOC_SEQ1 = 1;        //Software trigger-Start SEQ1 from currently stopped position (i.e., Idle mode)
 }
 void SCIASetup()
 {
@@ -353,8 +356,8 @@ void dsp28335Init()
 	InitEPwm2Gpio();                               //Configure GPIO2 as EPWM2A,  GPIO3 as EPWM2B
 	InitEPwm3Gpio();                               //Configure GPIO4 as EPWM3A,  GPIO5 as EPWM3B
 	InitECap1Gpio();							   //Configure GPIO24 as ECAP1
-	InitECap2Gpio();							   //Configure GPIO7 as ECAP2
-	InitECap3Gpio();							   //Configure GPIO9 as ECAP3
+	InitECap2Gpio();							   //Configure GPIO25 as ECAP2
+	InitECap3Gpio();							   //Configure GPIO26 as ECAP3
 	InitSciaGpio();								   //Configure GPIO28 as RX, GPIO29 as TX
 										   //ADC复位
 	configureLed();
@@ -388,7 +391,7 @@ void dsp28335Init()
     ConfigCpuTimer(&CpuTimer0, 150, 100);       //定时器0初始化/10KHz
     StartCpuTimer0();                             //开启定时器0
 
-    PWM_DISABLE;
+    //PWM_DISABLE;
     EPwm1Setup(PWM_PERIOD,PWM_DUTY);    		  //EPWM1配置
     EPwm2Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM2配置
     EPwm3Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM3配置
@@ -427,7 +430,6 @@ void dsp28335Init()
 
 interrupt void ISRSCIARX(void)
 {
-	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9;        //Acknowledge this interrupt to receive more interrupts from group 1
 	Uint16 tmpChar;
 	static Uint16 ptr = 0;
 	//static Uint16 xors = 0;
@@ -488,12 +490,13 @@ interrupt void ISRSCIARX(void)
 	}
     //SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;      // Clear Overflow flag
     SciaRegs.SCIFFRX.bit.RXFFINTCLR=1;      // Clear Interrupt flag
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9;        //Acknowledge this interrupt to receive more interrupts from group 1
 }
 
 
 interrupt void ISRTimer0(void)
 {
-    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;  //Acknowledge this interrupt to receive more interrupts from group 1
+
     CpuTimer0Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
 //    interruptCnt++;
@@ -524,12 +527,14 @@ interrupt void ISRTimer0(void)
 			{
 			  msCnt1000 = 0;
 			  LED_TOGGLE;
+
 			  flag1000msW = 0xffff;//1s
 			}
 		  }
 		}
 	  }
 	}
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;  //Acknowledge this interrupt to receive more interrupts from group 1
 }
 interrupt void ISRCap1(void)
 {
@@ -537,8 +542,6 @@ interrupt void ISRCap1(void)
 	Uint32 t2 = 0;
 	Uint32 t3 = 0;
 	Uint32 t4 = 0;
-
-    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
 
     if(1 == backData.motorDir)
     {
@@ -586,9 +589,10 @@ interrupt void ISRCap1(void)
     		backData.motorRuning = 0;
     	}
     }
+    //readHall();
     pwmUpdate();
     ECap1Regs.ECCLR.bit.INT = 1;
-
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
 
 }
 
@@ -598,7 +602,7 @@ interrupt void ISRCap2(void)
 	Uint32 t2 = 0;
 	Uint32 t3 = 0;
 	Uint32 t4 = 0;
-	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+
     if(1 == backData.motorDir)
     {
     	backData.posCnt++;
@@ -636,8 +640,10 @@ interrupt void ISRCap2(void)
 	{
 		ECap2Regs.ECCLR.bit.CTROVF = 1;
 	}
+	//readHall();
 	pwmUpdate();
 	ECap2Regs.ECCLR.bit.INT = 1;
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
 }
 
 interrupt void ISRCap3(void)
@@ -646,7 +652,6 @@ interrupt void ISRCap3(void)
 	Uint32 t2 = 0;
 	Uint32 t3 = 0;
 	Uint32 t4 = 0;
-    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
     if(1 == backData.motorDir)
     {
     	backData.posCnt++;
@@ -684,8 +689,10 @@ interrupt void ISRCap3(void)
 	{
 		ECap3Regs.ECCLR.bit.CTROVF = 1;
 	}
+	//readHall();
 	pwmUpdate();
-	ECap2Regs.ECCLR.bit.INT = 1;
+	ECap3Regs.ECCLR.bit.INT = 1;
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
 }
 
 interrupt void local_DINTCH1_ISR(void)
@@ -696,14 +703,15 @@ interrupt void local_DINTCH1_ISR(void)
 
 interrupt void xintUp_isr(void)
 {
-	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
+
 	backData.upperOver = 1;
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
 
 }
 interrupt void xintDown_isr(void)
 {
-	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP2;
 	backData.lowerOver = 1;
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP2;
 }
 
 void dataInit()
@@ -713,6 +721,7 @@ void dataInit()
 	memset(&upperCommand,0x00,sizeof(BACK_DATA));
 	upperCommand.motionCmd = DO_STOP;
 	backData.status = STOP_STA;
+	backData.motorDir = 1;
 //	/*Current_Base*/
 //	for(i = 0;i < QUE_MAX;i++)
 //	{
@@ -731,7 +740,7 @@ void readHall()
 	{
 		backData.hallPos &= ~(0x0001<<0);
 	}
-	if(GpioDataRegs.GPADAT.bit.GPIO7)
+	if(GpioDataRegs.GPADAT.bit.GPIO25)
 	{
 		backData.hallPos |= (0x0001<<1);
 	}
@@ -739,7 +748,7 @@ void readHall()
 	{
 		backData.hallPos &= ~(0x0001<<1);
 	}
-	if(GpioDataRegs.GPADAT.bit.GPIO9)
+	if(GpioDataRegs.GPADAT.bit.GPIO26)
 	{
 		backData.hallPos |= (0x0001<<2);
 	}
@@ -750,10 +759,10 @@ void readHall()
 }
 void pwmUpdate()
 {
-	if((STOP_STA == backData.status) || (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x003F)))
-	{
-		return;
-	}
+//	if((STOP_STA == backData.status) || (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x003F)))
+//	{
+//		return;
+//	}
 	if(0 == backData.motorDir)
 	{
 		switch(backData.hallPos)
@@ -761,32 +770,38 @@ void pwmUpdate()
 		case 5://UV
 			PWM_DISABLE;
 			PWM_U1_ENABLE;
-			PWM_V2_ENABLE;
+			//PWM_V2_ENABLE;
+			PWM_V2_ON;
 			break;
 		case 1://UW
 			PWM_DISABLE;
 			PWM_U1_ENABLE;
-			PWM_W2_ENABLE;
+			//PWM_W2_ENABLE;
+			PWM_W2_ON;
 			break;
 		case 3://VW
 			PWM_DISABLE;
 			PWM_V1_ENABLE;
-			PWM_W2_ENABLE;
+			//PWM_W2_ENABLE;
+			PWM_W2_ON;
 			break;
 		case 2://VU
 			PWM_DISABLE;
 			PWM_V1_ENABLE;
-			PWM_U2_ENABLE;
+			//PWM_U2_ENABLE;
+			PWM_U2_ON;
 			break;
 		case 6://WU
 			PWM_DISABLE;
 			PWM_W1_ENABLE;
-			PWM_U2_ENABLE;
+			//PWM_U2_ENABLE;
+			PWM_U2_ON;
 			break;
 		case 4://WV
 			PWM_DISABLE;
 			PWM_W1_ENABLE;
-			PWM_V2_ENABLE;
+			//PWM_V2_ENABLE;
+			PWM_V2_ON;
 			break;
 		default:;
 		}
@@ -798,32 +813,38 @@ void pwmUpdate()
 		case 2://UV
 			PWM_DISABLE;
 			PWM_U1_ENABLE;
-			PWM_V2_ENABLE;
+			//PWM_V2_ENABLE;
+			PWM_V2_ON;
 			break;
 		case 6://UW
 			PWM_DISABLE;
 			PWM_U1_ENABLE;
-			PWM_W2_ENABLE;
+			//PWM_W2_ENABLE;
+			PWM_W2_ON;
 			break;
 		case 4://VW
 			PWM_DISABLE;
 			PWM_V1_ENABLE;
-			PWM_W2_ENABLE;
+			//PWM_W2_ENABLE;
+			PWM_W2_ON;
 			break;
 		case 5://VU
 			PWM_DISABLE;
 			PWM_V1_ENABLE;
-			PWM_U2_ENABLE;
+			//PWM_U2_ENABLE;
+			PWM_U2_ON;
 			break;
 		case 1://WU
 			PWM_DISABLE;
 			PWM_W1_ENABLE;
-			PWM_U2_ENABLE;
+			//PWM_U2_ENABLE;
+			PWM_U2_ON;
 			break;
 		case 3://WV
 			PWM_DISABLE;
 			PWM_W1_ENABLE;
-			PWM_V2_ENABLE;
+			//PWM_V2_ENABLE;
+			PWM_V2_ON;
 			break;
 		default:;
 		}
