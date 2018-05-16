@@ -109,6 +109,8 @@ InitEPwm1Gpio(void)
     GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 1;   // Configure GPIO1 as EPWM1B
 
     EDIS;
+    EPwm1Regs.AQCSFRC.bit.CSFA = 2;
+    EPwm1Regs.AQCSFRC.bit.CSFB = 2;
 }
 
 //
@@ -137,6 +139,8 @@ InitEPwm2Gpio(void)
     GpioCtrlRegs.GPAMUX1.bit.GPIO3 = 1;   // Configure GPIO3 as EPWM2B
 
     EDIS;
+    EPwm2Regs.AQCSFRC.bit.CSFA = 2;
+    EPwm2Regs.AQCSFRC.bit.CSFB = 2;
 }
 
 //
@@ -165,6 +169,8 @@ InitEPwm3Gpio(void)
     GpioCtrlRegs.GPAMUX1.bit.GPIO5 = 1;   // Configure GPIO5 as EPWM3B
 
     EDIS;
+    EPwm3Regs.AQCSFRC.bit.CSFA = 2;
+    EPwm3Regs.AQCSFRC.bit.CSFB = 2;
 }
 
 #if DSP28_EPWM4
