@@ -163,7 +163,7 @@ InitECap2Gpio(void)
     // pins. Comment out other unwanted lines.
     //
     //GpioCtrlRegs.GPAMUX1.bit.GPIO7 = 3;    // Configure GPIO7 as CAP2
-    GpioCtrlRegs.GPAMUX2.bit.GPIO25 = 2;   // Configure GPIO25 as CAP2
+    GpioCtrlRegs.GPAMUX2.bit.GPIO25 = 1;   // Configure GPIO25 as CAP2
     //GpioCtrlRegs.GPBMUX1.bit.GPIO37 = 3;   // Configure GPIO37 as CAP2
 
     EDIS;
@@ -198,7 +198,7 @@ InitECap3Gpio(void)
 // Comment out other unwanted lines.
 
    //GpioCtrlRegs.GPAMUX1.bit.GPIO9 = 3;     // Configure GPIO9 as CAP3
-   GpioCtrlRegs.GPAMUX2.bit.GPIO26 = 3;    // Configure GPIO26 as CAP3
+   GpioCtrlRegs.GPAMUX2.bit.GPIO26 = 1;    // Configure GPIO26 as CAP3
 
     EDIS;
 }
