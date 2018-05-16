@@ -35,7 +35,7 @@ void readSensor()
 	{
 		backData.faultCode |= (0x01<<3);//bit3 over load
 	}
-	if ((0x07 == (backData.hallPos&0x07)) || (0x00 == (backData.hallPos&0x00)) )
+	if ((0x0007 == (backData.hallPos&0x0007)) || (0x0000 == backData.hallPos) )
 	{
 		backData.faultCode |= (0x01<<2);//bit2 hall error
 	}
