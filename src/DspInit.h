@@ -3,18 +3,21 @@
 #include "MyDataType.h"
 #include "DSP28x_Project.h"
 
-#define PWM_PERIOD    7500
-#define PWM_DUTY      6750
+#define PWM_PERIOD    3750//20K 10K:7500
+#define PWM_DUTY      3375//%10 6750
 #define PWM_U1_DISABLE  EPwm1Regs.AQCSFRC.bit.CSFA = 2
 #define PWM_U2_DISABLE  EPwm1Regs.AQCSFRC.bit.CSFB = 2
 #define PWM_U1_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFA = 0
 #define PWM_U2_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFB = 0
+#define PWM_U2_ON       EPwm1Regs.AQCSFRC.bit.CSFB = 1
 #define PWM_V1_DISABLE  EPwm2Regs.AQCSFRC.bit.CSFA = 2
 #define PWM_V2_DISABLE  EPwm2Regs.AQCSFRC.bit.CSFB = 2
+#define PWM_V2_ON       EPwm2Regs.AQCSFRC.bit.CSFB = 1
 #define PWM_V1_ENABLE   EPwm2Regs.AQCSFRC.bit.CSFA = 0
 #define PWM_V2_ENABLE   EPwm2Regs.AQCSFRC.bit.CSFB = 0
 #define PWM_W1_DISABLE  EPwm3Regs.AQCSFRC.bit.CSFA = 2
 #define PWM_W2_DISABLE  EPwm3Regs.AQCSFRC.bit.CSFB = 2
+#define PWM_W2_ON		EPwm3Regs.AQCSFRC.bit.CSFB = 1
 #define PWM_W1_ENABLE   EPwm3Regs.AQCSFRC.bit.CSFA = 0
 #define PWM_W2_ENABLE   EPwm3Regs.AQCSFRC.bit.CSFB = 0
 #define PWM_DISABLE   {EPwm1Regs.AQCSFRC.bit.CSFA = 2;\
@@ -29,12 +32,12 @@
 					   EPwm2Regs.CMPB = n;\
 					   EPwm3Regs.CMPA.half.CMPA  = n;\
 					   EPwm3Regs.CMPB = n;}
-#define SET_PWM_PERCENT(n) {EPwm1Regs.CMPA.half.CMPA  = 75 * (100 -n);\
-					   EPwm1Regs.CMPB = 75 * (100 -n);\
-					   EPwm2Regs.CMPA.half.CMPA  = 75 * (100 -n);\
-					   EPwm2Regs.CMPB = 75 * (100 -n);\
-					   EPwm3Regs.CMPA.half.CMPA  = 75 * (100 -n);\
-					   EPwm3Regs.CMPB = 75 * (100 -n);}
+#define SET_PWM_PERCENT(n) {EPwm1Regs.CMPA.half.CMPA  = 75 * (100 -n)/2;\
+					   EPwm1Regs.CMPB = 75 * (100 -n)/2;\
+					   EPwm2Regs.CMPA.half.CMPA  = 75 * (100 -n)/2;\
+					   EPwm2Regs.CMPB = 75 * (100 -n)/2;\
+					   EPwm3Regs.CMPA.half.CMPA  = 75 * (100 -n)/2;\
+					   EPwm3Regs.CMPB = 75 * (100 -n)/2;}
 
 #define LED_TOGGLE 	  GpioDataRegs.GPCTOGGLE.bit.GPIO87 = 1;
 
