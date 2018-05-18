@@ -5,7 +5,7 @@
 
 Uint16 sendBuf[10] = {0};
 Uint16 testBuf[80] = {0};
-Uint16 reciveBuf[9] = {0};
+Uint16 reciveBuf[18] = {0};
 BACK_DATA backData;
 
 void readSensor()
@@ -141,7 +141,7 @@ void unPackMsg2()
 	Uint16 stmpH = 0;
 	Uint32 ltmpL = 0;
 	Uint32 ltmpH = 0;
-	Uint16 offset = 2;
+	int16 offset = 2;
 	upperCommand.motionCmd = *(reciveBuf + offset);offset++;//2
 	upperCommand.speedMode = *(reciveBuf + offset);offset++;//3
 	if(MANUAL_STA != backData.status)
@@ -185,6 +185,7 @@ void unPackMsg2()
 			if((STOP_STA  == backData.status) || (FOREWARD_STA  == backData.status))
 			{
 				backData.status = FOREWARD_STA;
+				backData.motorDir = 0;
 				readHall();
 				pwmUpdate();
 			}
@@ -221,7 +222,7 @@ void unPackMsg2()
 		stmpL = reciveBuf[offset]; offset++;
 		stmpH = reciveBuf[offset]; offset++;
 		ltmpH = stmpL + (stmpH<<8);
-		speedPID.kp = ltmpL + (ltmpH<<8);
+		speedPID.kp = ltmpL + (ltmpH<<16);
 
 		stmpL = reciveBuf[offset]; offset++;
 		stmpH = reciveBuf[offset]; offset++;
@@ -229,7 +230,7 @@ void unPackMsg2()
 		stmpL = reciveBuf[offset]; offset++;
 		stmpH = reciveBuf[offset]; offset++;
 		ltmpH = stmpL + (stmpH<<8);
-		speedPID.ki = ltmpL + (ltmpH<<8);
+		speedPID.ki = ltmpL + (ltmpH<<16);
 
 		stmpL = reciveBuf[offset]; offset++;
 		stmpH = reciveBuf[offset]; offset++;
@@ -237,7 +238,7 @@ void unPackMsg2()
 		stmpL = reciveBuf[offset]; offset++;
 		stmpH = reciveBuf[offset]; offset++;
 		ltmpH = stmpL + (stmpH<<8);
-		speedPID.outMax = ltmpL + (ltmpH<<8);
+		speedPID.outMax = ltmpL + (ltmpH<<16);
 	}
 }
 Uint16 packMsg()
@@ -267,14 +268,18 @@ void sendTest()
 	*(testBuf + offset) = 0x55; offset++;
 	*(testBuf + offset) = backData.status; offset++;
 	*(testBuf + offset) = backData.faultCode; offset++;
-	*(testBuf + offset) = backData.speed; offset++;
-	*(testBuf + offset) = backData.speed>>8;offset++;
+	*(testBuf + offset) = backData.speedCapture; offset++;
+	*(testBuf + offset) = backData.speedCapture>>8;offset++;
 	*(testBuf + offset) = backData.current; offset++;
 	*(testBuf + offset) = backData.current>>8; offset++;
-	*(testBuf + offset) = backData.posCnt;offset++;
-	*(testBuf + offset) = backData.posCnt>>8;offset++;
-	*(testBuf + offset) = backData.posCnt>>16;offset++;
-	*(testBuf + offset) = backData.posCnt>>24;offset++;
+//	*(testBuf + offset) = backData.posCnt;offset++;
+//	*(testBuf + offset) = backData.posCnt>>8;offset++;
+//	*(testBuf + offset) = backData.posCnt>>16;offset++;
+//	*(testBuf + offset) = backData.posCnt>>24;offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.sumOut);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.sumOut>>8);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.sumOut>>16);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.sumOut>>24);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.kp);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.kp>>8);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.kp>>16);offset++;
