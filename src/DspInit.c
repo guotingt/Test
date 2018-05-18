@@ -30,12 +30,15 @@ Uint16 cap2OverCnt = 0;
 Uint16 cap3OverCnt = 0;
 Uint16 cap4OverCnt = 0;
 Uint16 motorRuning = 0;
-Uint16 LastHallGpio = 0;
-Uint16 NewHallGpio = 0;
-Uint32 VirtualTimer = 0;
-Uint32 SpeedNewTimer = 0;
-Uint32 SpeedLastTimer = 0;
-Uint16 modcnt = 0;
+//Uint16 LastHallGpio = 0;
+//Uint16 NewHallGpio = 0;
+//Uint32 VirtualTimer = 0;
+//Uint32 SpeedNewTimer = 0;
+//Uint32 SpeedLastTimer = 0;
+//Uint16 modcnt = 0;
+//Uint16 overTime = 0;
+Uint32 tx[12] = {0};
+Uint16 speedQue[10] = {0};
 
 void EPwm1Setup(Uint16 period,Uint16 duty)
 {
@@ -62,10 +65,10 @@ void EPwm2Setup(Uint16 period,Uint16 duty)
 	EPwm2Regs.TBPRD = period;                         // Period =1600 TBCLK counts  up-down mode
 	EPwm2Regs.TBPHS.half.TBPHS = 0;                   // Set Phase register to zero
 	EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;    // Symmetrical mode
-	EPwm2Regs.TBCTL.bit.PHSEN = TB_DISABLE;            // master module
+	EPwm2Regs.TBCTL.bit.PHSEN = TB_ENABLE;            // master module
 	//EPwm2Regs.TBCTL.bit.PHSDIR = TB_DOWN;
-	//EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
-	EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_CTR_ZERO;        // sync flow-through
+	EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+	EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;        // sync flow-through
 	EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
 	EPwm2Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
 	EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;     // load on CTR=Zero
@@ -83,10 +86,10 @@ void EPwm3Setup(Uint16 period,Uint16 duty)
 	EPwm3Regs.TBPRD = period;                         // Period = 1600 TBCLK counts,up-down mode
 	EPwm3Regs.TBPHS.half.TBPHS = 0;                   // Set Phase register to 50000
 	EPwm3Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;    // Symmetrical mode
-	EPwm3Regs.TBCTL.bit.PHSEN = TB_DISABLE;            // Slave module
-	//EPwm3Regs.TBCTL.bit.PHSDIR = TB_UP;
-	//EPwm3Regs.TBCTL.bit.PRDLD = TB_SHADOW;
-	EPwm3Regs.TBCTL.bit.SYNCOSEL = TB_CTR_ZERO;        // sync flow-through
+	EPwm3Regs.TBCTL.bit.PHSEN = TB_ENABLE;            // Slave module
+	//EPwm3Regs.TBCTL.bit.PHSDIR = TB_DOWN;
+	EPwm3Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+	EPwm3Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;        // sync flow-through
 	EPwm3Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
 	EPwm3Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
 	EPwm3Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;     // load on CTR=Zero
@@ -124,7 +127,7 @@ void ECap1Setup()
 	ECap1Regs.ECEINT.bit.CEVT2=1;
 	ECap1Regs.ECEINT.bit.CEVT3=1;
 	ECap1Regs.ECEINT.bit.CEVT4=1;  	                     // Enable cevt4 interrupt
-	//ECap1Regs.ECEINT.bit.CTROVF=1;                       //Enable CTROVF interrupt
+	ECap1Regs.ECEINT.bit.CTROVF=1;                       //Enable CTROVF interrupt
 	ECap1Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;             // start to run ECap1
 }
 void ECap2Setup()
@@ -151,7 +154,7 @@ void ECap2Setup()
 	ECap2Regs.ECEINT.bit.CEVT2=1;
 	ECap2Regs.ECEINT.bit.CEVT3=1;
 	ECap2Regs.ECEINT.bit.CEVT4 = 1;						 //Enable cevt4 interrupt
-	//ECap2Regs.ECEINT.bit.CTROVF = 1;					 //Enable CTROVF interrupt
+	ECap2Regs.ECEINT.bit.CTROVF = 1;					 //Enable CTROVF interrupt
 	ECap2Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;		     //start to run ECap2
 }
 void ECap3Setup()
@@ -178,7 +181,7 @@ void ECap3Setup()
 	ECap3Regs.ECEINT.bit.CEVT2=1;
 	ECap3Regs.ECEINT.bit.CEVT3=1;
 	ECap3Regs.ECEINT.bit.CEVT4 = 1;  					//Enable cevt4 interrupt
-	//ECap3Regs.ECEINT.bit.CTROVF = 1; 				    //Enable CTROVF interrupt
+	ECap3Regs.ECEINT.bit.CTROVF = 1; 				    //Enable CTROVF interrupt
 	ECap3Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;            //start to run ECap3
 }
 void DMASetup()
@@ -391,7 +394,6 @@ void dsp28335Init()
     ConfigCpuTimer(&CpuTimer0, 150, 100);       //定时器0初始化/10KHz
     StartCpuTimer0();                             //开启定时器0
 
-    //PWM_DISABLE;
     EPwm1Setup(PWM_PERIOD,PWM_DUTY);    		  //EPWM1配置
     EPwm2Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM2配置
     EPwm3Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM3配置
@@ -421,9 +423,8 @@ void dsp28335Init()
     PieCtrlRegs.PIEIER4.bit.INTx2 = 1;            //使能第四组中断里的第二个中断--CAP2中断
     PieCtrlRegs.PIEIER4.bit.INTx3 = 1;            //使能第四组中断里的第三个中断--CAP3中断
     PieCtrlRegs.PIEIER9.bit.INTx1 = 1;            //使能第九组中断里的第一个中断--SCIARX接收中断
-
-    /*DMA通道中断在配置中使能*/
     dataInit();
+    /*DMA通道中断在配置中使能*/
     EINT;                                         //中断使能
     ERTM;                                         //使能总实时中断
 }
@@ -499,8 +500,8 @@ interrupt void ISRTimer0(void)
 
     CpuTimer0Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
-//    interruptCnt++;
-    speedRead();//0.1ms 10000
+    //interruptCnt++;
+    //speedRead();//0.1ms 10000
     flagDot1msW = 0xffff; //100us时间到
     msCnt1++;
 	if(msCnt1 >= 10)
@@ -523,12 +524,14 @@ interrupt void ISRTimer0(void)
 			msCnt500 = 0;
 			flag500msW = 0xffff;//0.5s
 			msCnt1000++;
+			//backData.speed = sumPluse / 45 * 60;
+
 			if(msCnt1000 >= 2)
 			{
 			  msCnt1000 = 0;
 			  LED_TOGGLE;
-
 			  flag1000msW = 0xffff;//1s
+
 			}
 		  }
 		}
@@ -536,48 +539,62 @@ interrupt void ISRTimer0(void)
 	}
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;  //Acknowledge this interrupt to receive more interrupts from group 1
 }
+//void speedFliter1(Uint16 speed1)
+//{
+//	int16 i ;
+//	Uint32 sum;
+//	for(i = 0; i < 9;i++)
+//	{
+//		speedQue[i] = speedQue[i+1];
+//	}
+//	speedQue[9] = speed1;
+//	for(i = 0; i < 10;i++)
+//	{
+//		sum += speedQue[i];
+//	}
+//	backData.speedCapture = sum / 10;
+//}
 interrupt void ISRCap1(void)
 {
-	Uint32 t1= 0;
-	Uint32 t2 = 0;
-	Uint32 t3 = 0;
-	Uint32 t4 = 0;
-
-    if(1 == backData.motorDir)
-    {
-    	backData.posCnt++;
-    }
-    else
-    {
-    	backData.posCnt--;
-    }
-
     if(1 == ECap1Regs.ECFLG.bit.CEVT1)
     {
     	backData.hallPos &= (~(0x0001<<0));
     	ECap1Regs.ECCLR.bit.CEVT1 = 1;
-    	t4 = ECap1Regs.CAP1;
-    	t1 = ECap1Regs.CAP2;
-    	t2 = ECap1Regs.CAP3;
-    	t3 = ECap1Regs.CAP4;
-    	backData.speedCapture = (5000000/(t1 + t2 + t3 + t4));
+
+    	tx[0] = ECap1Regs.CAP1 / 12;
+    	tx[1] = ECap1Regs.CAP2 / 12;
+    	tx[2] = ECap1Regs.CAP3 / 12;
+    	tx[3] = ECap1Regs.CAP4 / 12;
+
+    	readPulse();
+    	speedCapture();
+    	readHall();
+    	pwmUpdate();
+
     }
     if(1 == ECap1Regs.ECFLG.bit.CEVT2)
     {
     	backData.hallPos |= (0x0001<<0);
     	ECap1Regs.ECCLR.bit.CEVT2 = 1;
-
+    	readPulse();
+    	readHall();
+    	pwmUpdate();
     }
     if(1 == ECap1Regs.ECFLG.bit.CEVT3)
     {
     	backData.hallPos &= (~(0x0001<<0));
     	ECap1Regs.ECCLR.bit.CEVT3 = 1;
-
+    	readPulse();
+    	readHall();
+    	pwmUpdate();
     }
     if(1 == ECap1Regs.ECFLG.bit.CEVT4)
     {
     	backData.hallPos |= (0x0001<<0);
     	ECap1Regs.ECCLR.bit.CEVT4 = 1;
+    	readPulse();
+    	readHall();
+    	pwmUpdate();
     }
     if(1 == ECap1Regs.ECFLG.bit.CTROVF)
     {
@@ -589,108 +606,105 @@ interrupt void ISRCap1(void)
     		backData.motorRuning = 0;
     	}
     }
-    //readHall();
-    pwmUpdate();
     ECap1Regs.ECCLR.bit.INT = 1;
     PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
-
 }
 
 interrupt void ISRCap2(void)
 {
-	Uint32 t1= 0;
-	Uint32 t2 = 0;
-	Uint32 t3 = 0;
-	Uint32 t4 = 0;
-
-    if(1 == backData.motorDir)
-    {
-    	backData.posCnt++;
-    }
-    else
-    {
-    	backData.posCnt--;
-    }
 	if(1 == ECap2Regs.ECFLG.bit.CEVT1)
 	{
 		backData.hallPos &= (~(0x0001<<1));
 		ECap2Regs.ECCLR.bit.CEVT1 = 1;
-    	t4 = ECap2Regs.CAP1;
-    	t1 = ECap2Regs.CAP2;
-    	t2 = ECap2Regs.CAP3;
-    	t3 = ECap2Regs.CAP4;
-    	backData.speedCapture = 5000000/(t1 + t2 + t3 + t4);
+
+		tx[4] = ECap2Regs.CAP1 / 12;
+		tx[5] = ECap2Regs.CAP2 / 12;
+		tx[6] = ECap2Regs.CAP3 / 12;
+		tx[7] = ECap2Regs.CAP4 / 12;
+
+		readPulse();
+		speedCapture();
+		readHall();
+		pwmUpdate();
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT2)
 	{
 		backData.hallPos |= (0x0001<<1);
 		ECap2Regs.ECCLR.bit.CEVT2 = 1;
+		readPulse();
+		readHall();
+		pwmUpdate();
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT3)
 	{
 		backData.hallPos &= (~(0x0001<<1));
 		ECap2Regs.ECCLR.bit.CEVT3 = 1;
+		readPulse();
+		readHall();
+		pwmUpdate();
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT4)
 	{
 		backData.hallPos |= (0x0001<<1);
 		ECap2Regs.ECCLR.bit.CEVT4 = 1;
+		readPulse();
+		readHall();
+		pwmUpdate();
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CTROVF)
 	{
 		ECap2Regs.ECCLR.bit.CTROVF = 1;
 	}
-	//readHall();
-	pwmUpdate();
 	ECap2Regs.ECCLR.bit.INT = 1;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
 }
 
 interrupt void ISRCap3(void)
 {
-	Uint32 t1= 0;
-	Uint32 t2 = 0;
-	Uint32 t3 = 0;
-	Uint32 t4 = 0;
-    if(1 == backData.motorDir)
-    {
-    	backData.posCnt++;
-    }
-    else
-    {
-    	backData.posCnt--;
-    }
+
     if(1 == ECap3Regs.ECFLG.bit.CEVT1)
 	{
     	backData.hallPos &= (~(0x0001<<2));
     	ECap3Regs.ECCLR.bit.CEVT1 = 1;
-    	t4 = ECap3Regs.CAP1;
-		t1 = ECap3Regs.CAP2;
-		t2 = ECap3Regs.CAP3;
-		t3 = ECap3Regs.CAP4;
-		backData.speedCapture = 5000000/(t1 + t2 + t3 + t4);
+
+    	tx[8] = ECap3Regs.CAP1 / 12;
+    	tx[9] = ECap3Regs.CAP2 / 12;
+    	tx[10] = ECap3Regs.CAP3 / 12;
+    	tx[11] = ECap3Regs.CAP4 / 12;
+
+    	readPulse();
+    	speedCapture();
+    	readHall();
+    	pwmUpdate();
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CEVT2)
 	{
 		backData.hallPos |= (0x0001<<2);
 		ECap3Regs.ECCLR.bit.CEVT2 = 1;
+		readPulse();
+		readHall();
+		pwmUpdate();
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CEVT3)
 	{
 		backData.hallPos &= (~(0x0001<<2));
 		ECap3Regs.ECCLR.bit.CEVT3 = 1;
+		readPulse();
+		readHall();
+		pwmUpdate();
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CEVT4)
 	{
 		backData.hallPos |= (0x0001<<2);
 		ECap3Regs.ECCLR.bit.CEVT4 = 1;
+		readPulse();
+		readHall();
+		pwmUpdate();
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CTROVF)
 	{
 		ECap3Regs.ECCLR.bit.CTROVF = 1;
 	}
-	//readHall();
-	pwmUpdate();
 	ECap3Regs.ECCLR.bit.INT = 1;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
 }
@@ -721,7 +735,8 @@ void dataInit()
 	memset(&upperCommand,0x00,sizeof(BACK_DATA));
 	upperCommand.motionCmd = DO_STOP;
 	backData.status = STOP_STA;
-	backData.motorDir = 1;
+	backData.motorDir = 0;
+	//backData.hallPos = 4;
 //	/*Current_Base*/
 //	for(i = 0;i < QUE_MAX;i++)
 //	{
@@ -759,8 +774,9 @@ void readHall()
 }
 void pwmUpdate()
 {
-//	if((STOP_STA == backData.status) || (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x003F)))
+//	if((STOP_STA == backData.status))//|| (MANUAL_STA == backData.status) )//|| (0x0000 != (backData.faultCode&0x003F)))
 //	{
+//		PWM_OFF;
 //		return;
 //	}
 	if(0 == backData.motorDir)
@@ -768,39 +784,33 @@ void pwmUpdate()
 		switch(backData.hallPos)
 		{
 		case 5://UV
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_U1_ENABLE;
-			//PWM_V2_ENABLE;
 			PWM_V2_ON;
 			break;
 		case 1://UW
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_U1_ENABLE;
-			//PWM_W2_ENABLE;
 			PWM_W2_ON;
 			break;
 		case 3://VW
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_V1_ENABLE;
-			//PWM_W2_ENABLE;
 			PWM_W2_ON;
 			break;
 		case 2://VU
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_V1_ENABLE;
-			//PWM_U2_ENABLE;
 			PWM_U2_ON;
 			break;
 		case 6://WU
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_W1_ENABLE;
-			//PWM_U2_ENABLE;
 			PWM_U2_ON;
 			break;
 		case 4://WV
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_W1_ENABLE;
-			//PWM_V2_ENABLE;
 			PWM_V2_ON;
 			break;
 		default:;
@@ -811,91 +821,127 @@ void pwmUpdate()
 		switch(backData.hallPos)
 		{
 		case 2://UV
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_U1_ENABLE;
-			//PWM_V2_ENABLE;
-			PWM_V2_ON;
+		    PWM_V2_ON;
 			break;
 		case 6://UW
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_U1_ENABLE;
-			//PWM_W2_ENABLE;
-			PWM_W2_ON;
+		    PWM_W2_ON;
 			break;
 		case 4://VW
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_V1_ENABLE;
-			//PWM_W2_ENABLE;
 			PWM_W2_ON;
 			break;
 		case 5://VU
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_V1_ENABLE;
-			//PWM_U2_ENABLE;
 			PWM_U2_ON;
 			break;
 		case 1://WU
-			PWM_DISABLE;
+			PWM_OFF;
+			//PWM_W1_ON;
 			PWM_W1_ENABLE;
-			//PWM_U2_ENABLE;
 			PWM_U2_ON;
 			break;
 		case 3://WV
-			PWM_DISABLE;
+			PWM_OFF;
 			PWM_W1_ENABLE;
-			//PWM_V2_ENABLE;
 			PWM_V2_ON;
 			break;
 		default:;
 		}
 	}
 }
-void speedRead()
+
+//void speedRead()
+//{
+//	readHall();
+//	LastHallGpio = backData.hallPos;
+//	if(VirtualTimer==0)
+//	{
+//		NewHallGpio = backData.hallPos;
+//	}
+//	if(VirtualTimer!=0)
+//	{
+//		if(LastHallGpio != NewHallGpio)
+//		{
+//			NewHallGpio = LastHallGpio;
+//			modcnt++;
+//		}
+//	}
+//	if(modcnt == 7)
+//	{
+//		SpeedNewTimer = VirtualTimer;
+//		backData.speed = speed_calc(SpeedNewTimer,SpeedLastTimer);
+//		overTime = 0;
+//		VirtualTimer = 0;
+//		modcnt = 1;
+//		//posCnt++;
+//	}
+//	if(modcnt == 1)
+//	{
+//		SpeedLastTimer = VirtualTimer;
+//	}
+//	VirtualTimer++;
+//	VirtualTimer &= 0x00007FFF;
+//	if (VirtualTimer == 0x7FFF)
+//	{
+//		overTime++;
+//		VirtualTimer = 1;
+//	}
+//}
+//Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2)
+//{
+//	Uint32 TimerDelay;
+//	Uint16 ret;
+//
+//	TimerDelay = Timer1 + overTime * 32767;
+//
+////	if(Timer1<Timer2)
+////	{
+////		TimerDelay=Timer1-Timer2+32767;
+////	}
+////	else
+////	{
+////		TimerDelay=Timer1-Timer2;
+////	}
+//	ret = (Uint16)(40000/TimerDelay);
+//	return ret;
+//}
+
+Uint16 speedCapture()
 {
-	readHall();
-	LastHallGpio = backData.hallPos;
-	if(VirtualTimer==0)
+	int16 i;
+	Uint32 tMean = 0;
+	Uint32 sum = 0;
+	for(i = 0; i<12;i++)
 	{
-		NewHallGpio = backData.hallPos;
+		tMean += tx[i];
 	}
-	if(VirtualTimer!=0)
+	for(i = 0; i < 9;i++)
 	{
-		if(LastHallGpio != NewHallGpio)
-		{
-			NewHallGpio = LastHallGpio;
-			modcnt++;
-		}
+		speedQue[i] = speedQue[i+1];
 	}
-	if(modcnt == 7)
+	speedQue[9] =  (Uint16)(75000000/tMean*4);
+	for(i = 0; i < 10;i++)
 	{
-		SpeedNewTimer = VirtualTimer;
-		backData.speed = speed_calc(SpeedNewTimer,SpeedLastTimer);
-		modcnt = 1;
-		//posCnt++;
+		sum += speedQue[i];
 	}
-	if(modcnt == 1)
-	{
-		SpeedLastTimer = VirtualTimer;
-	}
-	VirtualTimer++;
-	VirtualTimer &= 0x00007FFF;
-	if (VirtualTimer == 0x7FFF)
-	{
-		VirtualTimer = 1;
-	}
+	backData.speedCapture = (Uint16)(sum / 10);
+
+	return 1;
 }
-Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2)
+void readPulse()
 {
-	Uint32 TimerDelay;
-	Uint16 ret;
-	if(Timer1<Timer2)
+	if(0 == backData.motorDir)
 	{
-		TimerDelay=Timer1-Timer2+32767;
+		backData.posCnt++;
 	}
 	else
 	{
-		TimerDelay=Timer1-Timer2;
+		backData.posCnt--;
 	}
-	ret = (Uint16)(40000/TimerDelay);
-	return ret;
 }
