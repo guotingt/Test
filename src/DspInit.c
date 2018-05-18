@@ -30,13 +30,13 @@ Uint16 cap2OverCnt = 0;
 Uint16 cap3OverCnt = 0;
 Uint16 cap4OverCnt = 0;
 Uint16 motorRuning = 0;
-//Uint16 LastHallGpio = 0;
-//Uint16 NewHallGpio = 0;
-//Uint32 VirtualTimer = 0;
-//Uint32 SpeedNewTimer = 0;
-//Uint32 SpeedLastTimer = 0;
-//Uint16 modcnt = 0;
-//Uint16 overTime = 0;
+Uint16 LastHallGpio = 0;
+Uint16 NewHallGpio = 0;
+Uint32 VirtualTimer = 0;
+Uint32 SpeedNewTimer = 0;
+Uint32 SpeedLastTimer = 0;
+Uint16 modcnt = 0;
+Uint16 overTime = 0;
 Uint32 tx[12] = {0};
 Uint16 speedQue[10] = {0};
 
@@ -501,7 +501,7 @@ interrupt void ISRTimer0(void)
     CpuTimer0Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
     //interruptCnt++;
-    //speedRead();//0.1ms 10000
+    speedRead();//0.1ms 10000
     flagDot1msW = 0xffff; //100us时间到
     msCnt1++;
 	if(msCnt1 >= 10)
@@ -567,7 +567,7 @@ interrupt void ISRCap1(void)
     	tx[3] = ECap1Regs.CAP4 / 12;
 
     	readPulse();
-    	speedCapture();
+    	backData.speedCapture = speedCapture();
     	readHall();
     	pwmUpdate();
 
@@ -600,10 +600,11 @@ interrupt void ISRCap1(void)
     {
     	ECap1Regs.ECCLR.bit.CTROVF = 1;
     	cap1OverCnt++;
-    	if(cap1OverCnt > 2)
+    	//if(cap1OverCnt > 1)
     	{
-    		cap1OverCnt = 0;
+    		//cap1OverCnt = 0;
     		backData.motorRuning = 0;
+    		backData.speedCapture = 0;
     	}
     }
     ECap1Regs.ECCLR.bit.INT = 1;
@@ -623,7 +624,7 @@ interrupt void ISRCap2(void)
 		tx[7] = ECap2Regs.CAP4 / 12;
 
 		readPulse();
-		speedCapture();
+		backData.speedCapture = speedCapture();
 		readHall();
 		pwmUpdate();
 	}
@@ -654,6 +655,8 @@ interrupt void ISRCap2(void)
 	if(1 == ECap2Regs.ECFLG.bit.CTROVF)
 	{
 		ECap2Regs.ECCLR.bit.CTROVF = 1;
+		backData.motorRuning = 0;
+		backData.speedCapture = 0;
 	}
 	ECap2Regs.ECCLR.bit.INT = 1;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
@@ -673,7 +676,7 @@ interrupt void ISRCap3(void)
     	tx[11] = ECap3Regs.CAP4 / 12;
 
     	readPulse();
-    	speedCapture();
+    	backData.speedCapture = speedCapture();
     	readHall();
     	pwmUpdate();
 	}
@@ -704,6 +707,8 @@ interrupt void ISRCap3(void)
 	if(1 == ECap3Regs.ECFLG.bit.CTROVF)
 	{
 		ECap3Regs.ECCLR.bit.CTROVF = 1;
+		backData.motorRuning = 0;
+		backData.speedCapture = 0;
 	}
 	ECap3Regs.ECCLR.bit.INT = 1;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
@@ -774,11 +779,11 @@ void readHall()
 }
 void pwmUpdate()
 {
-//	if((STOP_STA == backData.status))//|| (MANUAL_STA == backData.status) )//|| (0x0000 != (backData.faultCode&0x003F)))
-//	{
-//		PWM_OFF;
-//		return;
-//	}
+	if((STOP_STA == backData.status))//|| (MANUAL_STA == backData.status) )//|| (0x0000 != (backData.faultCode&0x003F)))
+	{
+		PWM_OFF;
+		return;
+	}
 	if(0 == backData.motorDir)
 	{
 		switch(backData.hallPos)
@@ -856,83 +861,75 @@ void pwmUpdate()
 	}
 }
 
-//void speedRead()
-//{
-//	readHall();
-//	LastHallGpio = backData.hallPos;
-//	if(VirtualTimer==0)
+void speedRead()
+{
+	readHall();
+	LastHallGpio = backData.hallPos;
+	if(VirtualTimer==0)
+	{
+		NewHallGpio = backData.hallPos;
+	}
+	if(VirtualTimer!=0)
+	{
+		if(LastHallGpio != NewHallGpio)
+		{
+			NewHallGpio = LastHallGpio;
+			modcnt++;
+		}
+	}
+	if(modcnt == 7)
+	{
+		SpeedNewTimer = VirtualTimer;
+		backData.speed = speed_calc(SpeedNewTimer,SpeedLastTimer);
+		overTime = 0;
+		VirtualTimer = 0;
+		modcnt = 1;
+		//posCnt++;
+	}
+	if(modcnt == 1)
+	{
+		SpeedLastTimer = VirtualTimer;
+	}
+	VirtualTimer++;
+	VirtualTimer &= 0x00007FFF;
+	if (VirtualTimer == 0x7FFF)
+	{
+		overTime++;
+		VirtualTimer = 1;
+	}
+}
+Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2)
+{
+	Uint32 TimerDelay;
+	Uint16 ret;
+
+	TimerDelay = Timer1 + overTime * 32767;
+
+//	if(Timer1<Timer2)
 //	{
-//		NewHallGpio = backData.hallPos;
+//		TimerDelay=Timer1-Timer2+32767;
 //	}
-//	if(VirtualTimer!=0)
+//	else
 //	{
-//		if(LastHallGpio != NewHallGpio)
-//		{
-//			NewHallGpio = LastHallGpio;
-//			modcnt++;
-//		}
+//		TimerDelay=Timer1-Timer2;
 //	}
-//	if(modcnt == 7)
-//	{
-//		SpeedNewTimer = VirtualTimer;
-//		backData.speed = speed_calc(SpeedNewTimer,SpeedLastTimer);
-//		overTime = 0;
-//		VirtualTimer = 0;
-//		modcnt = 1;
-//		//posCnt++;
-//	}
-//	if(modcnt == 1)
-//	{
-//		SpeedLastTimer = VirtualTimer;
-//	}
-//	VirtualTimer++;
-//	VirtualTimer &= 0x00007FFF;
-//	if (VirtualTimer == 0x7FFF)
-//	{
-//		overTime++;
-//		VirtualTimer = 1;
-//	}
-//}
-//Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2)
-//{
-//	Uint32 TimerDelay;
-//	Uint16 ret;
-//
-//	TimerDelay = Timer1 + overTime * 32767;
-//
-////	if(Timer1<Timer2)
-////	{
-////		TimerDelay=Timer1-Timer2+32767;
-////	}
-////	else
-////	{
-////		TimerDelay=Timer1-Timer2;
-////	}
-//	ret = (Uint16)(40000/TimerDelay);
-//	return ret;
-//}
+	ret = (Uint16)(40000/TimerDelay);
+	return ret;
+}
 
 Uint16 speedCapture()
 {
 	int16 i;
 	Uint32 tMean = 0;
-	Uint32 sum = 0;
+
+	Uint16 ret;
 	for(i = 0; i<12;i++)
 	{
 		tMean += tx[i];
 	}
-	for(i = 0; i < 9;i++)
-	{
-		speedQue[i] = speedQue[i+1];
-	}
-	speedQue[9] =  (Uint16)(75000000/tMean*4);
-	for(i = 0; i < 10;i++)
-	{
-		sum += speedQue[i];
-	}
-	backData.speedCapture = (Uint16)(sum / 10);
+	ret =  (Uint16)(75000000/tMean*4);
 
-	return 1;
+	return ret;
 }
 void readPulse()
 {
@@ -944,4 +941,21 @@ void readPulse()
 	{
 		backData.posCnt--;
 	}
+}
+Uint16 speedFilter(Uint16 newSpeed)
+{
+	int16 i;
+	Uint32 sum = 0;
+	Uint16 ret;
+	speedQue[9] = newSpeed;
+	for(i = 0; i < 9;i++)
+	{
+		speedQue[i] = speedQue[i+1];
+	}
+	for(i = 0; i < 10;i++)
+	{
+		sum += speedQue[i];
+	}
+	ret = (Uint16)(sum / 10);
+	return ret;
 }

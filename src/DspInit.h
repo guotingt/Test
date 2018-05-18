@@ -158,10 +158,10 @@ extern void dsp28335Init(void);
  * @brief get current data
  */
 extern void currentRead(void);
-///**
-// * @brief get speed data
-// */
-//extern void speedRead(void);
+/**
+ * @brief get speed data
+ */
+extern void speedRead(void);
 /**
  * @brief PWM update
  */
@@ -170,12 +170,15 @@ extern void pwmUpdate();
  * @biref read hall state
  */
 extern void readHall();
-///**
-// * @brief calc speed
-// */
-//static Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2);
+/**
+ * @brief calc speed
+ */
+static Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2);
 
 static Uint16 speedCapture();
 
 static void readPulse();
+
+static Uint16 speedFilter(Uint16 newSpeed);
+
 #endif
