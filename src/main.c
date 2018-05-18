@@ -36,14 +36,14 @@ Uint16 reciveFlag = 0;
 Uint16 keepCnt = 0;
 Uint16 moveCnt = 0;
 Uint16 timeOutFlag = 0;
-Uint16 duty = 20;
+Uint16 duty = 10;
 
 void initPID()
 {
-	speedPID.outMax = 90;
-	speedPID.outMin = 10;
-	speedPID.kp = 10000;//42000  39000  38000
-	speedPID.ki = 20;//675      300     250
+	speedPID.outMax = 73728000;
+	speedPID.outMin = 0;
+	speedPID.kp = 393216;//42000  39000  38000
+	speedPID.ki = 6554;//675      300     250
 
 //	currentPID.outMax = 100*65536;//设置上限电流为1.5A  214748364U
 //	currentPID.outMin = 0;//设置下限电流为0
@@ -111,9 +111,9 @@ int main()
 
     readHall();
 
-    SET_PWM_PERCENT(duty);
+    //SET_PWM_PERCENT(duty);
 
-    pwmUpdate();
+    //pwmUpdate();
 
 //    /*read sensor data*/
 //    readSensor();
@@ -164,6 +164,16 @@ int main()
 //    	speedPID.input = backData.speedCapture * 60;
 //		pidCalc(&speedPID);
 //		SET_PWM(speedPID.sumOut);
+    	if(0 != speedLoopSample)
+    	{
+    		speedLoopSample = 0;
+    		speedPID.setPoint = 300;
+    		speedPID.input = backData.speedCapture;
+    		pidCalc(&speedPID);
+    		//SET_PWM(speedPID.sumOut);
+    		//SET_PWM_PERCENT(duty);
+    		SET_PWM(3750-speedPID.sumOut);
+    	}
 #endif
 
 #if SPEED_CURVE
