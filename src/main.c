@@ -3,10 +3,11 @@
 #include "Port.h"
 #include "GlobalValue.h"
 #include "DSPInit.h"
+#include "math.h"
 
-#define OPENLOOP 1
 #define CURRENT 0
-#define SPEED 0
+#define SPEED 1
+#define SPEED_CURVE 0
 
 #define PWM_CHECK_PERC 10
 #define NOMAL_RATE_DOWN 30000
@@ -35,18 +36,19 @@ Uint16 reciveFlag = 0;
 Uint16 keepCnt = 0;
 Uint16 moveCnt = 0;
 Uint16 timeOutFlag = 0;
+Uint16 duty = 20;
 
 void initPID()
 {
-	speedPID.outMax = 500*65536;
-	speedPID.outMin = 0;
+	speedPID.outMax = 90;
+	speedPID.outMin = 10;
 	speedPID.kp = 10000;//42000  39000  38000
 	speedPID.ki = 20;//675      300     250
 
-	currentPID.outMax = 100*65536;//设置上限电流为1.5A  214748364U
-	currentPID.outMin = 0;//设置下限电流为0
-	currentPID.kp = 10000;
-	currentPID.ki = 10;
+//	currentPID.outMax = 100*65536;//设置上限电流为1.5A  214748364U
+//	currentPID.outMin = 0;//设置下限电流为0
+//	currentPID.kp = 10000;
+//	currentPID.ki = 10;
 }
 Uint16 speedRamp(Uint16 speed,Uint16 stepT,Uint16 stepL,Uint16* pKeepCnt)
 {
@@ -107,6 +109,12 @@ int main()
     /*initialize Controller*/
 	initPID();
 
+    readHall();
+
+    SET_PWM_PERCENT(duty);
+
+    pwmUpdate();
+
 //    /*read sensor data*/
 //    readSensor();
 //   /*self check*/
@@ -133,10 +141,8 @@ int main()
     	if(0 != sensorReadSample)
     	{
     		sensorReadSample = 0;
-    		//readSensor();
-    		//readHall();
     		/*pid calc mode set*/
-    		currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
+    		//currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     		speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     		 /*check faultCode*/
 //    		if(STOP_STA == backData.status || 0x0000 != (backData.faultCode&0x003F))
@@ -153,33 +159,11 @@ int main()
 //    		}
     	 }
 
-//        /*check faultCode*/
-//        if (0x0000 != (backData.faultCode&0x003F))
-//        {
-//        	PWM_DISABLE;
-//            sendMsg(sendBuf,&backData);
-//        }
-//        else
-//        {
-//        	/*换相*/
-//        	if(0 != pwmUpdateSample)
-//			{
-//				pwmUpdateSample = 0;
-//				if((STOP_STA != backData.status) && (MANUAL_STA != backData.status))
-//				{
-//					pwmUpdate();
-//				}
-//			}
-
-#if OPENLOOP
-    	SET_PWM_PERCENT(10);
-#endif
-
 #if SPEED
-    	speedPID.setPoint = (Uint16)(NOMAL_RATE_UP / 8);
-    	speedPID.input = backData.speedCapture;
-		pidCalc(&speedPID);
-		SET_PWM(speedPID.sumOut);
+//    	speedPID.setPoint = ;
+//    	speedPID.input = backData.speedCapture * 60;
+//		pidCalc(&speedPID);
+//		SET_PWM(speedPID.sumOut);
 #endif
 
 #if SPEED_CURVE

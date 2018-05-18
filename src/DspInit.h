@@ -5,33 +5,42 @@
 
 #define PWM_PERIOD    3750//20K 10K:7500
 #define PWM_DUTY      3375//%10 6750
-#define PWM_U1_DISABLE  EPwm1Regs.AQCSFRC.bit.CSFA = 2
-#define PWM_U2_DISABLE  EPwm1Regs.AQCSFRC.bit.CSFB = 2
+
 #define PWM_U1_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFA = 0
 #define PWM_U2_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFB = 0
+#define PWM_U1_ON       EPwm1Regs.AQCSFRC.bit.CSFA = 1
 #define PWM_U2_ON       EPwm1Regs.AQCSFRC.bit.CSFB = 1
-#define PWM_V1_DISABLE  EPwm2Regs.AQCSFRC.bit.CSFA = 2
-#define PWM_V2_DISABLE  EPwm2Regs.AQCSFRC.bit.CSFB = 2
-#define PWM_V2_ON       EPwm2Regs.AQCSFRC.bit.CSFB = 1
+#define PWM_U1_OFF  	EPwm1Regs.AQCSFRC.bit.CSFA = 2
+#define PWM_U2_OFF  	EPwm1Regs.AQCSFRC.bit.CSFB = 2
+
 #define PWM_V1_ENABLE   EPwm2Regs.AQCSFRC.bit.CSFA = 0
 #define PWM_V2_ENABLE   EPwm2Regs.AQCSFRC.bit.CSFB = 0
-#define PWM_W1_DISABLE  EPwm3Regs.AQCSFRC.bit.CSFA = 2
-#define PWM_W2_DISABLE  EPwm3Regs.AQCSFRC.bit.CSFB = 2
-#define PWM_W2_ON		EPwm3Regs.AQCSFRC.bit.CSFB = 1
+#define PWM_V1_ON       EPwm2Regs.AQCSFRC.bit.CSFA = 1
+#define PWM_V2_ON       EPwm2Regs.AQCSFRC.bit.CSFB = 1
+#define PWM_V1_OFF  	EPwm2Regs.AQCSFRC.bit.CSFA = 2
+#define PWM_V2_OFF  	EPwm2Regs.AQCSFRC.bit.CSFB = 2
+
 #define PWM_W1_ENABLE   EPwm3Regs.AQCSFRC.bit.CSFA = 0
 #define PWM_W2_ENABLE   EPwm3Regs.AQCSFRC.bit.CSFB = 0
-#define PWM_DISABLE   {EPwm1Regs.AQCSFRC.bit.CSFA = 2;\
+#define PWM_W1_ON		EPwm3Regs.AQCSFRC.bit.CSFA = 1
+#define PWM_W2_ON		EPwm3Regs.AQCSFRC.bit.CSFB = 1
+#define PWM_W1_OFF  	EPwm3Regs.AQCSFRC.bit.CSFA = 2
+#define PWM_W2_OFF  	EPwm3Regs.AQCSFRC.bit.CSFB = 2
+
+#define PWM_OFF  	  {EPwm1Regs.AQCSFRC.bit.CSFA = 2;\
 					   EPwm2Regs.AQCSFRC.bit.CSFA = 2;\
 					   EPwm3Regs.AQCSFRC.bit.CSFA = 2;\
 					   EPwm1Regs.AQCSFRC.bit.CSFB = 2;\
 					   EPwm2Regs.AQCSFRC.bit.CSFB = 2;\
 					   EPwm3Regs.AQCSFRC.bit.CSFB = 2;}
+
 #define SET_PWM(n)    {EPwm1Regs.CMPA.half.CMPA  = n;\
 					   EPwm1Regs.CMPB = n;\
 					   EPwm2Regs.CMPA.half.CMPA  = n;\
 					   EPwm2Regs.CMPB = n;\
 					   EPwm3Regs.CMPA.half.CMPA  = n;\
 					   EPwm3Regs.CMPB = n;}
+
 #define SET_PWM_PERCENT(n) {EPwm1Regs.CMPA.half.CMPA  = 75 * (100 -n)/2;\
 					   EPwm1Regs.CMPB = 75 * (100 -n)/2;\
 					   EPwm2Regs.CMPA.half.CMPA  = 75 * (100 -n)/2;\
@@ -149,10 +158,10 @@ extern void dsp28335Init(void);
  * @brief get current data
  */
 extern void currentRead(void);
-/**
- * @brief get speed data
- */
-extern void speedRead(void);
+///**
+// * @brief get speed data
+// */
+//extern void speedRead(void);
 /**
  * @brief PWM update
  */
@@ -161,8 +170,12 @@ extern void pwmUpdate();
  * @biref read hall state
  */
 extern void readHall();
-/**
- * @brief calc speed
- */
-static Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2);
+///**
+// * @brief calc speed
+// */
+//static Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2);
+
+static Uint16 speedCapture();
+
+static void readPulse();
 #endif
