@@ -9,8 +9,8 @@ void pidCalc(PID *pPID)
 	else
 	{
 		pPID->err = pPID->setPoint - pPID->input;
-		pPID->pOut = pPID->kp * pPID->err;//计算Up值
-		pPID->iOut +=  pPID->ki * pPID->err;//计算Ui值
+		pPID->pOut = (pPID->kp * pPID->err);//计算Up值
+		pPID->iOut += (pPID->ki * pPID->err);//计算Ui值
 		if(pPID->pOut >= pPID->outMax)
 		{
 			pPID->pOut = pPID->outMax; //设置Up上限

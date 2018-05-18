@@ -42,15 +42,15 @@ typedef union _time_flag
 /*PID controller parameter(PI)*/
 typedef struct _pid
 {
-    Uint16 setPoint; ///<expectation_value
-    Uint16 input; ///<back_value
+    int16 setPoint; ///<expectation_value
+    int16 input; ///<back_value
     int16 err; ///<error
-    Uint32 kp; ///<proportion
-    Uint32 ki; ///<integral
+    int32 kp; ///<proportion
+    int32 ki; ///<integral
     int32 pOut; ///<proportion_out
     int32 iOut; ///<integral_out
     int32 sumOut; ///<output_value
-    Uint32 outMax; ///<amplitude_limiting
+    int32 outMax; ///<amplitude_limiting
     int32 outMin; ///<amplitude_limiting
     int16 mode; ///<manual_or_automatic
 }PID;
