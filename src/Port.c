@@ -5,7 +5,7 @@
 
 Uint16 sendBuf[10] = {0};
 Uint16 testBuf[80] = {0};
-Uint16 reciveBuf[18] = {0};
+Uint16 reciveBuf[20] = {0};
 BACK_DATA backData;
 
 void readSensor()
@@ -16,7 +16,7 @@ void readSensor()
     /*mode is manual or automatic*/
 	if(GpioDataRegs.GPADAT.bit.GPIO21)
 	{
-	    backData.status = MANUAL_STA;
+	   // backData.status = MANUAL_STA;
 	}
 	if(GpioDataRegs.GPADAT.bit.GPIO22)
 	{
@@ -141,81 +141,89 @@ void unPackMsg2()
 	Uint16 stmpH = 0;
 	Uint32 ltmpL = 0;
 	Uint32 ltmpH = 0;
-	int16 offset = 2;
-	upperCommand.motionCmd = *(reciveBuf + offset);offset++;//2
-	upperCommand.speedMode = *(reciveBuf + offset);offset++;//3
-	if(MANUAL_STA != backData.status)
+	int16 offset;
+	if(0 == reciveBuf[4])
 	{
-		/*Process*/
-		switch (upperCommand.motionCmd)
+		offset = 2;
+		upperCommand.motionCmd = *(reciveBuf + offset);offset++;//2
+		upperCommand.speedMode = *(reciveBuf + offset);offset++;//3
+		if(MANUAL_STA != backData.status)
 		{
-		case DO_STOP:
-			if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
+			/*Process*/
+			switch (upperCommand.motionCmd)
 			{
-				backData.posFlag = 1;
-				backData.posCnt = 0;//correct
-			}
-			else if(FOREWARD_STA == backData.status)
-			{
-				backData.posFlag = 2;
-				backData.posCnt = MAX_CNT;//correct
-			}
-			else
-			{
-				backData.posFlag = 0;
-			}
-			backData.status = STOP_STA;
-			PWM_OFF;
-			break;
-		case DO_BACKWARD:
-			if((STOP_STA  == backData.status) || (DO_BACKWARD  == backData.status))
-			{
-				backData.status = BACKWARD_STA;
-				backData.motorDir = 1;
-				readHall();
-				pwmUpdate();
-			}
-			else
-			{
+			case DO_STOP:
+				if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
+				{
+					backData.posFlag = 1;
+					backData.posCnt = 0;//correct
+				}
+				else if(FOREWARD_STA == backData.status)
+				{
+					backData.posFlag = 2;
+					backData.posCnt = MAX_CNT;//correct
+				}
+				else
+				{
+					backData.posFlag = 0;
+				}
 				backData.status = STOP_STA;
 				PWM_OFF;
+				break;
+			case DO_BACKWARD:
+				if((STOP_STA  == backData.status) || (DO_BACKWARD  == backData.status))
+				{
+					backData.status = BACKWARD_STA;
+					backData.motorDir = 1;
+					readHall();
+					pwmUpdate();
+				}
+				else
+				{
+					backData.status = STOP_STA;
+					PWM_OFF;
+				}
+				break;
+			case DO_FOREWARD:
+				if((STOP_STA  == backData.status) || (FOREWARD_STA  == backData.status))
+				{
+					backData.status = FOREWARD_STA;
+					backData.motorDir = 0;
+					readHall();
+					pwmUpdate();
+				}
+				else
+				{
+					backData.status = STOP_STA;
+					PWM_OFF;
+				}
+				break;
+			case DO_CHECK:
+				if((STOP_STA  == backData.status) || (CHECK_STA  == backData.status))
+				{
+					backData.status = CHECK_STA;
+					backData.motorDir = 1;
+					readHall();
+					pwmUpdate();
+				}
+				else
+				{
+					backData.status = STOP_STA;
+					PWM_OFF;
+				}
+				break;
+			default:
+				break;
 			}
-			break;
-		case DO_FOREWARD:
-			if((STOP_STA  == backData.status) || (FOREWARD_STA  == backData.status))
-			{
-				backData.status = FOREWARD_STA;
-				backData.motorDir = 0;
-				readHall();
-				pwmUpdate();
-			}
-			else
-			{
-				backData.status = STOP_STA;
-				PWM_OFF;
-			}
-			break;
-		case DO_CHECK:
-			if((STOP_STA  == backData.status) || (CHECK_STA  == backData.status))
-			{
-				backData.status = CHECK_STA;
-				backData.motorDir = 1;
-				readHall();
-				pwmUpdate();
-			}
-			else
-			{
-				backData.status = STOP_STA;
-				PWM_OFF;
-			}
-			break;
-		default:
-			break;
+			stmpL = reciveBuf[17];
+			stmpH = reciveBuf[18];
+			speedPID.setPoint = stmpL + (stmpH<<8);
 		}
 	}
-	if(1 == reciveBuf[offset])
+	else
+	//if(1 == reciveBuf[offset])
 	{
-		offset++;
+		offset = 5;
 		stmpL = reciveBuf[offset]; offset++;
 		stmpH = reciveBuf[offset]; offset++;
 		ltmpL = stmpL + (stmpH<<8);
@@ -276,10 +284,10 @@ void sendTest()
 //	*(testBuf + offset) = backData.posCnt>>8;offset++;
 //	*(testBuf + offset) = backData.posCnt>>16;offset++;
 //	*(testBuf + offset) = backData.posCnt>>24;offset++;
-	*(testBuf + offset) = (Uint16)(speedPID.sumOut);offset++;
-	*(testBuf + offset) = (Uint16)(speedPID.sumOut>>8);offset++;
-	*(testBuf + offset) = (Uint16)(speedPID.sumOut>>16);offset++;
-	*(testBuf + offset) = (Uint16)(speedPID.sumOut>>24);offset++;
+	*(testBuf + offset) = (Uint16)(duty);offset++;
+	*(testBuf + offset) = (Uint16)(duty>>8);offset++;
+	*(testBuf + offset) = 0;offset++;
+	*(testBuf + offset) = 0;offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.kp);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.kp>>8);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.kp>>16);offset++;
