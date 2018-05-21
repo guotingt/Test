@@ -181,4 +181,8 @@ static void readPulse();
 
 static Uint16 speedFilter(Uint16 newSpeed);
 
+interrupt void ISRTimer01(void);
+
+void speedRead2();
+
 #endif

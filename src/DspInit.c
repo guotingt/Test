@@ -20,10 +20,12 @@ volatile Uint16 msCnt10 = 0;  ///<10ms
 volatile Uint16 msCnt100 = 0; ///<100ms
 volatile Uint16 msCnt500 = 0; ///<0.5s
 volatile Uint16 msCnt1000 = 0;///<1s
+//test
+//volatile Uint16 msCnt10000 = 0;///<1s
 
-volatile Uint16 currentBaseW = 0;
-volatile Uint16 currentBaseU = 0;
-volatile Uint16 currentBaseV = 0;
+volatile Uint16 currentBaseW = 4096;
+volatile Uint16 currentBaseU = 2048;
+volatile Uint16 currentBaseV = 2048;
 
 Uint16 cap1OverCnt = 0;
 Uint16 cap2OverCnt = 0;
@@ -37,7 +39,7 @@ Uint32 SpeedNewTimer = 0;
 Uint32 SpeedLastTimer = 0;
 Uint16 modcnt = 0;
 Uint16 overTime = 0;
-Uint32 tx[12] = {0};
+Uint32 tx[8] = {0};
 Uint16 speedQue[10] = {0};
 
 void EPwm1Setup(Uint16 period,Uint16 duty)
@@ -210,8 +212,8 @@ void AdcSetup()
     AdcRegs.ADCTRL1.bit.CONT_RUN = 1;        //Continuous conversion mode
     AdcRegs.ADCTRL1.bit.CPS = 0;             //ADCCLK = Fclk/1
     AdcRegs.ADCTRL1.bit.ACQ_PS = 0x0F;       //The width of SOC pulse is ADCTRL1[11:8] + 1 times the ADCLK period
-    //AdcRegs.ADCTRL2.bit.INT_ENA_SEQ1 = 1;    //Interrupt request by INT_SEQ1 is enable
-    //AdcRegs.ADCTRL2.bit.INT_MOD_SEQ1 = 0;    //INT_SEQ1 is set at the end of every SEQ1 sequence
+    AdcRegs.ADCTRL2.bit.INT_ENA_SEQ1 = 1;    //Interrupt request by INT_SEQ1 is enable
+    AdcRegs.ADCTRL2.bit.INT_MOD_SEQ1 = 0;    //INT_SEQ1 is set at the end of every SEQ1 sequence
     AdcRegs.ADCTRL2.bit.RST_SEQ1 = 1;        //Immediately reset sequencer to state CONV0
     AdcRegs.ADCTRL3.bit.SMODE_SEL = 0;       //Sequential sampling mode is selected
     AdcRegs.ADCTRL3.bit.ADCCLKPS = 3;        //Core clock divider.12.5Mh;
@@ -295,11 +297,11 @@ void currentRead()
 			break;
 		case 1://UW
 			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
-			backData.current = backData.currentW - currentBaseW;
+			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 3://VW
 			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
-			backData.current = backData.currentW - currentBaseW;
+			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 2://VU
 			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
@@ -327,11 +329,11 @@ void currentRead()
 			break;
 		case 6://UW
 			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
-			backData.current = backData.currentW - currentBaseW;
+			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 4://VW
 			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
-			backData.current = backData.currentW - currentBaseW;
+			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 5://VU
 			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
@@ -362,7 +364,7 @@ void dsp28335Init()
 	InitECap2Gpio();							   //Configure GPIO25 as ECAP2
 	InitECap3Gpio();							   //Configure GPIO26 as ECAP3
 	InitSciaGpio();								   //Configure GPIO28 as RX, GPIO29 as TX
-										   //ADC复位
+
 	configureLed();
 	DMAInitialize();                               //DMA复位
 	congigureSW();
@@ -376,24 +378,27 @@ void dsp28335Init()
 
 //	MemCopy(&RamfuncsLoadStart,&RamfuncsLoadEnd,&RamfuncsRunStart);
 //	InitFlash();
-	InitAdc();
+	InitAdc();                                    //ADC复位
 	EALLOW;                                       //This is needed to write to EALLOW protected registers
 	PieVectTable.ECAP1_INT = &ISRCap1;            //将CAP1中断添加都中断向量表里
 	PieVectTable.ECAP2_INT = &ISRCap2;            //将CAP2中断添加都中断向量表里
     PieVectTable.ECAP3_INT = &ISRCap3;   	      //将CAP3中断添加都中断向量表里
     PieVectTable.TINT0 = &ISRTimer0;              //将定时器0中断添加都中断向量表里
-    PieVectTable.SCIRXINTA = &ISRSCIARX;           //将串口接收中断添加都中断向量表里
+    //PieVectTable.XINT13 = &ISRTimer1;
+    PieVectTable.SCIRXINTA = &ISRSCIARX;          //将串口接收中断添加都中断向量表里
     PieVectTable.DINTCH1= &local_DINTCH1_ISR;
-//    PieVectTable.XINT1 = &xintHand_isr;			//外部中断GPIO21
+//    PieVectTable.XINT1 = &xintHand_isr;	      //外部中断GPIO21
 //    PieVectTable.XINT2 = &xintUp_isr;           //外部中断GPIO22
 //    PieVectTable.XINT3 = &xintDown_isr;         //外部中断GPIO23
 
     EDIS;                                         //This is needed to disable write to EALLOW protected register
 
     InitCpuTimers();                              //定时器初始化
-    ConfigCpuTimer(&CpuTimer0, 150, 100);       //定时器0初始化/10KHz
+    ConfigCpuTimer(&CpuTimer0, 150, 100);         //定时器0初始化/10KHz
+   // ConfigCpuTimer(&CpuTimer1, 150, 100);         //定时器1初始化/100KHz
     StartCpuTimer0();                             //开启定时器0
-
+    //CpuTimer1Regs.TCR.all = 0x4000;
+    //StartCpuTimer1();                           //开启定时器2
     EPwm1Setup(PWM_PERIOD,PWM_DUTY);    		  //EPWM1配置
     EPwm2Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM2配置
     EPwm3Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM3配置
@@ -407,15 +412,13 @@ void dsp28335Init()
     AdcSetup();     							  //ADC初始化配置
     SCIASetup();     							  //SCIA初始化配置
 
-
-
     IER |= M_INT1;   							  //使能第一组中断
     IER |= M_INT4;   							  //使能第四组中断
     IER |= M_INT9;   							  //使能第九组中断
     IER |= M_INT13; 						      //使能中断13
     IER |= M_INT7; 						          //使能第七组中断
 
-    PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
+   // PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
     PieCtrlRegs.PIEIER1.bit.INTx1 = 1;			  //使能第一组中断里的第1个中断--UP中断
     PieCtrlRegs.PIEIER1.bit.INTx2 = 1;			  //使能第一组中断里的第2个中断--DOWN中断
     PieCtrlRegs.PIEIER1.bit.INTx7 = 1;            //使能第一组中断里的第七个中断--定时器0中断
@@ -423,6 +426,7 @@ void dsp28335Init()
     PieCtrlRegs.PIEIER4.bit.INTx2 = 1;            //使能第四组中断里的第二个中断--CAP2中断
     PieCtrlRegs.PIEIER4.bit.INTx3 = 1;            //使能第四组中断里的第三个中断--CAP3中断
     PieCtrlRegs.PIEIER9.bit.INTx1 = 1;            //使能第九组中断里的第一个中断--SCIARX接收中断
+
     dataInit();
     /*DMA通道中断在配置中使能*/
     EINT;                                         //中断使能
@@ -456,12 +460,12 @@ interrupt void ISRSCIARX(void)
 //		  reciveBuf[ptr++] = tmpChar;
 //		  xors ^= tmpChar;
 //		}
-		else if(ptr < 18)
+		else if(ptr < 20)
 		{
 		  reciveBuf[ptr++] = tmpChar;
-		  if(ptr == 18)
+		  if(ptr == 20)
 		  {
-			  if(0x00BF == (0x00BF&reciveBuf[17]))
+			  if(0x00BF == (0x00BF&reciveBuf[19]))
 			  {
 				  //unPackMsg();
 				  unPackMsg2();
@@ -502,6 +506,7 @@ interrupt void ISRTimer0(void)
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
     //interruptCnt++;
     speedRead();//0.1ms 10000
+    //speedRead2();
     flagDot1msW = 0xffff; //100us时间到
     msCnt1++;
 	if(msCnt1 >= 10)
@@ -524,8 +529,6 @@ interrupt void ISRTimer0(void)
 			msCnt500 = 0;
 			flag500msW = 0xffff;//0.5s
 			msCnt1000++;
-			//backData.speed = sumPluse / 45 * 60;
-
 			if(msCnt1000 >= 2)
 			{
 			  msCnt1000 = 0;
@@ -539,6 +542,54 @@ interrupt void ISRTimer0(void)
 	}
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;  //Acknowledge this interrupt to receive more interrupts from group 1
 }
+
+//interrupt void ISRTimer01(void)
+//{
+////    CpuTimer2Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
+////    CpuTimer2Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
+//	CpuTimer0Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
+//	CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
+//	//interruptCnt++;
+//	speedRead();//0.1ms 10000
+//	//speedRead2();
+//	flagDot1msW = 0xffff; //10us时间到
+//	msCnt1++;
+//	if(msCnt1 >= 10)
+//	{
+//	  msCnt1 = 0;
+//	  flag1msW = 0xffff;  //0.11ms时间到
+//	  msCnt10++;
+//	  if(msCnt10 >= 10)
+//	  {
+//		msCnt10 = 0;
+//		flag10msW = 0xffff; //1ms时间到
+//		msCnt100++;
+//		if(msCnt100 >= 10)
+//		{
+//		  msCnt100 = 0;
+//		  flag100msW = 0xffff; //10ms时间到
+//		  msCnt500++;
+//		  if(msCnt500 >= 5)
+//		  {
+//			msCnt500 = 0;
+//			flag500msW = 0xffff;//50ms
+//			msCnt1000++;
+//			if(msCnt1000 >= 2)
+//			{
+//			  msCnt1000 = 0;
+//			  if(msCnt10000 >= 10)
+//			  {
+//				  msCnt10000 = 0;
+//				  LED_TOGGLE;
+//			  }
+//			  flag1000msW = 0xffff;//100ms
+//			}
+//		  }
+//		}
+//	  }
+//	}
+//	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
+//}
 //void speedFliter1(Uint16 speed1)
 //{
 //	int16 i ;
@@ -561,10 +612,10 @@ interrupt void ISRCap1(void)
     	backData.hallPos &= (~(0x0001<<0));
     	ECap1Regs.ECCLR.bit.CEVT1 = 1;
 
-    	tx[0] = ECap1Regs.CAP1 / 12;
-    	tx[1] = ECap1Regs.CAP2 / 12;
-    	tx[2] = ECap1Regs.CAP3 / 12;
-    	tx[3] = ECap1Regs.CAP4 / 12;
+    	tx[0] = ECap1Regs.CAP1 / 6 ;
+    	tx[1] = ECap1Regs.CAP2 / 6;
+//    	tx[2] = ECap1Regs.CAP3 / 12;
+//    	tx[3] = ECap1Regs.CAP4 / 12;
 
     	readPulse();
     	backData.speedCapture = speedCapture();
@@ -618,10 +669,10 @@ interrupt void ISRCap2(void)
 		backData.hallPos &= (~(0x0001<<1));
 		ECap2Regs.ECCLR.bit.CEVT1 = 1;
 
-		tx[4] = ECap2Regs.CAP1 / 12;
-		tx[5] = ECap2Regs.CAP2 / 12;
-		tx[6] = ECap2Regs.CAP3 / 12;
-		tx[7] = ECap2Regs.CAP4 / 12;
+		tx[2] = ECap2Regs.CAP1 / 6;
+		tx[3] = ECap2Regs.CAP2 / 6;
+//		tx[6] = ECap2Regs.CAP3 / 12;
+//		tx[7] = ECap2Regs.CAP4 / 12;
 
 		readPulse();
 		backData.speedCapture = speedCapture();
@@ -670,10 +721,10 @@ interrupt void ISRCap3(void)
     	backData.hallPos &= (~(0x0001<<2));
     	ECap3Regs.ECCLR.bit.CEVT1 = 1;
 
-    	tx[8] = ECap3Regs.CAP1 / 12;
-    	tx[9] = ECap3Regs.CAP2 / 12;
-    	tx[10] = ECap3Regs.CAP3 / 12;
-    	tx[11] = ECap3Regs.CAP4 / 12;
+    	tx[4] = ECap3Regs.CAP1 / 6 ;
+    	tx[5] = ECap3Regs.CAP2 / 6 ;
+//    	tx[10] = ECap3Regs.CAP3 / 12;
+//    	tx[11] = ECap3Regs.CAP4 / 12;
 
     	readPulse();
     	backData.speedCapture = speedCapture();
@@ -735,20 +786,21 @@ interrupt void xintDown_isr(void)
 
 void dataInit()
 {
-	//Uint16 i;
+	Uint16 i;
 	memset(&backData,0x00,sizeof(BACK_DATA));
 	memset(&upperCommand,0x00,sizeof(BACK_DATA));
 	upperCommand.motionCmd = DO_STOP;
 	backData.status = STOP_STA;
 	backData.motorDir = 0;
 	//backData.hallPos = 4;
-//	/*Current_Base*/
-//	for(i = 0;i < QUE_MAX;i++)
-//	{
-//		currentBaseW = FILTERcon(&wiQueue,DMABuf1[0],QUE_MAX);
+	/*Current_Base*/
+	for(i = 0;i < QUE_MAX;i++)
+	{
+//		currentBaseU = FILTERcon(&wiQueue,DMABuf1[0],QUE_MAX);
 //		currentBaseV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
-//		currentBaseU = FILTERcon(&uiQueue,DMABuf1[20],QUE_MAX);
-//	}
+//		currentBaseW =  currentBaseV + currentBaseU;
+		//currentBaseU = -currentBaseW-currentBaseV;
+	}
 }
 void readHall()
 {
@@ -863,6 +915,7 @@ void pwmUpdate()
 
 void speedRead()
 {
+	Uint16 tmpSpeed = 0;
 	readHall();
 	LastHallGpio = backData.hallPos;
 	if(VirtualTimer==0)
@@ -877,10 +930,11 @@ void speedRead()
 			modcnt++;
 		}
 	}
-	if(modcnt == 7)
+	if(modcnt == 2)
 	{
 		SpeedNewTimer = VirtualTimer;
-		backData.speed = speed_calc(SpeedNewTimer,SpeedLastTimer);
+		tmpSpeed = speed_calc(SpeedNewTimer,SpeedLastTimer);
+		backData.speed = speedFilter(tmpSpeed);
 		overTime = 0;
 		VirtualTimer = 0;
 		modcnt = 1;
@@ -891,10 +945,14 @@ void speedRead()
 		SpeedLastTimer = VirtualTimer;
 	}
 	VirtualTimer++;
-	VirtualTimer &= 0x00007FFF;
-	if (VirtualTimer == 0x7FFF)
+	//VirtualTimer &= 0x00007FFF;
+	if (VirtualTimer == 10000)
 	{
 		overTime++;
+		if(overTime > 1)
+		{
+			backData.speed = 0;
+		}
 		VirtualTimer = 1;
 	}
 }
@@ -913,7 +971,8 @@ Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2)
 //	{
 //		TimerDelay=Timer1-Timer2;
 //	}
-	ret = (Uint16)(40000/TimerDelay);
+	//ret = (Uint16)(40000/TimerDelay);
+	ret = (Uint16)(400000/(TimerDelay*6));
 	return ret;
 }
 
@@ -923,7 +982,7 @@ Uint16 speedCapture()
 	Uint32 tMean = 0;
 
 	Uint16 ret;
-	for(i = 0; i<12;i++)
+	for(i = 0; i < 6;i++)
 	{
 		tMean += tx[i];
 	}
@@ -958,4 +1017,37 @@ Uint16 speedFilter(Uint16 newSpeed)
 	}
 	ret = (Uint16)(sum / 10);
 	return ret;
+}
+void speedRead2()
+{
+//	Uint16 tmpSpeed;
+//	readHall();
+//	LastHallGpio = backData.hallPos;
+//	if(VirtualTimer==0)
+//	{
+//		NewHallGpio = backData.hallPos;
+//	}
+//	if(VirtualTimer!=0)
+//	{
+//		if(LastHallGpio != NewHallGpio)
+//		{
+//			NewHallGpio = LastHallGpio;
+//		}
+//	}
+//	if(LastHallGpio != NewHallGpio)
+//	{
+//		SpeedNewTimer = VirtualTimer;
+//		tmpSpeed = speed_calc(SpeedNewTimer,SpeedLastTimer);
+//		backData.speed = speedFilter(tmpSpeed);
+//		LastHallGpio = backData.hallPos;
+//		SpeedLastTimer = SpeedNewTimer;
+//		overTime = 0;
+//	}
+//	VirtualTimer++;
+//	if(VirtualTimer > 1000)
+//	{
+//		overTime++;
+//		VirtualTimer = 0;
+//		backData.speed = 0;
+//	}
 }

@@ -41,7 +41,7 @@ Uint16 duty = 10;
 void initPID()
 {
 	speedPID.outMax = 73728000;
-	speedPID.outMin = 0;
+	speedPID.outMin = 327675;
 	speedPID.kp = 393216;//42000  39000  38000
 	speedPID.ki = 6554;//675      300     250
 
@@ -111,9 +111,9 @@ int main()
 
     readHall();
 
-    //SET_PWM_PERCENT(duty);
+    SET_PWM_PERCENT(duty);
 
-    //pwmUpdate();
+    pwmUpdate();
 
 //    /*read sensor data*/
 //    readSensor();
@@ -141,6 +141,7 @@ int main()
     	if(0 != sensorReadSample)
     	{
     		sensorReadSample = 0;
+    		readSensor();
     		/*pid calc mode set*/
     		//currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     		speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
@@ -160,18 +161,13 @@ int main()
     	 }
 
 #if SPEED
-//    	speedPID.setPoint = ;
-//    	speedPID.input = backData.speedCapture * 60;
-//		pidCalc(&speedPID);
-//		SET_PWM(speedPID.sumOut);
     	if(0 != speedLoopSample)
     	{
     		speedLoopSample = 0;
-    		speedPID.setPoint = 300;
+    		//speedPID.setPoint = 100;
     		speedPID.input = backData.speedCapture;
     		pidCalc(&speedPID);
-    		//SET_PWM(speedPID.sumOut);
-    		//SET_PWM_PERCENT(duty);
+    		duty = (Uint16)(speedPID.sumOut * 100/3750) ;
     		SET_PWM(3750-speedPID.sumOut);
     	}
 #endif
