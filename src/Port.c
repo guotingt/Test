@@ -286,8 +286,10 @@ void sendTest()
 //	*(testBuf + offset) = backData.posCnt>>24;offset++;
 	*(testBuf + offset) = (Uint16)(duty);offset++;
 	*(testBuf + offset) = (Uint16)(duty>>8);offset++;
-	*(testBuf + offset) = 0;offset++;
-	*(testBuf + offset) = 0;offset++;
+	*(testBuf + offset) = backData.posCnt;offset++;
+	*(testBuf + offset) = backData.posCnt>>8;offset++;
+	*(testBuf + offset) = backData.posCnt>>16;offset++;
+	*(testBuf + offset) = backData.posCnt>>24;offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.kp);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.kp>>8);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.kp>>16);offset++;

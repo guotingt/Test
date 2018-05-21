@@ -20,11 +20,11 @@ extern TIME_FLAG  flag10ms;
 
 extern TIME_FLAG  flag100ms;
 #define flag100msW flag100ms.word
-#define testSendSample flag100ms.bit.bit0
+//#define testSendSample flag100ms.bit.bit0
 
 extern TIME_FLAG  flag500ms;
 #define flag500msW flag500ms.word
-//#define testSendSample flag500ms.bit.bit0
+#define testSendSample flag500ms.bit.bit0
 
 extern TIME_FLAG  flag1000ms;
 #define flag1000msW flag1000ms.word
