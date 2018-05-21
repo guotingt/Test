@@ -420,14 +420,14 @@ SEQ1INT_ISR(void)   //SEQ1 ADC
     // To receive more interrupts from this PIE group, acknowledge this 
     // interrupt
     //
-    // PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
 
     //
     // Next two lines for debug only to halt the processor here
     // Remove after inserting ISR Code
     //
-    asm ("      ESTOP0");
-    for(;;);
+   // asm ("      ESTOP0");
+    //for(;;);
 }
 
 //
