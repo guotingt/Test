@@ -285,8 +285,8 @@ void currentRead()
 {
 //    while(1 == AdcRegs.ADCST.bit.SEQ1_BSY)
 //    {}
-	backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
-	backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
+	backData.currentU = DMABuf1[0]; //FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
+	backData.currentV = DMABuf1[10]; //FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 	backData.currentW = -(backData.currentU+backData.currentV);
     if(0 == backData.motorDir)//Forward
     {
@@ -506,13 +506,20 @@ interrupt void ISRTimer0(void)
     CpuTimer0Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
     //interruptCnt++;
-    speedRead();//0.1ms 10000
+    //speedRead();//0.1ms 10000
     //speedRead2();
     flagDot1msW = 0xffff; //100us时间到
     msCnt1++;
 	if(msCnt1 >= 10)
 	{
 	  msCnt1 = 0;
+	  readSensor();
+	  cap1OverCnt++;
+	  if(cap1OverCnt > 100)
+	  {
+		 cap1OverCnt = 101;
+	     backData.speedCapture = 0;
+	  }
 	  flag1msW = 0xffff;  //1ms时间到
 	  msCnt10++;
 	  if(msCnt10 >= 10)
@@ -528,11 +535,11 @@ interrupt void ISRTimer0(void)
 				{
 					if(moveCnt <= T8_T1)
 					{
-						if(KR_UP_MS * moveCnt < 100)
-						{
-							speedPID.setPoint = 100;
-						}
-						else
+//						if(KR_UP_MS * moveCnt < 100)
+//						{
+//							speedPID.setPoint = 100;
+//						}
+//						else
 						{
 							speedPID.setPoint =(Uint16)(KR_UP_MS * moveCnt);
 						}
@@ -562,11 +569,11 @@ interrupt void ISRTimer0(void)
 				{
 					if(moveCnt <= T7_T1)
 					{
-						if(KR_DOWN_MS * moveCnt < 100)
-						{
-							speedPID.setPoint = 100;
-						}
-						else
+//						if(KR_DOWN_MS * moveCnt < 100)
+//						{
+//							speedPID.setPoint = 100;
+//						}
+//						else
 						{
 							speedPID.setPoint =(Uint16)(KR_DOWN_MS * moveCnt);
 						}
@@ -704,6 +711,7 @@ interrupt void ISRTimer0(void)
 //}
 interrupt void ISRCap1(void)
 {
+	cap1OverCnt = 0;
     if(1 == ECap1Regs.ECFLG.bit.CEVT1)
     {
     	backData.hallPos &= (~(0x0001<<0));
@@ -747,13 +755,6 @@ interrupt void ISRCap1(void)
     if(1 == ECap1Regs.ECFLG.bit.CTROVF)
     {
     	ECap1Regs.ECCLR.bit.CTROVF = 1;
-    	cap1OverCnt++;
-    	//if(cap1OverCnt > 1)
-    	{
-    		//cap1OverCnt = 0;
-    		backData.motorRuning = 0;
-    		backData.speedCapture = 0;
-    	}
     }
     ECap1Regs.ECCLR.bit.INT = 1;
     PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
