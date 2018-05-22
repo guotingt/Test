@@ -494,7 +494,7 @@ interrupt void ISRSCIARX(void)
 		  //xors = 0;
 		}
 	}
-    //SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;      // Clear Overflow flag
+    SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;      // Clear Overflow flag
     SciaRegs.SCIFFRX.bit.RXFFINTCLR=1;      // Clear Interrupt flag
     PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9;        //Acknowledge this interrupt to receive more interrupts from group 1
 }
@@ -505,9 +505,6 @@ interrupt void ISRTimer0(void)
 
     CpuTimer0Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
-    //interruptCnt++;
-    //speedRead();//0.1ms 10000
-    //speedRead2();
     flagDot1msW = 0xffff; //100us时间到
     msCnt1++;
 	if(msCnt1 >= 10)
@@ -520,6 +517,14 @@ interrupt void ISRTimer0(void)
 		 cap1OverCnt = 101;
 	     backData.speedCapture = 0;
 	  }
+//	  if(backData.posCnt == 4650)
+//	  {
+//		  backData.status = STOP_STA;
+//	  }
+//	  if(backData.posCnt == -1)
+//	  {
+//		  backData.status = STOP_STA;
+//	  }
 	  flag1msW = 0xffff;  //1ms时间到
 	  msCnt10++;
 	  if(msCnt10 >= 10)
@@ -535,18 +540,10 @@ interrupt void ISRTimer0(void)
 				{
 					if(moveCnt <= T8_T1)
 					{
-//						if(KR_UP_MS * moveCnt < 100)
-//						{
-//							speedPID.setPoint = 100;
-//						}
-//						else
-						{
-							speedPID.setPoint =(Uint16)(KR_UP_MS * moveCnt);
-						}
+						speedPID.setPoint =(Uint16)(KR_UP_MS * moveCnt);
 					}
 					else if(moveCnt <= T8_T2)
 					{
-
 						speedPID.setPoint = NOMAL_RATE_UP;
 					}
 					else if(moveCnt <= T8)
@@ -563,20 +560,14 @@ interrupt void ISRTimer0(void)
 					else if(moveCnt == T8)
 					{
 						backData.status = STOP_STA;
+						moveCnt = 0;
 					}
 				}
 				else
 				{
 					if(moveCnt <= T7_T1)
 					{
-//						if(KR_DOWN_MS * moveCnt < 100)
-//						{
-//							speedPID.setPoint = 100;
-//						}
-//						else
-						{
-							speedPID.setPoint =(Uint16)(KR_DOWN_MS * moveCnt);
-						}
+						speedPID.setPoint =(Uint16)(KR_DOWN_MS * moveCnt);
 					}
 					else if(moveCnt <= T7_T2)
 					{
@@ -597,6 +588,7 @@ interrupt void ISRTimer0(void)
 					else
 					{
 						backData.status = STOP_STA;
+						moveCnt = 0;
 					}
 
 				}
@@ -719,8 +711,6 @@ interrupt void ISRCap1(void)
 
     	tx[0] = ECap1Regs.CAP1 / 6 ;
     	tx[1] = ECap1Regs.CAP2 / 6;
-//    	tx[2] = ECap1Regs.CAP3 / 12;
-//    	tx[3] = ECap1Regs.CAP4 / 12;
 
     	readPulse();
     	backData.speedCapture = speedCapture();
@@ -769,8 +759,6 @@ interrupt void ISRCap2(void)
 
 		tx[2] = ECap2Regs.CAP1 / 6;
 		tx[3] = ECap2Regs.CAP2 / 6;
-//		tx[6] = ECap2Regs.CAP3 / 12;
-//		tx[7] = ECap2Regs.CAP4 / 12;
 
 		readPulse();
 		backData.speedCapture = speedCapture();
@@ -821,8 +809,6 @@ interrupt void ISRCap3(void)
 
     	tx[4] = ECap3Regs.CAP1 / 6 ;
     	tx[5] = ECap3Regs.CAP2 / 6 ;
-//    	tx[10] = ECap3Regs.CAP3 / 12;
-//    	tx[11] = ECap3Regs.CAP4 / 12;
 
     	readPulse();
     	backData.speedCapture = speedCapture();
