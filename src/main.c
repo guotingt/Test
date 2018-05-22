@@ -6,23 +6,9 @@
 #include "math.h"
 
 #define CURRENT 0
-#define SPEED 1
+#define SPEED 0
 #define SPEED_CURVE 0
 
-#define PWM_CHECK_PERC 10
-#define NOMAL_RATE_DOWN 30000
-#define NOMAL_RATE_UP 24000
-#define T8 8000
-#define T8_T1 1700
-#define T8_T2 6300
-#define T7 7000
-#define T7_T1  700
-#define T7_T2  6300
-#define T6 6000
-#define KR_UP_MS 17.64
-#define KR_DOWN_MS 42.84
-#define LOAD_TEST_V 30000/8
-#define BIG_LOAD_I 40
 
 /*golbal value def*/
 QUE_def uiQueue;///<Ui
@@ -40,10 +26,10 @@ Uint16 duty = 10;
 
 void initPID()
 {
-	speedPID.outMax = 73728000;
-	speedPID.outMin = 327675;
-	speedPID.kp = 393216;//42000  39000  38000
-	speedPID.ki = 6554;//675      300     250
+	speedPID.outMax = 196608000;//%80
+	speedPID.outMin = 327675;//%5
+	speedPID.kp = 262144;//4
+	speedPID.ki = 13107;//0.2
 
 //	currentPID.outMax = 100*65536;//设置上限电流为1.5A  214748364U
 //	currentPID.outMin = 0;//设置下限电流为0
@@ -115,26 +101,6 @@ int main()
 
     pwmUpdate();
 
-//    /*read sensor data*/
-//    readSensor();
-//   /*self check*/
-//    while(2 != posFlag)
-//    {
-//    	backData.status = CHECK_STA;
-//    	motorDir = 0;
-//    	readSensor();
-//    	selfCheck();
-//    	if(0 != pwmUpdateSample)
-//		{
-//			pwmUpdateSample = 0;
-//			if(STOP_STA != backData.status)
-//			{
-//				pwmUpdate();
-//			}
-//		}
-//    }
-//    /*send point 1*/
-//    sendMsg();
     while (1) 
     {
     	/*read sensor data*/
@@ -144,20 +110,7 @@ int main()
     		readSensor();
     		/*pid calc mode set*/
     		//currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
-    		speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
-    		 /*check faultCode*/
-//    		if(STOP_STA == backData.status || 0x0000 != (backData.faultCode&0x003F))
-//    		{
-//    			PWM_DISABLE;
-//    		}
-    		/*load test*/
-//    		if((backData.speedCapture - LOAD_TEST_V) <= LOAD_TEST_V/10)
-//    		{
-//    			if((abs(backData.current) - BIG_LOAD_I) < BIG_LOAD_I/10)
-//				{
-//    				backData.loadType = 1;
-//				}
-//    		}
+    		//speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     	 }
 
 #if SPEED
@@ -168,7 +121,7 @@ int main()
     		speedPID.input = backData.speedCapture;
     		pidCalc(&speedPID);
     		duty = (Uint16)(speedPID.sumOut * 100/3750) ;
-    		SET_PWM(3750-speedPID.sumOut);
+    		//SET_PWM(3750-speedPID.sumOut);
     	}
 #endif
 
@@ -182,11 +135,18 @@ int main()
 				if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
 				{
 					moveCnt++;
-					if(1 == backData.motorDir)
+					if(0 == backData.motorDir)
 					{
 						if(moveCnt <= T8_T1)
 						{
-							speedPID.setPoint =(Uint16)(KR_UP_MS * moveCnt);
+							if(KR_UP_MS * moveCnt < 100)
+							{
+								speedPID.setPoint = 100;
+							}
+							else
+							{
+								speedPID.setPoint =(Uint16)(KR_UP_MS * moveCnt);
+							}
 						}
 						else if(moveCnt <= T8_T2)
 						{
@@ -195,19 +155,32 @@ int main()
 						}
 						else if(moveCnt <= T8)
 						{
-							speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(KR_UP_MS * (moveCnt - T8_T2));
+							if((NOMAL_RATE_UP - (Uint16)(KR_UP_MS * (moveCnt - T8_T2))) < 100)
+							{
+								speedPID.setPoint = 100;
+							}
+							else
+							{
+								speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(KR_UP_MS * (moveCnt - T8_T2));
+							}
 						}
-						else
+						else if(moveCnt == T8)
 						{
-							speedPID.setPoint = (Uint16)(NOMAL_RATE_UP / 8);
-							timeOutFlag |= 0x0001;
+							backData.status = STOP_STA;
 						}
 					}
 					else
 					{
 						if(moveCnt <= T7_T1)
 						{
-							speedPID.setPoint =(Uint16)(KR_DOWN_MS * moveCnt);
+							if(KR_DOWN_MS * moveCnt < 100)
+							{
+								speedPID.setPoint = 100;
+							}
+							else
+							{
+								speedPID.setPoint =(Uint16)(KR_DOWN_MS * moveCnt);
+							}
 						}
 						else if(moveCnt <= T7_T2)
 						{
@@ -216,34 +189,42 @@ int main()
 						}
 						else if(moveCnt <= T7)
 						{
-							speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(KR_DOWN_MS * (moveCnt - T7_T2));
+							if((NOMAL_RATE_DOWN - (Uint16)(KR_DOWN_MS * (moveCnt - T7_T2))) < 100)
+							{
+								speedPID.setPoint = 100;
+							}
+							else
+							{
+								speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(KR_DOWN_MS * (moveCnt - T7_T2));
+							}
 						}
 						else
 						{
-							speedPID.setPoint = (Uint16)(NOMAL_RATE_DOWN / 8);
-							timeOutFlag |= 0x0001;
+							backData.status = STOP_STA;
 						}
 
 					}
-					//speedPID.setPoint = speedRamp(500,10,50,&keepCnt);
 					speedPID.input = backData.speedCapture;
 					pidCalc(&speedPID);
-					SET_PWM(speedPID.sumOut);
+					SET_PWM(3750 - speedPID.sumOut);
+					duty = (Uint16)(speedPID.sumOut * 100/3750);
 				}
 				else if(CHECK_STA == backData.status)
 				{
-					speedPID.setPoint = (Uint16)(NOMAL_RATE_UP / 8);
+					speedPID.setPoint = 100;
 					speedPID.input = backData.speedCapture;
 					pidCalc(&speedPID);
-					SET_PWM(speedPID.sumOut);
+					SET_PWM(3750 - speedPID.sumOut);
+					duty = (Uint16)(speedPID.sumOut * 100/3750);
 				}
 			}
 			else
 			{
-				speedPID.setPoint = (Uint16)(NOMAL_RATE_UP / 8);
+				speedPID.setPoint = 100;
 				speedPID.input = backData.speedCapture;
 				pidCalc(&speedPID);
-				SET_PWM(speedPID.sumOut);
+				SET_PWM(3750 - speedPID.sumOut);
+				duty = (Uint16)(speedPID.sumOut * 100/3750);
 			}
 		}
 #endif

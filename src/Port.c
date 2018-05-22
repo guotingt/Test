@@ -156,12 +156,12 @@ void unPackMsg2()
 				if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
 				{
 					backData.posFlag = 1;
-					backData.posCnt = 0;//correct
+					//backData.posCnt = 0;//correct
 				}
 				else if(FOREWARD_STA == backData.status)
 				{
 					backData.posFlag = 2;
-					backData.posCnt = MAX_CNT;//correct
+					//backData.posCnt = MAX_CNT;//correct
 				}
 				else
 				{
@@ -280,10 +280,6 @@ void sendTest()
 	*(testBuf + offset) = backData.speedCapture>>8;offset++;
 	*(testBuf + offset) = backData.current; offset++;
 	*(testBuf + offset) = backData.current>>8; offset++;
-//	*(testBuf + offset) = backData.posCnt;offset++;
-//	*(testBuf + offset) = backData.posCnt>>8;offset++;
-//	*(testBuf + offset) = backData.posCnt>>16;offset++;
-//	*(testBuf + offset) = backData.posCnt>>24;offset++;
 	*(testBuf + offset) = (Uint16)(duty);offset++;
 	*(testBuf + offset) = (Uint16)(duty>>8);offset++;
 	*(testBuf + offset) = backData.posCnt;offset++;
@@ -312,5 +308,4 @@ void sendTest()
 	{
 		scia_xmit(testBuf[i]);
 	}
-	//return offset;
 }

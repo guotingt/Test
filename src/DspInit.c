@@ -3,6 +3,7 @@
 #include "Port.h"
 #include "Queue.h"
 #include "string.h"
+#include "Control.h"
 
 TIME_FLAG  flagDot1ms;
 TIME_FLAG  flag1ms;
@@ -518,6 +519,102 @@ interrupt void ISRTimer0(void)
 	  {
 		msCnt10 = 0;
 		flag10msW = 0xffff; //10msʱ�䵽
+		if(0 == backData.loadType)
+		{
+			if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
+			{
+				moveCnt++;
+				if(0 == backData.motorDir)
+				{
+					if(moveCnt <= T8_T1)
+					{
+						if(KR_UP_MS * moveCnt < 100)
+						{
+							speedPID.setPoint = 100;
+						}
+						else
+						{
+							speedPID.setPoint =(Uint16)(KR_UP_MS * moveCnt);
+						}
+					}
+					else if(moveCnt <= T8_T2)
+					{
+
+						speedPID.setPoint = NOMAL_RATE_UP;
+					}
+					else if(moveCnt <= T8)
+					{
+						if((NOMAL_RATE_UP - (Uint16)(KR_UP_MS * (moveCnt - T8_T2))) < 100)
+						{
+							speedPID.setPoint = 100;
+						}
+						else
+						{
+							speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(KR_UP_MS * (moveCnt - T8_T2));
+						}
+					}
+					else if(moveCnt == T8)
+					{
+						backData.status = STOP_STA;
+					}
+				}
+				else
+				{
+					if(moveCnt <= T7_T1)
+					{
+						if(KR_DOWN_MS * moveCnt < 100)
+						{
+							speedPID.setPoint = 100;
+						}
+						else
+						{
+							speedPID.setPoint =(Uint16)(KR_DOWN_MS * moveCnt);
+						}
+					}
+					else if(moveCnt <= T7_T2)
+					{
+
+						speedPID.setPoint = NOMAL_RATE_DOWN;
+					}
+					else if(moveCnt <= T7)
+					{
+						if((NOMAL_RATE_DOWN - (Uint16)(KR_DOWN_MS * (moveCnt - T7_T2))) < 100)
+						{
+							speedPID.setPoint = 100;
+						}
+						else
+						{
+							speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(KR_DOWN_MS * (moveCnt - T7_T2));
+						}
+					}
+					else
+					{
+						backData.status = STOP_STA;
+					}
+
+				}
+				speedPID.input = backData.speedCapture;
+				pidCalc(&speedPID);
+				SET_PWM(3750 - speedPID.sumOut);
+				duty = (Uint16)(speedPID.sumOut * 100/3750);
+			}
+			else if(CHECK_STA == backData.status)
+			{
+				speedPID.setPoint = 100;
+				speedPID.input = backData.speedCapture;
+				pidCalc(&speedPID);
+				SET_PWM(3750 - speedPID.sumOut);
+				duty = (Uint16)(speedPID.sumOut * 100/3750);
+			}
+		}
+		else
+		{
+			speedPID.setPoint = 100;
+			speedPID.input = backData.speedCapture;
+			pidCalc(&speedPID);
+			SET_PWM(3750 - speedPID.sumOut);
+			duty = (Uint16)(speedPID.sumOut * 100/3750);
+		}
 		msCnt100++;
 		if(msCnt100 >= 10)
 		{
