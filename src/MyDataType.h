@@ -85,7 +85,7 @@ typedef struct _back_Data
     Uint16 motorDir;
     Uint16 motorRuning;
     Uint16 posFlag;
-    Uint32 posCnt;
+    int32 posCnt;
     Uint16 loadType;
 }BACK_DATA;
 

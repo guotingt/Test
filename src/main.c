@@ -99,7 +99,7 @@ int main()
 
     SET_PWM_PERCENT(duty);
 
-    pwmUpdate();
+    //pwmUpdate();
 
     while (1) 
     {
@@ -121,7 +121,7 @@ int main()
     		speedPID.input = backData.speedCapture;
     		pidCalc(&speedPID);
     		duty = (Uint16)(speedPID.sumOut * 100/3750) ;
-    		//SET_PWM(3750-speedPID.sumOut);
+    		SET_PWM(3750-speedPID.sumOut);
     	}
 #endif
 
