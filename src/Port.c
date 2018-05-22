@@ -22,9 +22,17 @@ void readSensor()
 	{
 		backData.lowerOver = 1;
 	}
+	else
+	{
+		backData.lowerOver = 0;
+	}
 	if(GpioDataRegs.GPADAT.bit.GPIO23)
 	{
 		backData.upperOver = 1;
+	}
+	else
+	{
+		backData.upperOver = 0;
 	}
 	/*Read GPIOX to define status*/
 	if (backData.current >= CURRENT_THRESHOLD_1)
@@ -175,6 +183,7 @@ void unPackMsg2()
 				{
 					backData.status = BACKWARD_STA;
 					backData.motorDir = 1;
+					moveCnt =0;
 					readHall();
 					pwmUpdate();
 				}
@@ -189,6 +198,7 @@ void unPackMsg2()
 				{
 					backData.status = FOREWARD_STA;
 					backData.motorDir = 0;
+					moveCnt = 0;
 					readHall();
 					pwmUpdate();
 				}
