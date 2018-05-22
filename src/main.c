@@ -22,7 +22,7 @@ Uint16 reciveFlag = 0;
 Uint16 keepCnt = 0;
 Uint16 moveCnt = 0;
 Uint16 timeOutFlag = 0;
-Uint16 duty = 10;
+Uint16 duty = 1;
 
 void initPID()
 {
@@ -107,7 +107,7 @@ int main()
     	if(0 != sensorReadSample)
     	{
     		sensorReadSample = 0;
-    		readSensor();
+    		//readSensor();
     		/*pid calc mode set*/
     		//currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     		//speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
