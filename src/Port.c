@@ -16,44 +16,56 @@ void readSensor()
     /*mode is manual or automatic*/
 	if(GpioDataRegs.GPADAT.bit.GPIO21)
 	{
-	   // backData.status = MANUAL_STA;
+	   backData.status = MANUAL_STA;
 	}
 	if(GpioDataRegs.GPADAT.bit.GPIO22)
 	{
-		backData.lowerOver = 1;
+		backData.lowerOver = 0;
 	}
 	else
 	{
-		backData.lowerOver = 0;
+		backData.lowerOver = 1;
 	}
 	if(GpioDataRegs.GPADAT.bit.GPIO23)
 	{
-		backData.upperOver = 1;
+		backData.upperOver = 0;
 	}
 	else
 	{
-		backData.upperOver = 0;
+		backData.upperOver = 1;
 	}
 	/*Read GPIOX to define status*/
 	if (backData.current >= CURRENT_THRESHOLD_1)
 	{
-		backData.faultCode |= (0x01<<0);//bit0 over current
+		backData.faultCode |= (0x0000<<0);//bit0 over current_todo
 	}
 	else if (backData.current >= CURRENT_THRESHOLD_2)
 	{
-		backData.faultCode |= (0x01<<3);//bit3 over load
+		backData.faultCode |= (0x0000<<3);//bit3 over load_todo
+	}
+	else
+	{
+		backData.faultCode |= 0x0000;
 	}
 	if ((0x0007 == (backData.hallPos&0x0007)) || (0x0000 == backData.hallPos) )
 	{
-		backData.faultCode |= (0x01<<2);//bit2 hall error
+		backData.faultCode |= (0x0001<<2);//bit2 hall error
 	}
 	if (1 == backData.upperOver)
 	{
-		backData.faultCode |= (0x01<<4);//bit4 upper over
+		backData.faultCode |= (0x0001<<4);//bit4 upper over
+	}
+	else
+	{
+		backData.faultCode &= (~(0x0001<<4));
 	}
 	if (1 == backData.lowerOver)
 	{
-		backData.faultCode |= (0x01<<5);//bit5 lower over
+		backData.faultCode |= (0x0001<<5);//bit5 lower over
+	}
+	else
+	{
+		backData.faultCode &= (~(0x0001<<5));
 	}
 }
 

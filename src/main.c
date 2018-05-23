@@ -108,8 +108,8 @@ int main()
     		sensorReadSample = 0;
     		//readSensor();
     		/*pid calc mode set*/
-    		//currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
-    		//speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
+    		currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
+    		speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
     	 }
 
 #if SPEED

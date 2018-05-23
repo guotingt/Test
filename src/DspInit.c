@@ -24,9 +24,9 @@ volatile Uint16 msCnt1000 = 0;///<1s
 //test
 //volatile Uint16 msCnt10000 = 0;///<1s
 
-volatile Uint16 currentBaseW = 4096;
-volatile Uint16 currentBaseU = 2048;
-volatile Uint16 currentBaseV = 2048;
+volatile Uint16 currentBaseW = 0;
+volatile Uint16 currentBaseU = 0;
+volatile Uint16 currentBaseV = 0;
 
 Uint16 cap1OverCnt = 0;
 Uint16 cap2OverCnt = 0;
@@ -283,34 +283,40 @@ void scia_xmit(Uint16 a)
 }
 void currentRead()
 {
-	backData.currentU = DMABuf1[0]; //FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
-	backData.currentV = DMABuf1[10]; //FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
-	backData.currentW = -(backData.currentU+backData.currentV);
+	//backData.currentU = DMABuf1[0]; //FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
+	//backData.currentV = DMABuf1[10]; //FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
+	//backData.currentW = -(backData.currentU+backData.currentV);
     if(0 == backData.motorDir)//Forward
     {
 		switch(backData.hallPos)
 		{
 		case 5://UV
 			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
+			backData.currentV = DMABuf1[10];
 			backData.current = backData.currentV - currentBaseV;
 			break;
 		case 1://UW
+			backData.currentW = DMABuf1[10];
 			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 3://VW
+			backData.currentW = DMABuf1[10];
 			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 2://VU
+			backData.currentU = DMABuf1[10];
 			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 6://WU
+			backData.currentU = DMABuf1[10];
 			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 4://WV
+			backData.currentV = DMABuf1[10];
 			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
@@ -323,26 +329,32 @@ void currentRead()
     	switch(backData.hallPos)
 		{
 		case 2://UV
+			backData.currentV = DMABuf1[1];
 			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
 		case 6://UW
+			backData.currentW = DMABuf1[1];
 			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 4://VW
+			backData.currentW = DMABuf1[1];
 			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 5://VU
+			backData.currentU = DMABuf1[1];
 			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 1://WU
+			backData.currentU = DMABuf1[1];
 			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 3://WV
+			backData.currentV = DMABuf1[1];
 			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
@@ -915,84 +927,100 @@ void readHall()
 }
 void pwmUpdate()
 {
-	if((STOP_STA == backData.status))//|| (MANUAL_STA == backData.status) )//|| (0x0000 != (backData.faultCode&0x003F)))
+	if((STOP_STA == backData.status)|| (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x000F)))
 	{
 		PWM_OFF;
 		return;
 	}
 	if(0 == backData.motorDir)
 	{
-		switch(backData.hallPos)
+		if(1 == backData.upperOver)
 		{
-		case 5://UV
 			PWM_OFF;
-			PWM_U1_ENABLE;
-			PWM_V2_ON;
-			break;
-		case 1://UW
-			PWM_OFF;
-			PWM_U1_ENABLE;
-			PWM_W2_ON;
-			break;
-		case 3://VW
-			PWM_OFF;
-			PWM_V1_ENABLE;
-			PWM_W2_ON;
-			break;
-		case 2://VU
-			PWM_OFF;
-			PWM_V1_ENABLE;
-			PWM_U2_ON;
-			break;
-		case 6://WU
-			PWM_OFF;
-			PWM_W1_ENABLE;
-			PWM_U2_ON;
-			break;
-		case 4://WV
-			PWM_OFF;
-			PWM_W1_ENABLE;
-			PWM_V2_ON;
-			break;
-		default:;
+			return;
+		}
+		else
+		{
+			switch(backData.hallPos)
+			{
+			case 5://UV
+				PWM_OFF;
+				PWM_U1_ENABLE;
+				PWM_V2_ON;
+				break;
+			case 1://UW
+				PWM_OFF;
+				PWM_U1_ENABLE;
+				PWM_W2_ON;
+				break;
+			case 3://VW
+				PWM_OFF;
+				PWM_V1_ENABLE;
+				PWM_W2_ON;
+				break;
+			case 2://VU
+				PWM_OFF;
+				PWM_V1_ENABLE;
+				PWM_U2_ON;
+				break;
+			case 6://WU
+				PWM_OFF;
+				PWM_W1_ENABLE;
+				PWM_U2_ON;
+				break;
+			case 4://WV
+				PWM_OFF;
+				PWM_W1_ENABLE;
+				PWM_V2_ON;
+				break;
+			default:;
+			}
 		}
 	}
 	else if(1 == backData.motorDir)
 	{
-		switch(backData.hallPos)
+		if(1 == backData.lowerOver)
 		{
-		case 2://UV
 			PWM_OFF;
-			PWM_U1_ENABLE;
-		    PWM_V2_ON;
-			break;
-		case 6://UW
-			PWM_OFF;
-			PWM_U1_ENABLE;
-		    PWM_W2_ON;
-			break;
-		case 4://VW
-			PWM_OFF;
-			PWM_V1_ENABLE;
-			PWM_W2_ON;
-			break;
-		case 5://VU
-			PWM_OFF;
-			PWM_V1_ENABLE;
-			PWM_U2_ON;
-			break;
-		case 1://WU
-			PWM_OFF;
-			//PWM_W1_ON;
-			PWM_W1_ENABLE;
-			PWM_U2_ON;
-			break;
-		case 3://WV
-			PWM_OFF;
-			PWM_W1_ENABLE;
-			PWM_V2_ON;
-			break;
-		default:;
+			return;
+		}
+		else
+		{
+			switch(backData.hallPos)
+			{
+			case 2://UV
+				PWM_OFF;
+				PWM_U1_ENABLE;
+				PWM_V2_ON;
+				break;
+			case 6://UW
+				PWM_OFF;
+				PWM_U1_ENABLE;
+				PWM_W2_ON;
+				break;
+			case 4://VW
+				PWM_OFF;
+				PWM_V1_ENABLE;
+				PWM_W2_ON;
+				break;
+			case 5://VU
+				PWM_OFF;
+				PWM_V1_ENABLE;
+				PWM_U2_ON;
+				break;
+			case 1://WU
+				PWM_OFF;
+				//PWM_W1_ON;
+				PWM_W1_ENABLE;
+				PWM_U2_ON;
+				break;
+			case 3://WV
+				PWM_OFF;
+				PWM_W1_ENABLE;
+				PWM_V2_ON;
+				break;
+			default:;
+			}
 		}
 	}
 }
