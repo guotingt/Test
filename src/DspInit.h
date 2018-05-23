@@ -5,19 +5,25 @@
 
 #define PWM_PERIOD    3750//20K 10K:7500
 #define PWM_DUTY      3375//%10 6750
-
+#define SPEED_CURVE1 1
 #define PWM_CHECK_PERC 10
-#define NOMAL_RATE_DOWN 500
-#define NOMAL_RATE_UP 500
+#define NOMAL_RATE_DOWN 300//500
+#define NOMAL_RATE_UP 300 //500
 #define T8 800
 #define T8_T1 170
 #define T8_T2 630
 #define T7 700
 #define T7_T1  70
 #define T7_T2  630
+#define T9 900
+#define T9_T1  150
+#define T9_T2  750
+#define K_UP_10MS 2
+#define K_DOWN_10MS 2
 #define T6 6000
 #define KR_UP_MS 3
 #define KR_DOWN_MS 7
+
 #define LOAD_TEST_V 30000/8
 #define BIG_LOAD_I 40
 

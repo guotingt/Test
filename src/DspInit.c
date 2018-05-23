@@ -541,7 +541,7 @@ interrupt void ISRTimer0(void)
 	  {
 		msCnt10 = 0;
 		flag10msW = 0xffff; //10msʱ�䵽
-#if SPEED_CURVE
+#if SPEED_CURVE1
 		if(0 == backData.loadType)
 		{
 			if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
@@ -549,26 +549,26 @@ interrupt void ISRTimer0(void)
 				moveCnt++;
 				if(0 == backData.motorDir)
 				{
-					if(moveCnt <= T8_T1)
+					if(moveCnt <= T9_T1)
 					{
-						speedPID.setPoint =(Uint16)(KR_UP_MS * moveCnt);
+						speedPID.setPoint =(Uint16)(K_UP_10MS * moveCnt);
 					}
-					else if(moveCnt <= T8_T2)
+					else if(moveCnt <= T9_T2)
 					{
 						speedPID.setPoint = NOMAL_RATE_UP;
 					}
-					else if(moveCnt <= T8)
+					else if(moveCnt < T9)
 					{
-						if((NOMAL_RATE_UP - (Uint16)(KR_UP_MS * (moveCnt - T8_T2))) < 100)
+						if((NOMAL_RATE_UP - (Uint16)(K_UP_10MS * (moveCnt - T9_T2))) < 100)
 						{
 							speedPID.setPoint = 100;
 						}
 						else
 						{
-							speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(KR_UP_MS * (moveCnt - T8_T2));
+							speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(K_UP_10MS * (moveCnt - T9_T2));
 						}
 					}
-					else if(moveCnt == T8)
+					else if(moveCnt == T9)
 					{
 						backData.status = STOP_STA;
 						moveCnt = 0;
@@ -576,24 +576,24 @@ interrupt void ISRTimer0(void)
 				}
 				else
 				{
-					if(moveCnt <= T7_T1)
+					if(moveCnt <= T9_T1)
 					{
-						speedPID.setPoint =(Uint16)(KR_DOWN_MS * moveCnt);
+						speedPID.setPoint =(Uint16)(K_DOWN_10MS * moveCnt);
 					}
-					else if(moveCnt <= T7_T2)
+					else if(moveCnt <= T9_T2)
 					{
 
 						speedPID.setPoint = NOMAL_RATE_DOWN;
 					}
-					else if(moveCnt <= T7)
+					else if(moveCnt < T9)
 					{
-						if((NOMAL_RATE_DOWN - (Uint16)(KR_DOWN_MS * (moveCnt - T7_T2))) < 100)
+						if((NOMAL_RATE_DOWN - (Uint16)(K_DOWN_10MS * (moveCnt - T9_T2))) < 100)
 						{
 							speedPID.setPoint = 100;
 						}
 						else
 						{
-							speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(KR_DOWN_MS * (moveCnt - T7_T2));
+							speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(K_DOWN_10MS * (moveCnt - T9_T2));
 						}
 					}
 					else
