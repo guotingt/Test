@@ -6,9 +6,8 @@
 #include "math.h"
 
 #define CURRENT 0
-#define SPEED 0
+#define SPEED 1
 #define SPEED_CURVE 0
-
 
 /*golbal value def*/
 QUE_def uiQueue;///<Ui
@@ -244,7 +243,7 @@ int main()
         if (1 == reciveFlag)
         {
             //sendMsg();
-        	sendTest();
+        	//sendTest();
             reciveFlag = 0;
         }
         if(0 != testSendSample)

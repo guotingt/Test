@@ -283,8 +283,6 @@ void scia_xmit(Uint16 a)
 }
 void currentRead()
 {
-//    while(1 == AdcRegs.ADCST.bit.SEQ1_BSY)
-//    {}
 	backData.currentU = DMABuf1[0]; //FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 	backData.currentV = DMABuf1[10]; //FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 	backData.currentW = -(backData.currentU+backData.currentV);
@@ -531,6 +529,7 @@ interrupt void ISRTimer0(void)
 	  {
 		msCnt10 = 0;
 		flag10msW = 0xffff; //10msʱ�䵽
+#if SPEED_CURVE
 		if(0 == backData.loadType)
 		{
 			if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
@@ -614,6 +613,7 @@ interrupt void ISRTimer0(void)
 			SET_PWM(3750 - speedPID.sumOut);
 			duty = (Uint16)(speedPID.sumOut * 100/3750);
 		}
+#endif
 		msCnt100++;
 		if(msCnt100 >= 10)
 		{

@@ -21,6 +21,7 @@ extern TIME_FLAG  flag10ms;
 extern TIME_FLAG  flag100ms;
 #define flag100msW flag100ms.word
 #define testSendSample flag100ms.bit.bit0
+//#define speedLoopSample flag100ms.bit.bit1
 
 extern TIME_FLAG  flag500ms;
 #define flag500msW flag500ms.word

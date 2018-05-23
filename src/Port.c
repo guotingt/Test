@@ -169,7 +169,7 @@ void unPackMsg2()
 				else if(FOREWARD_STA == backData.status)
 				{
 					backData.posFlag = 2;
-					//backData.posCnt = MAX_CNT;//correct
+					//backData.posCnt = 0;//correct
 				}
 				else
 				{
