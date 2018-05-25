@@ -1,10 +1,11 @@
 #include "DspInit.h"
 #include "GlobalValue.h"
 #include "Port.h"
-#include "Queue.h"
 #include "string.h"
 #include "Control.h"
 
+/*=========全局变量定义==========*/
+/*时间分频*/
 TIME_FLAG  flagDot1ms;
 TIME_FLAG  flag1ms;
 TIME_FLAG  flag10ms;
@@ -12,36 +13,25 @@ TIME_FLAG  flag100ms;
 TIME_FLAG  flag500ms;
 TIME_FLAG  flag1000ms;
 
+/*==========局部变量定义=========*/
+/*ADC读取相关*/
 volatile Uint16 DMABuf1[20] = {0};///<DMA data
 volatile Uint16 *DMADest;         ///<DMA DST_Addr
 volatile Uint16 *DMASource;       ///<DMA SRC_Addr
+volatile Uint16 currentBaseW = 0; ///<W相基准值
+volatile Uint16 currentBaseU = 0; ///<U相基准值
+volatile Uint16 currentBaseV = 0; ///<V相基准值
 
+/*分频计数*/
 volatile Uint16 msCnt1 = 0;   ///<1ms
 volatile Uint16 msCnt10 = 0;  ///<10ms
 volatile Uint16 msCnt100 = 0; ///<100ms
 volatile Uint16 msCnt500 = 0; ///<0.5s
 volatile Uint16 msCnt1000 = 0;///<1s
-//test
-//volatile Uint16 msCnt10000 = 0;///<1s
 
-volatile Uint16 currentBaseW = 0;
-volatile Uint16 currentBaseU = 0;
-volatile Uint16 currentBaseV = 0;
-
-Uint16 cap1OverCnt = 0;
-Uint16 cap2OverCnt = 0;
-Uint16 cap3OverCnt = 0;
-Uint16 cap4OverCnt = 0;
-Uint16 motorRuning = 0;
-Uint16 LastHallGpio = 0;
-Uint16 NewHallGpio = 0;
-Uint32 VirtualTimer = 0;
-Uint32 SpeedNewTimer = 0;
-Uint32 SpeedLastTimer = 0;
-Uint16 modcnt = 0;
-Uint16 overTime = 0;
-Uint32 tx[8] = {0};
-Uint16 speedQue[10] = {0};
+/*速度读取相关*/
+volatile Uint16 cap1OverCnt = 0; ///<超时计数
+volatile Uint32 tx[8] = {0}; ///<间隔计时
 
 void EPwm1Setup(Uint16 period,Uint16 duty)
 {
@@ -69,7 +59,6 @@ void EPwm2Setup(Uint16 period,Uint16 duty)
 	EPwm2Regs.TBPHS.half.TBPHS = 0;                   // Set Phase register to zero
 	EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;    // Symmetrical mode
 	EPwm2Regs.TBCTL.bit.PHSEN = TB_ENABLE;            // master module
-	//EPwm2Regs.TBCTL.bit.PHSDIR = TB_DOWN;
 	EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
 	EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;        // sync flow-through
 	EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
@@ -90,7 +79,6 @@ void EPwm3Setup(Uint16 period,Uint16 duty)
 	EPwm3Regs.TBPHS.half.TBPHS = 0;                   // Set Phase register to 50000
 	EPwm3Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;    // Symmetrical mode
 	EPwm3Regs.TBCTL.bit.PHSEN = TB_ENABLE;            // Slave module
-	//EPwm3Regs.TBCTL.bit.PHSDIR = TB_DOWN;
 	EPwm3Regs.TBCTL.bit.PRDLD = TB_SHADOW;
 	EPwm3Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;        // sync flow-through
 	EPwm3Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
@@ -221,8 +209,7 @@ void AdcSetup()
     AdcRegs.ADCMAXCONV.bit.MAX_CONV1 = 0x1;  //The maximum number of conversions executed in an auto conversion is 2
     AdcRegs.ADCCHSELSEQ1.bit.CONV00 = 0x0;   // A0 selected
     AdcRegs.ADCCHSELSEQ1.bit.CONV01 = 0x1;   // A1 selected
-    //AdcRegs.ADCCHSELSEQ1.bit.CONV02 = 0x2;   // A2 selected
-   AdcRegs.ADCTRL2.bit.SOC_SEQ1 = 1;        //Software trigger-Start SEQ1 from currently stopped position (i.e., Idle mode)
+    AdcRegs.ADCTRL2.bit.SOC_SEQ1 = 1;        //Software trigger-Start SEQ1 from currently stopped position (i.e., Idle mode)
 }
 void SCIASetup()
 {
@@ -266,7 +253,7 @@ void congigureSW(void)
     EDIS;
 
     EALLOW;
-   // GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 21;   // Xint1 is GPIO0
+//  GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 21;   // Xint1 is GPIO0
     GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 22;   // XINT2 is GPIO1
     GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 23;   // XINT2 is GPIO1
     EDIS;
@@ -527,14 +514,6 @@ interrupt void ISRTimer0(void)
 		 cap1OverCnt = 101;
 	     backData.speedCapture = 0;
 	  }
-//	  if(backData.posCnt == 4650)
-//	  {
-//		  backData.status = STOP_STA;
-//	  }
-//	  if(backData.posCnt == -1)
-//	  {
-//		  backData.status = STOP_STA;
-//	  }
 	  flag1msW = 0xffff;  //1ms时间到
 	  msCnt10++;
 	  if(msCnt10 >= 10)
@@ -651,68 +630,6 @@ interrupt void ISRTimer0(void)
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;  //Acknowledge this interrupt to receive more interrupts from group 1
 }
 
-//interrupt void ISRTimer01(void)
-//{
-////    CpuTimer2Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
-////    CpuTimer2Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
-//	CpuTimer0Regs.TCR.bit.TIF = 1;           // 定时到了指定时间，标志位置位，清除标志
-//	CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
-//	//interruptCnt++;
-//	speedRead();//0.1ms 10000
-//	//speedRead2();
-//	flagDot1msW = 0xffff; //10us时间到
-//	msCnt1++;
-//	if(msCnt1 >= 10)
-//	{
-//	  msCnt1 = 0;
-//	  flag1msW = 0xffff;  //0.11ms时间到
-//	  msCnt10++;
-//	  if(msCnt10 >= 10)
-//	  {
-//		msCnt10 = 0;
-//		flag10msW = 0xffff; //1ms时间到
-//		msCnt100++;
-//		if(msCnt100 >= 10)
-//		{
-//		  msCnt100 = 0;
-//		  flag100msW = 0xffff; //10ms时间到
-//		  msCnt500++;
-//		  if(msCnt500 >= 5)
-//		  {
-//			msCnt500 = 0;
-//			flag500msW = 0xffff;//50ms
-//			msCnt1000++;
-//			if(msCnt1000 >= 2)
-//			{
-//			  msCnt1000 = 0;
-//			  if(msCnt10000 >= 10)
-//			  {
-//				  msCnt10000 = 0;
-//				  LED_TOGGLE;
-//			  }
-//			  flag1000msW = 0xffff;//100ms
-//			}
-//		  }
-//		}
-//	  }
-//	}
-//	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
-//}
-//void speedFliter1(Uint16 speed1)
-//{
-//	int16 i ;
-//	Uint32 sum;
-//	for(i = 0; i < 9;i++)
-//	{
-//		speedQue[i] = speedQue[i+1];
-//	}
-//	speedQue[9] = speed1;
-//	for(i = 0; i < 10;i++)
-//	{
-//		sum += speedQue[i];
-//	}
-//	backData.speedCapture = sum / 10;
-//}
 interrupt void ISRCap1(void)
 {
 	cap1OverCnt = 0;
@@ -804,8 +721,6 @@ interrupt void ISRCap2(void)
 	if(1 == ECap2Regs.ECFLG.bit.CTROVF)
 	{
 		ECap2Regs.ECCLR.bit.CTROVF = 1;
-		backData.motorRuning = 0;
-		backData.speedCapture = 0;
 	}
 	ECap2Regs.ECCLR.bit.INT = 1;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
@@ -813,7 +728,6 @@ interrupt void ISRCap2(void)
 
 interrupt void ISRCap3(void)
 {
-
     if(1 == ECap3Regs.ECFLG.bit.CEVT1)
 	{
     	backData.hallPos &= (~(0x0001<<2));
@@ -854,8 +768,6 @@ interrupt void ISRCap3(void)
 	if(1 == ECap3Regs.ECFLG.bit.CTROVF)
 	{
 		ECap3Regs.ECCLR.bit.CTROVF = 1;
-		backData.motorRuning = 0;
-		backData.speedCapture = 0;
 	}
 	ECap3Regs.ECCLR.bit.INT = 1;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
@@ -865,7 +777,6 @@ interrupt void local_DINTCH1_ISR(void)
 {
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP7;  //Acknowledge this interrupt to receive more interrupts from group 7
 }
-
 
 interrupt void xintUp_isr(void)
 {
@@ -882,21 +793,12 @@ interrupt void xintDown_isr(void)
 
 void dataInit()
 {
-	Uint16 i;
-	memset(&backData,0x00,sizeof(BACK_DATA));
-	memset(&upperCommand,0x00,sizeof(BACK_DATA));
-	upperCommand.motionCmd = DO_STOP;
-	backData.status = STOP_STA;
-	backData.motorDir = 0;
-	//backData.hallPos = 4;
+	memset(&backData,0x00,sizeof(BACK_DATA));//清空反馈数据
+	memset(&upperCommand,0x00,sizeof(BACK_DATA));//清空上位机指令
+	upperCommand.motionCmd = DO_STOP;//指令默认停止
+	backData.status = STOP_STA;//状态默认停止
+	backData.motorDir = 0;//转向为正
 	/*Current_Base*/
-	for(i = 0;i < QUE_MAX;i++)
-	{
-//		currentBaseU = FILTERcon(&wiQueue,DMABuf1[0],QUE_MAX);
-//		currentBaseV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
-//		currentBaseW =  currentBaseV + currentBaseU;
-		//currentBaseU = -currentBaseW-currentBaseV;
-	}
 }
 void readHall()
 {
@@ -927,6 +829,7 @@ void readHall()
 }
 void pwmUpdate()
 {
+	/*停止状态、手动状态以及过流和霍尔异常状态停止运动*/
 	if((STOP_STA == backData.status)|| (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x000F)))
 	{
 		PWM_OFF;
@@ -934,6 +837,7 @@ void pwmUpdate()
 	}
 	if(0 == backData.motorDir)
 	{
+		/*达到上限位状态不能正转*/
 		if(1 == backData.upperOver)
 		{
 			PWM_OFF;
@@ -979,6 +883,7 @@ void pwmUpdate()
 	}
 	else if(1 == backData.motorDir)
 	{
+		/*达到下限位状态不能反转*/
 		if(1 == backData.lowerOver)
 		{
 			PWM_OFF;
@@ -1024,70 +929,6 @@ void pwmUpdate()
 		}
 	}
 }
-
-void speedRead()
-{
-	Uint16 tmpSpeed = 0;
-	readHall();
-	LastHallGpio = backData.hallPos;
-	if(VirtualTimer==0)
-	{
-		NewHallGpio = backData.hallPos;
-	}
-	if(VirtualTimer!=0)
-	{
-		if(LastHallGpio != NewHallGpio)
-		{
-			NewHallGpio = LastHallGpio;
-			modcnt++;
-		}
-	}
-	if(modcnt == 2)
-	{
-		SpeedNewTimer = VirtualTimer;
-		tmpSpeed = speed_calc(SpeedNewTimer,SpeedLastTimer);
-		backData.speed = speedFilter(tmpSpeed);
-		overTime = 0;
-		VirtualTimer = 0;
-		modcnt = 1;
-		//posCnt++;
-	}
-	if(modcnt == 1)
-	{
-		SpeedLastTimer = VirtualTimer;
-	}
-	VirtualTimer++;
-	//VirtualTimer &= 0x00007FFF;
-	if (VirtualTimer == 10000)
-	{
-		overTime++;
-		if(overTime > 1)
-		{
-			backData.speed = 0;
-		}
-		VirtualTimer = 1;
-	}
-}
-Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2)
-{
-	Uint32 TimerDelay;
-	Uint16 ret;
-
-	TimerDelay = Timer1 + overTime * 32767;
-
-//	if(Timer1<Timer2)
-//	{
-//		TimerDelay=Timer1-Timer2+32767;
-//	}
-//	else
-//	{
-//		TimerDelay=Timer1-Timer2;
-//	}
-	//ret = (Uint16)(40000/TimerDelay);
-	ret = (Uint16)(400000/(TimerDelay*6));
-	return ret;
-}
-
 Uint16 speedCapture()
 {
 	int16 i;
@@ -1102,6 +943,7 @@ Uint16 speedCapture()
 
 	return ret;
 }
+
 void readPulse()
 {
 	if(0 == backData.motorDir)
@@ -1112,54 +954,4 @@ void readPulse()
 	{
 		backData.posCnt--;
 	}
-}
-Uint16 speedFilter(Uint16 newSpeed)
-{
-	int16 i;
-	Uint32 sum = 0;
-	Uint16 ret;
-	speedQue[9] = newSpeed;
-	for(i = 0; i < 9;i++)
-	{
-		speedQue[i] = speedQue[i+1];
-	}
-	for(i = 0; i < 10;i++)
-	{
-		sum += speedQue[i];
-	}
-	ret = (Uint16)(sum / 10);
-	return ret;
-}
-void speedRead2()
-{
-//	Uint16 tmpSpeed;
-//	readHall();
-//	LastHallGpio = backData.hallPos;
-//	if(VirtualTimer==0)
-//	{
-//		NewHallGpio = backData.hallPos;
-//	}
-//	if(VirtualTimer!=0)
-//	{
-//		if(LastHallGpio != NewHallGpio)
-//		{
-//			NewHallGpio = LastHallGpio;
-//		}
-//	}
-//	if(LastHallGpio != NewHallGpio)
-//	{
-//		SpeedNewTimer = VirtualTimer;
-//		tmpSpeed = speed_calc(SpeedNewTimer,SpeedLastTimer);
-//		backData.speed = speedFilter(tmpSpeed);
-//		LastHallGpio = backData.hallPos;
-//		SpeedLastTimer = SpeedNewTimer;
-//		overTime = 0;
-//	}
-//	VirtualTimer++;
-//	if(VirtualTimer > 1000)
-//	{
-//		overTime++;
-//		VirtualTimer = 0;
-//		backData.speed = 0;
-//	}
 }

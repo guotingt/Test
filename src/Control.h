@@ -5,12 +5,10 @@
 /*macro definition*/
 #define MANUAL 0
 #define AUTOMATIC 1
-#define POSITIVE 0
-#define NEGITIVE 1 
 
 /***
  *@brief PID calculator
- *@param PID
+ *@param PID struct
  */
 void pidCalc(PID *pPID);
 

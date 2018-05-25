@@ -2,15 +2,6 @@
 #define MY_DATA_TYPE_H
 #include "DSP28x_Project.h"
 
-#define QUE_MAX 25  //队列最大长度
-typedef struct
-{
-	Uint16 s_data[QUE_MAX];
-	Uint16 s_front;//队列头
-	Uint16 s_size; //队列长度
-	Uint16 s_mean;//平均值
-}QUE_def;//循环队列结构
-
 /*16_bit_Struct(for flag)*/
 typedef struct _bit16_def
 {
@@ -70,12 +61,10 @@ typedef struct _command
   B1(1:coil error) B0(1:over current)*/
 typedef struct _back_Data
 {
-    //Uint32 msCnt;
     int16 current;
     int16 currentU;
     int16 currentV;
     int16 currentW;
-    Uint16 speed;
     Uint16 speedCapture;
     Uint16 hallPos;
     Uint16 upperOver;
@@ -85,7 +74,7 @@ typedef struct _back_Data
     Uint16 motorDir;
     Uint16 motorRuning;
     Uint16 posFlag;
-    int32 posCnt;
+    int32  posCnt;
     Uint16 loadType;
 }BACK_DATA;
 

@@ -18,21 +18,28 @@ void readSensor()
 	{
 	   backData.status = MANUAL_STA;
 	}
+	/*下限位检测*/
 	if(GpioDataRegs.GPADAT.bit.GPIO22)
 	{
 		backData.lowerOver = 0;
+		backData.faultCode &= (~(0x0001<<5));
 	}
 	else
 	{
 		backData.lowerOver = 1;
+		backData.faultCode |= (0x0001<<5);//bit5 lower over
+
 	}
+	/*上限位检测*/
 	if(GpioDataRegs.GPADAT.bit.GPIO23)
 	{
 		backData.upperOver = 0;
+		backData.faultCode &= (~(0x0001<<4));
 	}
 	else
 	{
 		backData.upperOver = 1;
+		backData.faultCode |= (0x0001<<4);//bit4 upper over
 	}
 	/*Read GPIOX to define status*/
 	if (backData.current >= CURRENT_THRESHOLD_1)
@@ -47,25 +54,10 @@ void readSensor()
 	{
 		backData.faultCode |= 0x0000;
 	}
+	/*hall状态异常检测*/
 	if ((0x0007 == (backData.hallPos&0x0007)) || (0x0000 == backData.hallPos) )
 	{
 		backData.faultCode |= (0x0001<<2);//bit2 hall error
-	}
-	if (1 == backData.upperOver)
-	{
-		backData.faultCode |= (0x0001<<4);//bit4 upper over
-	}
-	else
-	{
-		backData.faultCode &= (~(0x0001<<4));
-	}
-	if (1 == backData.lowerOver)
-	{
-		backData.faultCode |= (0x0001<<5);//bit5 lower over
-	}
-	else
-	{
-		backData.faultCode &= (~(0x0001<<5));
 	}
 }
 
@@ -155,6 +147,7 @@ void sendMsg()
 //		}
 //    }
 //}
+
 void unPackMsg2()
 {
 	Uint16 stmpL = 0;
@@ -176,12 +169,10 @@ void unPackMsg2()
 				if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
 				{
 					backData.posFlag = 1;
-					//backData.posCnt = 0;//correct
 				}
 				else if(FOREWARD_STA == backData.status)
 				{
 					backData.posFlag = 2;
-					//backData.posCnt = 0;//correct
 				}
 				else
 				{
@@ -243,7 +234,6 @@ void unPackMsg2()
 		}
 	}
 	else
-	//if(1 == reciveBuf[offset])
 	{
 		offset = 5;
 		stmpL = reciveBuf[offset]; offset++;

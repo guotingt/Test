@@ -3,12 +3,13 @@
 #include "MyDataType.h"
 #include "DSP28x_Project.h"
 
-#define PWM_PERIOD    3750//20K 10K:7500
-#define PWM_DUTY      3375//%10 6750
-#define SPEED_CURVE1 1
-#define PWM_CHECK_PERC 10
-#define NOMAL_RATE_DOWN 300//500
-#define NOMAL_RATE_UP 300 //500
+/*debug相关*/
+#define SPEED_CURVE1 0
+
+
+/*曲线相关*/
+#define NOMAL_RATE_DOWN 300 //500
+#define NOMAL_RATE_UP 300  //500
 #define T8 800
 #define T8_T1 170
 #define T8_T2 630
@@ -20,12 +21,16 @@
 #define T9_T2  750
 #define K_UP_10MS 2
 #define K_DOWN_10MS 2
-#define T6 6000
+#define T6 600
 #define KR_UP_MS 3
 #define KR_DOWN_MS 7
 
 #define LOAD_TEST_V 30000/8
 #define BIG_LOAD_I 40
+
+/*PWM相关*/
+#define PWM_PERIOD    3750//20K 10K:7500
+#define PWM_DUTY      3375//%10 6750
 
 #define PWM_U1_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFA = 0
 #define PWM_U2_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFB = 0
@@ -128,9 +133,18 @@ static void configureLed(void);
  */
 static void congigureSW(void);
 /***
- * @breif data initialize
+ * @brief data initialize
  */
 static void dataInit();
+/**
+ * @brief capture speed
+ */
+static Uint16 speedCapture();
+/**
+ * @brief read posCnt
+ */
+static void readPulse();
+
 /**
  * @brief ISR for CAP1
  */
@@ -156,10 +170,6 @@ interrupt void ISRSCIARX(void);
  */
 interrupt void local_DINTCH1_ISR(void);
 /**
- * @brief ISR for GPIO21 HANDF
- */
-interrupt void xintHand_isr(void);
-/**
  * @brief ISR for GPIO22 DOWN
  */
 interrupt void xintUp_isr(void);
@@ -168,7 +178,12 @@ interrupt void xintUp_isr(void);
  */
 interrupt void xintDown_isr(void);
 /**
- * @brief scia send
+ * @brief Main ISR
+ */
+interrupt void ISRTimer01(void);
+/**
+ * @brief serial port send byte
+ * @param a byte
  */
 extern void scia_xmit(Uint16 a);
 /**
@@ -180,30 +195,14 @@ extern void dsp28335Init(void);
  */
 extern void currentRead(void);
 /**
- * @brief get speed data
- */
-extern void speedRead(void);
-/**
  * @brief PWM update
  */
 extern void pwmUpdate();
 /**
- * @biref read hall state
+ * @brief read hall state
  */
 extern void readHall();
-/**
- * @brief calc speed
- */
-static Uint16 speed_calc(Uint32 Timer1,Uint32 Timer2);
 
-static Uint16 speedCapture();
-
-static void readPulse();
-
-static Uint16 speedFilter(Uint16 newSpeed);
-
-interrupt void ISRTimer01(void);
-
-void speedRead2();
 
 #endif
+
