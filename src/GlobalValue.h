@@ -39,6 +39,5 @@ extern Uint16 sendBuf[];
 extern Uint16 reciveFlag;
 extern Uint16 moveCnt;
 extern Uint16 duty;
-
 #endif
 

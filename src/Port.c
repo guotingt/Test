@@ -45,10 +45,12 @@ void readSensor()
 	if (backData.current >= CURRENT_THRESHOLD_1)
 	{
 		backData.faultCode |= (0x0000<<0);//bit0 over current_todo
+		PWM_OFF;
 	}
 	else if (backData.current >= CURRENT_THRESHOLD_2)
 	{
 		backData.faultCode |= (0x0000<<3);//bit3 over load_todo
+		PWM_OFF;
 	}
 	else
 	{
@@ -58,6 +60,7 @@ void readSensor()
 	if ((0x0007 == (backData.hallPos&0x0007)) || (0x0000 == backData.hallPos) )
 	{
 		backData.faultCode |= (0x0001<<2);//bit2 hall error
+		PWM_OFF;
 	}
 }
 

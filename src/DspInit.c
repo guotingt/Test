@@ -241,7 +241,6 @@ void congigureSW(void)
 	EALLOW;
     GpioCtrlRegs.GPAMUX2.bit.GPIO21 = 0;      // GPIO21
     GpioCtrlRegs.GPADIR.bit.GPIO21 = 0;       // input
-    //GpioCtrlRegs.GPAQSEL2.bit.GPIO21 = 0;     // Xint1 Synch to SYSCLKOUT only
 
     GpioCtrlRegs.GPAMUX2.bit.GPIO22 = 0;      // GPIO22
     GpioCtrlRegs.GPADIR.bit.GPIO22 = 0;       // input
@@ -253,14 +252,14 @@ void congigureSW(void)
     EDIS;
 
     EALLOW;
-//  GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 21;   // Xint1 is GPIO0
-    GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 22;   // XINT2 is GPIO1
-    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 23;   // XINT2 is GPIO1
+    GpioIntRegs.GPIOXINT1SEL.bit.GPIOSEL = 22;   // XINT2 is GPIO22
+    GpioIntRegs.GPIOXINT2SEL.bit.GPIOSEL = 23;   // XINT2 is GPIO23
+    XIntruptRegs.XINT1CR.bit.POLARITY = 0;
+    XIntruptRegs.XINT2CR.bit.POLARITY = 0;
+    XIntruptRegs.XINT1CR.bit.ENABLE = 1;
+    XIntruptRegs.XINT2CR.bit.ENABLE = 1;
     EDIS;
-//    XIntruptRegs.XINT1CR.bit.POLARITY = 0;
-//    XIntruptRegs.XINT2CR.bit.POLARITY = 0;
-//    XIntruptRegs.XINT1CR.bit.ENABLE = 1;
-//    XIntruptRegs.XINT2CR.bit.ENABLE = 1;
+
 }
 void scia_xmit(Uint16 a)
 {
@@ -270,41 +269,32 @@ void scia_xmit(Uint16 a)
 }
 void currentRead()
 {
-	//backData.currentU = DMABuf1[0]; //FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
-	//backData.currentV = DMABuf1[10]; //FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
-	//backData.currentW = -(backData.currentU+backData.currentV);
     if(0 == backData.motorDir)//Forward
     {
 		switch(backData.hallPos)
 		{
 		case 5://UV
-			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.currentV = DMABuf1[10];
 			backData.current = backData.currentV - currentBaseV;
 			break;
 		case 1://UW
 			backData.currentW = DMABuf1[10];
-			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 3://VW
 			backData.currentW = DMABuf1[10];
-			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 2://VU
 			backData.currentU = DMABuf1[10];
-			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 6://WU
 			backData.currentU = DMABuf1[10];
-			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 4://WV
 			backData.currentV = DMABuf1[10];
-			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
 		default:
@@ -317,32 +307,26 @@ void currentRead()
 		{
 		case 2://UV
 			backData.currentV = DMABuf1[1];
-			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
 		case 6://UW
 			backData.currentW = DMABuf1[1];
-			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 4://VW
 			backData.currentW = DMABuf1[1];
-			//backData.currentW = FILTERcon(&wiQueue,DMABuf1[20],QUE_MAX);
 			backData.current = backData.currentW + currentBaseW;
 			break;
 		case 5://VU
 			backData.currentU = DMABuf1[1];
-			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 1://WU
 			backData.currentU = DMABuf1[1];
-			//backData.currentU = FILTERcon(&uiQueue,DMABuf1[0],QUE_MAX);
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 3://WV
 			backData.currentV = DMABuf1[1];
-			//backData.currentV = FILTERcon(&viQueue,DMABuf1[10],QUE_MAX);
 			backData.current = backData.currentV - currentBaseV;
 			break;
 		default:
@@ -382,21 +366,17 @@ void dsp28335Init()
 	PieVectTable.ECAP2_INT = &ISRCap2;            //将CAP2中断添加都中断向量表里
     PieVectTable.ECAP3_INT = &ISRCap3;   	      //将CAP3中断添加都中断向量表里
     PieVectTable.TINT0 = &ISRTimer0;              //将定时器0中断添加都中断向量表里
-    //PieVectTable.XINT13 = &ISRTimer1;
     PieVectTable.SCIRXINTA = &ISRSCIARX;          //将串口接收中断添加都中断向量表里
     PieVectTable.DINTCH1= &local_DINTCH1_ISR;
-//    PieVectTable.XINT1 = &xintHand_isr;	      //外部中断GPIO21
-//    PieVectTable.XINT2 = &xintUp_isr;           //外部中断GPIO22
-//    PieVectTable.XINT3 = &xintDown_isr;         //外部中断GPIO23
+    PieVectTable.XINT1 = &xintUp_isr;           //外部中断GPIO22
+    PieVectTable.XINT2 = &xintDown_isr;         //外部中断GPIO23
 
     EDIS;                                         //This is needed to disable write to EALLOW protected register
 
     InitCpuTimers();                              //定时器初始化
     ConfigCpuTimer(&CpuTimer0, 150, 100);         //定时器0初始化/10KHz
-   // ConfigCpuTimer(&CpuTimer1, 150, 100);         //定时器1初始化/100KHz
     StartCpuTimer0();                             //开启定时器0
-    //CpuTimer1Regs.TCR.all = 0x4000;
-    //StartCpuTimer1();                           //开启定时器2
+
     EPwm1Setup(PWM_PERIOD,PWM_DUTY);    		  //EPWM1配置
     EPwm2Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM2配置
     EPwm3Setup(PWM_PERIOD,PWM_DUTY);			  //EPWM3配置
@@ -416,9 +396,9 @@ void dsp28335Init()
     IER |= M_INT13; 						      //使能中断13
     IER |= M_INT7; 						          //使能第七组中断
 
-   // PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
-    PieCtrlRegs.PIEIER1.bit.INTx1 = 1;			  //使能第一组中断里的第1个中断--UP中断
-    PieCtrlRegs.PIEIER1.bit.INTx2 = 1;			  //使能第一组中断里的第2个中断--DOWN中断
+    PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
+    PieCtrlRegs.PIEIER1.bit.INTx4 = 1;			  //使能第一组中断里的第1个中断--UP中断
+    PieCtrlRegs.PIEIER1.bit.INTx5 = 1;			  //使能第一组中断里的第2个中断--DOWN中断
     PieCtrlRegs.PIEIER1.bit.INTx7 = 1;            //使能第一组中断里的第七个中断--定时器0中断
     PieCtrlRegs.PIEIER4.bit.INTx1 = 1;            //使能第四组中断里的第一个中断--CAP1中断
     PieCtrlRegs.PIEIER4.bit.INTx2 = 1;            //使能第四组中断里的第二个中断--CAP2中断
@@ -780,14 +760,17 @@ interrupt void local_DINTCH1_ISR(void)
 
 interrupt void xintUp_isr(void)
 {
-
+	PWM_OFF;
 	backData.upperOver = 1;
+	backData.faultCode |= (0x0001<<4);//bit4 upper over
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
 
 }
 interrupt void xintDown_isr(void)
 {
+	PWM_OFF;
 	backData.lowerOver = 1;
+	backData.faultCode |= (0x0001<<5);//bit5 lower over
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP2;
 }
 
@@ -797,7 +780,7 @@ void dataInit()
 	memset(&upperCommand,0x00,sizeof(BACK_DATA));//清空上位机指令
 	upperCommand.motionCmd = DO_STOP;//指令默认停止
 	backData.status = STOP_STA;//状态默认停止
-	backData.motorDir = 0;//转向为正
+	backData.motorDir = 1;//转向为正
 	/*Current_Base*/
 }
 void readHall()

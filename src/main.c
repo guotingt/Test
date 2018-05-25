@@ -4,6 +4,7 @@
 #include "GlobalValue.h"
 #include "DSPInit.h"
 #include "math.h"
+#include "string.h"
 
 #define CURRENT 0
 #define SPEED 1
@@ -20,53 +21,18 @@ Uint16 duty = 1;
 Uint16 keepCnt = 0;
 void initPID()
 {
+	memset(&speedPID,0x00,sizeof(PID));
 	speedPID.outMax = 196608000;//%80
 	speedPID.outMin = 327675;//%5
 	speedPID.kp = 262144;//4
 	speedPID.ki = 13107;//0.2
 
-//	currentPID.outMax = 100*65536;//设置上限电流为1.5A  214748364U
-//	currentPID.outMin = 0;//设置下限电流为0
+//	currentPID.outMax = 100*65536;
+//	currentPID.outMin = 0;
 //	currentPID.kp = 10000;
 //	currentPID.ki = 10;
 }
-Uint16 speedRamp(Uint16 speed,Uint16 stepT,Uint16 stepL,Uint16* pKeepCnt)
-{
-	Uint16 rampSpeed = 0;
-	if(speed > backData.speedCapture)
-	{
-		if(0 == (*pKeepCnt)%stepT)
-		{
-			rampSpeed += stepL;
-		}
-		if(rampSpeed >= speed)
-		{
-			rampSpeed = speed;
-			*pKeepCnt = 0;
-		}
-		else
-		{
-			(*pKeepCnt)++;
-		}
-	}
-	else
-	{
-		if(0 == (*pKeepCnt)%stepT)
-		{
-			rampSpeed -= stepL;
-		}
-		if(rampSpeed <= speed)
-		{
-			rampSpeed = speed;
-			*pKeepCnt = 0;
-		}
-		else
-		{
-			(*pKeepCnt)++;
-		}
-	}
-	return rampSpeed;
-}
+
 int main()
 {
 
@@ -92,6 +58,7 @@ int main()
     	 }
 
 #if SPEED
+    	/*speed pid */
     	if(0 != speedLoopSample)
     	{
     		speedLoopSample = 0;
@@ -110,7 +77,7 @@ int main()
 			currentPID.input = backData.current;
 			currentLoopSample = 0;
 			pidCalc(&currentPID);
-			//SET_PWM(currentPID.sumOut);
+			SET_PWM(3750 - currentPID.sumOut);
 		}
 #endif
 
