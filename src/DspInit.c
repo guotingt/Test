@@ -18,9 +18,9 @@ TIME_FLAG  flag1000ms;
 volatile Uint16 DMABuf1[20] = {0};///<DMA data
 volatile Uint16 *DMADest;         ///<DMA DST_Addr
 volatile Uint16 *DMASource;       ///<DMA SRC_Addr
-volatile Uint16 currentBaseW = 0; ///<W相基准值
-volatile Uint16 currentBaseU = 0; ///<U相基准值
-volatile Uint16 currentBaseV = 0; ///<V相基准值
+volatile Uint16 currentBaseW = 2253; ///<W相基准值 1.65V
+volatile Uint16 currentBaseU = 2253; ///<U相基准值 1.65V
+volatile Uint16 currentBaseV = 2253; ///<V相基准值 1.65V
 
 /*分频计数*/
 volatile Uint16 msCnt1 = 0;   ///<1ms
@@ -269,65 +269,138 @@ void scia_xmit(Uint16 a)
 }
 void currentRead()
 {
-    if(0 == backData.motorDir)//Forward
+	Uint16 i,iSum;
+    if(FOREWARD == backData.motorDir)//Forward
     {
 		switch(backData.hallPos)
 		{
 		case 5://UV
-			backData.currentV = DMABuf1[10];
-			backData.current = backData.currentV - currentBaseV;
+			for(i = 10,iSum = 0;i < 20;i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentV = iSum/10;
+			backData.current = currentBaseV - backData.currentV;
 			break;
 		case 1://UW
-			backData.currentW = DMABuf1[10];
-			backData.current = backData.currentW + currentBaseW;
+			for(i = 0,iSum = 0; i < 10; i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentU = iSum / 10;
+			for(i = 10,iSum = 0;i < 20;i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentV = iSum/10;
+			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.current = backData.currentW;
 			break;
 		case 3://VW
-			backData.currentW = DMABuf1[10];
-			backData.current = backData.currentW + currentBaseW;
+			for(i = 0,iSum = 0; i < 10; i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentU = iSum / 10;
+			for(i = 10,iSum = 0;i < 20;i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentV = iSum/10;
+			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.current = backData.currentW;
 			break;
 		case 2://VU
-			backData.currentU = DMABuf1[10];
+			for(i = 0,iSum = 0; i < 10; i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentU = iSum / 10;
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 6://WU
-			backData.currentU = DMABuf1[10];
+			for(i = 0,iSum = 0; i < 10; i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentU = iSum / 10;
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 4://WV
-			backData.currentV = DMABuf1[10];
-			backData.current = backData.currentV - currentBaseV;
+			for(i = 10,iSum = 0;i < 20;i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentV = iSum/10;
+			backData.current = currentBaseV - backData.currentV;
 			break;
 		default:
 			break;
 		}
     }
-    else if(1 == backData.motorDir)//Backward
+    else if(BACKWARD == backData.motorDir)//Backward
     {
     	switch(backData.hallPos)
 		{
 		case 2://UV
-			backData.currentV = DMABuf1[1];
-			backData.current = backData.currentV - currentBaseV;
+			for(i = 10,iSum = 0;i < 20;i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentV = iSum/10;
+			backData.current = currentBaseV - backData.currentV;
 			break;
 		case 6://UW
-			backData.currentW = DMABuf1[1];
-			backData.current = backData.currentW + currentBaseW;
+			for(i = 0,iSum = 0; i < 10; i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentU = iSum / 10;
+			for(i = 10,iSum = 0;i < 20;i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentV = iSum/10;
+			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.current = backData.currentW;
 			break;
 		case 4://VW
-			backData.currentW = DMABuf1[1];
-			backData.current = backData.currentW + currentBaseW;
+			for(i = 0,iSum = 0; i < 10; i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentU = iSum / 10;
+			for(i = 10,iSum = 0;i < 20;i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentV = iSum/10;
+			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.current = backData.currentW;
 			break;
 		case 5://VU
-			backData.currentU = DMABuf1[1];
+			for(i = 0,iSum = 0; i < 10; i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentU = iSum / 10;
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 1://WU
-			backData.currentU = DMABuf1[1];
+			for(i = 0,iSum = 0; i < 10; i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentU = iSum / 10;
 			backData.current = backData.currentU - currentBaseU;
 			break;
 		case 3://WV
-			backData.currentV = DMABuf1[1];
-			backData.current = backData.currentV - currentBaseV;
+			for(i = 10,iSum = 0;i < 20;i++)
+			{
+				iSum += DMABuf1[i];
+			}
+			backData.currentV = iSum/10;
+			backData.current = currentBaseV - backData.currentV;
 			break;
 		default:
 			break;
@@ -506,15 +579,23 @@ interrupt void ISRTimer0(void)
 			if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
 			{
 				moveCnt++;
-				if(0 == backData.motorDir)
+				if(FOREWARD == backData.motorDir)
 				{
 					if(moveCnt <= T9_T1)
 					{
 						speedPID.setPoint =(Uint16)(K_UP_10MS * moveCnt);
+						speedPID.input = backData.speedCapture;
+						pidCalc(&speedPID);
+						SET_PWM(3750 - speedPID.sumOut);
+						duty = (Uint16)(speedPID.sumOut * 100/3750);
 					}
 					else if(moveCnt <= T9_T2)
 					{
 						speedPID.setPoint = NOMAL_RATE_UP;
+						speedPID.input = backData.speedCapture;
+						pidCalc(&speedPID);
+						SET_PWM(3750 - speedPID.sumOut);
+						duty = (Uint16)(speedPID.sumOut * 100/3750);
 					}
 					else if(moveCnt < T9)
 					{
@@ -526,10 +607,17 @@ interrupt void ISRTimer0(void)
 						{
 							speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(K_UP_10MS * (moveCnt - T9_T2));
 						}
+						speedPID.input = backData.speedCapture;
+						pidCalc(&speedPID);
+						SET_PWM(3750 - speedPID.sumOut);
+						duty = (Uint16)(speedPID.sumOut * 100/3750);
 					}
 					else if(moveCnt == T9)
 					{
 						backData.status = STOP_STA;
+						pidReset(&speedPID);
+						SET_PWM(3750 - speedPID.sumOut);
+						duty = (Uint16)(speedPID.sumOut * 100/3750);
 						moveCnt = 0;
 					}
 				}
@@ -538,11 +626,18 @@ interrupt void ISRTimer0(void)
 					if(moveCnt <= T9_T1)
 					{
 						speedPID.setPoint =(Uint16)(K_DOWN_10MS * moveCnt);
+						speedPID.input = backData.speedCapture;
+						pidCalc(&speedPID);
+						SET_PWM(3750 - speedPID.sumOut);
+						duty = (Uint16)(speedPID.sumOut * 100/3750);
 					}
 					else if(moveCnt <= T9_T2)
 					{
-
 						speedPID.setPoint = NOMAL_RATE_DOWN;
+						speedPID.input = backData.speedCapture;
+						pidCalc(&speedPID);
+						SET_PWM(3750 - speedPID.sumOut);
+						duty = (Uint16)(speedPID.sumOut * 100/3750);
 					}
 					else if(moveCnt < T9)
 					{
@@ -554,18 +649,21 @@ interrupt void ISRTimer0(void)
 						{
 							speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(K_DOWN_10MS * (moveCnt - T9_T2));
 						}
+						speedPID.input = backData.speedCapture;
+						pidCalc(&speedPID);
+						SET_PWM(3750 - speedPID.sumOut);
+						duty = (Uint16)(speedPID.sumOut * 100/3750);
 					}
-					else
+					else if(moveCnt == T9)
 					{
 						backData.status = STOP_STA;
+						pidReset(&speedPID);
+						SET_PWM(3750 - speedPID.sumOut);
+						duty = (Uint16)(speedPID.sumOut * 100/3750);
 						moveCnt = 0;
 					}
-
 				}
-				speedPID.input = backData.speedCapture;
-				pidCalc(&speedPID);
-				SET_PWM(3750 - speedPID.sumOut);
-				duty = (Uint16)(speedPID.sumOut * 100/3750);
+
 			}
 			else if(CHECK_STA == backData.status)
 			{
@@ -780,7 +878,7 @@ void dataInit()
 	memset(&upperCommand,0x00,sizeof(BACK_DATA));//清空上位机指令
 	upperCommand.motionCmd = DO_STOP;//指令默认停止
 	backData.status = STOP_STA;//状态默认停止
-	backData.motorDir = 1;//转向为正
+	backData.motorDir = FOREWARD;//转向为正
 	/*Current_Base*/
 }
 void readHall()
@@ -818,8 +916,9 @@ void pwmUpdate()
 		PWM_OFF;
 		return;
 	}
-	if(0 == backData.motorDir)
+	if(FOREWARD == backData.motorDir)
 	{
+
 		/*达到上限位状态不能正转*/
 		if(1 == backData.upperOver)
 		{
@@ -864,7 +963,7 @@ void pwmUpdate()
 			}
 		}
 	}
-	else if(1 == backData.motorDir)
+	else if(BACKWARD == backData.motorDir)
 	{
 		/*达到下限位状态不能反转*/
 		if(1 == backData.lowerOver)

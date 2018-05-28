@@ -16,14 +16,14 @@ COMMAND upperCommand;
 Uint16 reciveFlag = 0;
 
 Uint16 moveCnt = 0;
-Uint16 duty = 1;
-
+Uint16 duty = 0;
 Uint16 keepCnt = 0;
+
 void initPID()
 {
 	memset(&speedPID,0x00,sizeof(PID));
 	speedPID.outMax = 196608000;//%80
-	speedPID.outMin = 327675;//%5
+	speedPID.outMin = 0;//
 	speedPID.kp = 262144;//4
 	speedPID.ki = 13107;//0.2
 
@@ -31,6 +31,7 @@ void initPID()
 //	currentPID.outMin = 0;
 //	currentPID.kp = 10000;
 //	currentPID.ki = 10;
+
 }
 
 int main()
@@ -62,10 +63,13 @@ int main()
     	if(0 != speedLoopSample)
     	{
     		speedLoopSample = 0;
-    		speedPID.input = backData.speedCapture;
-    		pidCalc(&speedPID);
-    		duty = (Uint16)(speedPID.sumOut * 100/3750) ;
-    		SET_PWM(3750-speedPID.sumOut);
+		    if(FOREWARD_STA == backData.status || BACKWARD_STA == backData.status )
+		    {
+		    	speedPID.input = backData.speedCapture;
+		    	pidCalc(&speedPID);
+		    	duty = (Uint16)(speedPID.sumOut * 100/3750) ;
+		    	SET_PWM(3750-speedPID.sumOut);
+		    }
     	}
 #endif
 

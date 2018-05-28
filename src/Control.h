@@ -10,6 +10,11 @@
  *@brief PID calculator
  *@param PID struct
  */
-void pidCalc(PID *pPID);
+extern void pidCalc(PID *pPID);
+/***
+ * @brief reset PID
+ * @param PID struct
+ */
+extern void pidReset(PID *pPID);
 
 #endif

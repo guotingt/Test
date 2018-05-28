@@ -41,3 +41,11 @@ void pidCalc(PID *pPID)
 	}
 }
 
+void pidReset(PID *pPID)
+{
+	pPID->setPoint = 0;
+	pPID->err = 0;
+	pPID->pOut = 0;
+	pPID->iOut = 0;
+	pPID->sumOut = 0;
+}

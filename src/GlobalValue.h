@@ -2,6 +2,10 @@
 #define GLOBAL_H
 #include "MyDataType.h"
 
+/*motor state*/
+#define FOREWARD 0
+#define BACKWARD 1
+
 /*Time Interrupt*/
 extern TIME_FLAG  flagDot1ms;
 #define flagDot1msW flagDot1ms.word
