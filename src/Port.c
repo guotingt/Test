@@ -2,6 +2,7 @@
 #include"GlobalValue.h"
 #include"string.h"
 #include"DspInit.h"
+#include"Control.h"
 
 Uint16 sendBuf[10] = {0};
 Uint16 testBuf[80] = {0};
@@ -16,7 +17,7 @@ void readSensor()
     /*mode is manual or automatic*/
 	if(GpioDataRegs.GPADAT.bit.GPIO21)
 	{
-	   backData.status = MANUAL_STA;
+		backData.status = MANUAL_STA;
 	}
 	/*обочн╩╪Л╡Б*/
 	if(GpioDataRegs.GPADAT.bit.GPIO22)
@@ -42,15 +43,15 @@ void readSensor()
 		backData.faultCode |= (0x0001<<4);//bit4 upper over
 	}
 	/*Read GPIOX to define status*/
-	if (backData.current >= CURRENT_THRESHOLD_1)
+	if (abs(backData.current) >= CURRENT_THRESHOLD_1)
 	{
-		backData.faultCode |= (0x0000<<0);//bit0 over current_todo
-		PWM_OFF;
+		backData.faultCode |= (0x0001<<0);//bit0 over current_todo
+		//PWM_OFF;
 	}
-	else if (backData.current >= CURRENT_THRESHOLD_2)
+	else if (abs(backData.current) >= CURRENT_THRESHOLD_2)
 	{
-		backData.faultCode |= (0x0000<<3);//bit3 over load_todo
-		PWM_OFF;
+		backData.faultCode |= (0x0001<<3);//bit3 over load_todo
+		//PWM_OFF;
 	}
 	else
 	{
@@ -181,8 +182,11 @@ void unPackMsg2()
 				{
 					backData.posFlag = 0;
 				}
-				backData.status = STOP_STA;
 				PWM_OFF;
+				backData.status = STOP_STA;
+				pidReset(&speedPID);
+				SET_PWM(3750 - speedPID.sumOut);
+				duty = (Uint16)(speedPID.sumOut * 100/3750);
 				break;
 			case DO_BACKWARD:
 				if((STOP_STA  == backData.status) || (DO_BACKWARD  == backData.status))
@@ -196,7 +200,9 @@ void unPackMsg2()
 				else
 				{
 					backData.status = STOP_STA;
-					PWM_OFF;
+					pidReset(&speedPID);
+					SET_PWM(3750 - speedPID.sumOut);
+					duty = (Uint16)(speedPID.sumOut * 100/3750);
 				}
 				break;
 			case DO_FOREWARD:
@@ -210,8 +216,11 @@ void unPackMsg2()
 				}
 				else
 				{
+					PWM_OFF
 					backData.status = STOP_STA;
-					PWM_OFF;
+					pidReset(&speedPID);
+					SET_PWM(3750 - speedPID.sumOut);
+					duty = (Uint16)(speedPID.sumOut * 100/3750);
 				}
 				break;
 			case DO_CHECK:
@@ -224,8 +233,11 @@ void unPackMsg2()
 				}
 				else
 				{
-					backData.status = STOP_STA;
 					PWM_OFF;
+					backData.status = STOP_STA;
+					pidReset(&speedPID);
+					SET_PWM(3750 - speedPID.sumOut);
+					duty = (Uint16)(speedPID.sumOut * 100/3750);
 				}
 				break;
 			default:

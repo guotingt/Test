@@ -30,8 +30,8 @@
 #define MAX_CNT 4725//(420/8*90) //2925(260/8*90)
 
 /*current threshold*/
-#define CURRENT_THRESHOLD_1 10
-#define CURRENT_THRESHOLD_2 20
+#define CURRENT_THRESHOLD_1 676 //30A
+#define CURRENT_THRESHOLD_2 901 //40A
 
 extern void readSensor();
 
