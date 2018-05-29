@@ -17,7 +17,7 @@ void readSensor()
     /*mode is manual or automatic*/
 	if(GpioDataRegs.GPADAT.bit.GPIO21)
 	{
-		backData.status = MANUAL_STA;
+		//backData.status = MANUAL_STA;
 	}
 	/*ÏÂÏÞÎ»¼ì²â*/
 	if(GpioDataRegs.GPADAT.bit.GPIO22)
@@ -45,12 +45,12 @@ void readSensor()
 	/*Read GPIOX to define status*/
 	if (abs(backData.current) >= CURRENT_THRESHOLD_1)
 	{
-		backData.faultCode |= (0x0001<<0);//bit0 over current_todo
+		backData.faultCode |= (0x0000<<0);//bit0 over current_todo
 		//PWM_OFF;
 	}
 	else if (abs(backData.current) >= CURRENT_THRESHOLD_2)
 	{
-		backData.faultCode |= (0x0001<<3);//bit3 over load_todo
+		backData.faultCode |= (0x0000<<3);//bit3 over load_todo
 		//PWM_OFF;
 	}
 	else
