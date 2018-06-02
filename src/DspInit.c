@@ -96,10 +96,10 @@ void EPwm3Setup(Uint16 period,Uint16 duty)
 
 void ECap1Setup()
 {
-	ECap1Regs.ECCTL1.bit.CAP1POL = EC_FALLING;           //CAP1: falling
-	ECap1Regs.ECCTL1.bit.CAP2POL = EC_RISING;           //CAP2: rising
-	ECap1Regs.ECCTL1.bit.CAP3POL = EC_FALLING;           //CAP3: falling
-	ECap1Regs.ECCTL1.bit.CAP4POL = EC_RISING;           //CAP4: rising
+	ECap1Regs.ECCTL1.bit.CAP1POL = GpioDataRegs.GPADAT.bit.GPIO24;
+	ECap1Regs.ECCTL1.bit.CAP2POL = ~(GpioDataRegs.GPADAT.bit.GPIO24);
+	ECap1Regs.ECCTL1.bit.CAP3POL = GpioDataRegs.GPADAT.bit.GPIO24;
+	ECap1Regs.ECCTL1.bit.CAP4POL = ~(GpioDataRegs.GPADAT.bit.GPIO24);
 	ECap1Regs.ECCTL1.bit.CTRRST1 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap1Regs.ECCTL1.bit.CTRRST2 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap1Regs.ECCTL1.bit.CTRRST3 = EC_DELTA_MODE;          //difference time stamp operation
@@ -123,10 +123,10 @@ void ECap1Setup()
 }
 void ECap2Setup()
 {
-	ECap2Regs.ECCTL1.bit.CAP1POL = EC_FALLING;           //CAP1: falling
-	ECap2Regs.ECCTL1.bit.CAP2POL = EC_RISING;           //CAP2: rising
-	ECap2Regs.ECCTL1.bit.CAP3POL = EC_FALLING;           //CAP3: falling
-	ECap2Regs.ECCTL1.bit.CAP4POL = EC_RISING;           //CAP4: rising
+	ECap2Regs.ECCTL1.bit.CAP1POL = GpioDataRegs.GPADAT.bit.GPIO25;
+	ECap2Regs.ECCTL1.bit.CAP2POL = ~(GpioDataRegs.GPADAT.bit.GPIO25);
+	ECap2Regs.ECCTL1.bit.CAP3POL = GpioDataRegs.GPADAT.bit.GPIO25;
+	ECap2Regs.ECCTL1.bit.CAP4POL = ~(GpioDataRegs.GPADAT.bit.GPIO25);
 	ECap2Regs.ECCTL1.bit.CTRRST1 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap2Regs.ECCTL1.bit.CTRRST2 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap2Regs.ECCTL1.bit.CTRRST3 = EC_DELTA_MODE;          //difference time stamp operation
@@ -150,10 +150,10 @@ void ECap2Setup()
 }
 void ECap3Setup()
 {
-	ECap3Regs.ECCTL1.bit.CAP1POL = EC_FALLING;           //CAP1: rising
-	ECap3Regs.ECCTL1.bit.CAP2POL = EC_RISING;           //CAP2: falling
-	ECap3Regs.ECCTL1.bit.CAP3POL = EC_FALLING;           //CAP3: rising
-	ECap3Regs.ECCTL1.bit.CAP4POL = EC_RISING;           //CAP4: falling
+	ECap3Regs.ECCTL1.bit.CAP1POL = GpioDataRegs.GPADAT.bit.GPIO26;
+	ECap3Regs.ECCTL1.bit.CAP2POL = ~(GpioDataRegs.GPADAT.bit.GPIO26);
+	ECap3Regs.ECCTL1.bit.CAP3POL = GpioDataRegs.GPADAT.bit.GPIO26;
+	ECap3Regs.ECCTL1.bit.CAP4POL = ~(GpioDataRegs.GPADAT.bit.GPIO26);
 	ECap3Regs.ECCTL1.bit.CTRRST1 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap3Regs.ECCTL1.bit.CTRRST2 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap3Regs.ECCTL1.bit.CTRRST3 = EC_DELTA_MODE;          //difference time stamp operation
@@ -219,7 +219,7 @@ void SCIASetup()
 	SciaRegs.SCICTL2.bit.TXINTENA = 0;   // disable TXRDY interrupt
 	SciaRegs.SCICTL2.bit.RXBKINTENA =0;  // disable RXRDY/BRKDT interrupt
     SciaRegs.SCIHBAUD = 0x0000;          // (2400baud,7A0h),(4800baud, 3D0h),(9600baud,1E7h),(19200baud,F3h),(38400baud,79h)  @LSPCLK = 37.5MHz.
-    SciaRegs.SCILBAUD = 0x00F3;
+    SciaRegs.SCILBAUD = 0x0079;
     SciaRegs.SCICTL1.all =0x0023;  		 // Relinquish SCI from Reset
     SciaRegs.SCIFFTX.all = 0xE040;
     SciaRegs.SCIFFRX.all = 0x204a;
@@ -269,7 +269,7 @@ void scia_xmit(Uint16 a)
 }
 void currentRead()
 {
-	Uint16 i,iSum;
+	int16 i,iSum;
     if(FOREWARD == backData.motorDir)//Forward
     {
 		switch(backData.hallPos)
@@ -433,6 +433,7 @@ void dsp28335Init()
 
 //	MemCopy(&RamfuncsLoadStart,&RamfuncsLoadEnd,&RamfuncsRunStart);
 //	InitFlash();
+
 	InitAdc();                                    //ADC复位
 	EALLOW;                                       //This is needed to write to EALLOW protected registers
 	PieVectTable.ECAP1_INT = &ISRCap1;            //将CAP1中断添加都中断向量表里
@@ -581,89 +582,110 @@ interrupt void ISRTimer0(void)
 				moveCnt++;
 				if(FOREWARD == backData.motorDir)
 				{
-					if(moveCnt <= T9_T1)
+					if(backData.posCntUp >= POS_THRESHOLD)
 					{
-						speedPID.setPoint =(Uint16)(K_UP_10MS * moveCnt);
+						speedPID.setPoint = 100;
 						speedPID.input = backData.speedCapture;
 						pidCalc(&speedPID);
 						SET_PWM(3750 - speedPID.sumOut);
 						duty = (Uint16)(speedPID.sumOut * 100/3750);
 					}
-					else if(moveCnt <= T9_T2)
+					else
 					{
-						speedPID.setPoint = NOMAL_RATE_UP;
-						speedPID.input = backData.speedCapture;
-						pidCalc(&speedPID);
-						SET_PWM(3750 - speedPID.sumOut);
-						duty = (Uint16)(speedPID.sumOut * 100/3750);
-					}
-					else if(moveCnt < T9)
-					{
-						if((NOMAL_RATE_UP - (Uint16)(K_UP_10MS * (moveCnt - T9_T2))) < 100)
+						if(moveCnt <= T_T1)
 						{
-							speedPID.setPoint = 100;
+							speedPID.setPoint =(Uint16)(K_UP_10MS * moveCnt);
+							speedPID.input = backData.speedCapture;
+							pidCalc(&speedPID);
+							SET_PWM(3750 - speedPID.sumOut);
+							duty = (Uint16)(speedPID.sumOut * 100/3750);
 						}
-						else
+						else if(moveCnt <= T_T2)
 						{
-							speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(K_UP_10MS * (moveCnt - T9_T2));
+							speedPID.setPoint = NOMAL_RATE_UP;
+							speedPID.input = backData.speedCapture;
+							pidCalc(&speedPID);
+							SET_PWM(3750 - speedPID.sumOut);
+							duty = (Uint16)(speedPID.sumOut * 100/3750);
 						}
-						speedPID.input = backData.speedCapture;
-						pidCalc(&speedPID);
-						SET_PWM(3750 - speedPID.sumOut);
-						duty = (Uint16)(speedPID.sumOut * 100/3750);
-					}
-					else if(moveCnt == T9)
-					{
-						backData.status = STOP_STA;
-						pidReset(&speedPID);
-						SET_PWM(3750 - speedPID.sumOut);
-						duty = (Uint16)(speedPID.sumOut * 100/3750);
-						moveCnt = 0;
+						else //if(moveCnt < T_ALL)
+						{
+							if((NOMAL_RATE_UP - (Uint16)(K_UP_10MS * (moveCnt - T_T2))) < 100)
+							{
+								speedPID.setPoint = 100;
+							}
+							else
+							{
+								speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(K_UP_10MS * (moveCnt - T_T2));
+							}
+							speedPID.input = backData.speedCapture;
+							pidCalc(&speedPID);
+							SET_PWM(3750 - speedPID.sumOut);
+							duty = (Uint16)(speedPID.sumOut * 100/3750);
+						}
+//						else if(moveCnt == T_ALL)
+//						{
+//							backData.status = STOP_STA;
+//							pidReset(&speedPID);
+//							SET_PWM(3750 - speedPID.sumOut);
+//							duty = (Uint16)(speedPID.sumOut * 100/3750);
+//							moveCnt = 0;
+//						}
 					}
 				}
 				else
 				{
-					if(moveCnt <= T9_T1)
+					if(backData.posCntDwon >= POS_THRESHOLD)
 					{
-						speedPID.setPoint =(Uint16)(K_DOWN_10MS * moveCnt);
+						speedPID.setPoint = 100;
 						speedPID.input = backData.speedCapture;
 						pidCalc(&speedPID);
 						SET_PWM(3750 - speedPID.sumOut);
 						duty = (Uint16)(speedPID.sumOut * 100/3750);
 					}
-					else if(moveCnt <= T9_T2)
+					else
 					{
-						speedPID.setPoint = NOMAL_RATE_DOWN;
-						speedPID.input = backData.speedCapture;
-						pidCalc(&speedPID);
-						SET_PWM(3750 - speedPID.sumOut);
-						duty = (Uint16)(speedPID.sumOut * 100/3750);
-					}
-					else if(moveCnt < T9)
-					{
-						if((NOMAL_RATE_DOWN - (Uint16)(K_DOWN_10MS * (moveCnt - T9_T2))) < 100)
+						if(moveCnt <= T_T1)
 						{
-							speedPID.setPoint = 100;
+							speedPID.setPoint =(Uint16)(K_DOWN_10MS * moveCnt);
+							speedPID.input = backData.speedCapture;
+							pidCalc(&speedPID);
+							SET_PWM(3750 - speedPID.sumOut);
+							duty = (Uint16)(speedPID.sumOut * 100/3750);
 						}
-						else
+						else if(moveCnt <= T_T2)
 						{
-							speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(K_DOWN_10MS * (moveCnt - T9_T2));
+							speedPID.setPoint = NOMAL_RATE_DOWN;
+							speedPID.input = backData.speedCapture;
+							pidCalc(&speedPID);
+							SET_PWM(3750 - speedPID.sumOut);
+							duty = (Uint16)(speedPID.sumOut * 100/3750);
 						}
-						speedPID.input = backData.speedCapture;
-						pidCalc(&speedPID);
-						SET_PWM(3750 - speedPID.sumOut);
-						duty = (Uint16)(speedPID.sumOut * 100/3750);
-					}
-					else if(moveCnt == T9)
-					{
-						backData.status = STOP_STA;
-						pidReset(&speedPID);
-						SET_PWM(3750 - speedPID.sumOut);
-						duty = (Uint16)(speedPID.sumOut * 100/3750);
-						moveCnt = 0;
+						else //if(moveCnt < T_ALL)
+						{
+							if((NOMAL_RATE_DOWN - (Uint16)(K_DOWN_10MS * (moveCnt - T_T2))) < 100)
+							{
+								speedPID.setPoint = 100;
+							}
+							else
+							{
+								speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(K_DOWN_10MS * (moveCnt - T_T2));
+							}
+							speedPID.input = backData.speedCapture;
+							pidCalc(&speedPID);
+							SET_PWM(3750 - speedPID.sumOut);
+							duty = (Uint16)(speedPID.sumOut * 100/3750);
+						}
+//						else if(moveCnt == T_ALL)
+//						{
+//							backData.status = STOP_STA;
+//							pidReset(&speedPID);
+//							SET_PWM(3750 - speedPID.sumOut);
+//							duty = (Uint16)(speedPID.sumOut * 100/3750);
+//							moveCnt = 0;
+//						}
 					}
 				}
-
 			}
 			else if(CHECK_STA == backData.status)
 			{
@@ -705,7 +727,7 @@ interrupt void ISRTimer0(void)
 		}
 	  }
 	}
-	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;  //Acknowledge this interrupt to receive more interrupts from group 1
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
 }
 
 interrupt void ISRCap1(void)
@@ -754,7 +776,7 @@ interrupt void ISRCap1(void)
     	ECap1Regs.ECCLR.bit.CTROVF = 1;
     }
     ECap1Regs.ECCLR.bit.INT = 1;
-    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;
 }
 
 interrupt void ISRCap2(void)
@@ -801,7 +823,7 @@ interrupt void ISRCap2(void)
 		ECap2Regs.ECCLR.bit.CTROVF = 1;
 	}
 	ECap2Regs.ECCLR.bit.INT = 1;
-	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;
 }
 
 interrupt void ISRCap3(void)
@@ -848,12 +870,12 @@ interrupt void ISRCap3(void)
 		ECap3Regs.ECCLR.bit.CTROVF = 1;
 	}
 	ECap3Regs.ECCLR.bit.INT = 1;
-	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;  //Acknowledge this interrupt to receive more interrupts from group 4
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;
 }
 
 interrupt void local_DINTCH1_ISR(void)
 {
-	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP7;  //Acknowledge this interrupt to receive more interrupts from group 7
+	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP7;
 }
 
 interrupt void xintUp_isr(void)
@@ -861,6 +883,10 @@ interrupt void xintUp_isr(void)
 	PWM_OFF;
 	backData.upperOver = 1;
 	backData.faultCode |= (0x0001<<4);//bit4 upper over
+	/*test*/
+	moveCn = 0;
+	backData.posCntUp = 0;
+
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
 
 }
@@ -869,6 +895,10 @@ interrupt void xintDown_isr(void)
 	PWM_OFF;
 	backData.lowerOver = 1;
 	backData.faultCode |= (0x0001<<5);//bit5 lower over
+	/*test*/
+	moveCn = 0;
+	backData.posCntDown = 0;
+
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP2;
 }
 
@@ -879,9 +909,16 @@ void dataInit()
 	upperCommand.motionCmd = DO_STOP;//指令默认停止
 	backData.status = STOP_STA;//状态默认停止
 	backData.motorDir = FOREWARD;//转向为正
+
+	memset(&speedPID,0x00,sizeof(PID));
+	speedPID.outMax = 24576000;//196608000;//%80
+	speedPID.outMin = 12288000;//12288000->5%;//
+	speedPID.kp = 65536;//1
+	speedPID.ki = 3277;//0
+
 	/*Current_Base*/
 }
-void readHall()
+Uint16 readHall()
 {
 	if(GpioDataRegs.GPADAT.bit.GPIO24)
 	{
@@ -906,6 +943,34 @@ void readHall()
 	else
 	{
 		backData.hallPos &= ~(0x0001<<2);
+	}
+	return backData.hallPos;
+}
+void readHall1()
+{
+	if(GpioDataRegs.GPADAT.bit.GPIO24)
+	{
+		backData.hallPos1 |= (0x0001<<0);
+	}
+	else
+	{
+		backData.hallPos1 &= ~(0x0001<<0);
+	}
+	if(GpioDataRegs.GPADAT.bit.GPIO25)
+	{
+		backData.hallPos1 |= (0x0001<<1);
+	}
+	else
+	{
+		backData.hallPos1 &= ~(0x0001<<1);
+	}
+	if(GpioDataRegs.GPADAT.bit.GPIO26)
+	{
+		backData.hallPos1 |= (0x0001<<2);
+	}
+	else
+	{
+		backData.hallPos1 &= ~(0x0001<<2);
 	}
 }
 void pwmUpdate()
@@ -1031,9 +1096,11 @@ void readPulse()
 	if(0 == backData.motorDir)
 	{
 		backData.posCnt++;
+		backData.posCntUp++;
 	}
 	else
 	{
 		backData.posCnt--;
+		backData.posCntDown++;
 	}
 }
