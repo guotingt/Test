@@ -6,26 +6,21 @@
 /*debug相关*/
 #define SPEED_CURVE1 0
 
+/**/
+#define POS_THREHOLD 4600
 /*曲线相关*/
-#define NOMAL_RATE_DOWN 300 //500
-#define NOMAL_RATE_UP 300  //500
-#define T8 800
-#define T8_T1 170
-#define T8_T2 630
-#define T7 700
-#define T7_T1  70
-#define T7_T2  630
-#define T9 900
-#define T9_T1  150
-#define T9_T2  750
-#define K_UP_10MS 2
-#define K_DOWN_10MS 2
+#define NOMAL_RATE_DOWN 450 //500
+#define NOMAL_RATE_UP 450  //500
+
+#define T_ALL 1000 //800
+#define T_T1  300  //70
+#define T_T2  700  //630
+#define K_UP_10MS 3
+#define K_DOWN_10MS 3
+
 #define T6 600
 #define KR_UP_MS 3
 #define KR_DOWN_MS 7
-
-#define LOAD_TEST_V 30000/8
-#define BIG_LOAD_I 40
 
 /*PWM相关*/
 #define PWM_PERIOD    3750//10K 5K:7500
@@ -145,6 +140,10 @@ static Uint16 speedCapture();
 static void readPulse();
 
 /**
+ * @brief filter
+ */
+//static int16 filterCurrent(volatile Uint16* pSrc,int16 *pArray);
+/**
  * @brief ISR for CAP1
  */
 interrupt void ISRCap1(void);
@@ -200,8 +199,8 @@ extern void pwmUpdate();
 /**
  * @brief read hall state
  */
-extern void readHall();
+extern Uint16 readHall();
 
-
+extern void readHall1();
 #endif
 

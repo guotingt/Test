@@ -67,6 +67,7 @@ typedef struct _back_Data
     int16 currentW;
     Uint16 speedCapture;
     Uint16 hallPos;
+    Uint16 hallPos1;
     Uint16 upperOver;
     Uint16 lowerOver;
     Uint16 faultCode;
@@ -76,6 +77,8 @@ typedef struct _back_Data
     Uint16 posFlag;
     int32  posCnt;
     Uint16 loadType;
+    Uint16 posCntUp;
+    Uint16 posCntDown;
 }BACK_DATA;
 
 #endif

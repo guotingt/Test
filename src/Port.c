@@ -4,6 +4,7 @@
 #include"DspInit.h"
 #include"Control.h"
 
+
 Uint16 sendBuf[10] = {0};
 Uint16 testBuf[80] = {0};
 Uint16 reciveBuf[20] = {0};
@@ -173,10 +174,12 @@ void unPackMsg2()
 				if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
 				{
 					backData.posFlag = 1;
+					backData.posCntUp = 0;
 				}
 				else if(FOREWARD_STA == backData.status)
 				{
 					backData.posFlag = 2;
+					backData.posCntDown = 0;
 				}
 				else
 				{
@@ -189,10 +192,10 @@ void unPackMsg2()
 				duty = (Uint16)(speedPID.sumOut * 100/3750);
 				break;
 			case DO_BACKWARD:
-				if((STOP_STA  == backData.status) || (DO_BACKWARD  == backData.status))
+				if((STOP_STA  == backData.status) || (BACKWARD_STA  == backData.status))
 				{
 					backData.status = BACKWARD_STA;
-					backData.motorDir = 1;
+					backData.motorDir = BACKWARD;
 					moveCnt =0;
 					readHall();
 					pwmUpdate();
@@ -209,14 +212,14 @@ void unPackMsg2()
 				if((STOP_STA  == backData.status) || (FOREWARD_STA  == backData.status))
 				{
 					backData.status = FOREWARD_STA;
-					backData.motorDir = 0;
+					backData.motorDir = FOREWARD;
 					moveCnt = 0;
 					readHall();
 					pwmUpdate();
 				}
 				else
 				{
-					PWM_OFF
+					PWM_OFF;
 					backData.status = STOP_STA;
 					pidReset(&speedPID);
 					SET_PWM(3750 - speedPID.sumOut);
@@ -227,7 +230,7 @@ void unPackMsg2()
 				if((STOP_STA  == backData.status) || (CHECK_STA  == backData.status))
 				{
 					backData.status = CHECK_STA;
-					backData.motorDir = 1;
+					backData.motorDir = FOREWARD;
 					readHall();
 					pwmUpdate();
 				}
@@ -299,6 +302,7 @@ void sendTest()
 	Uint16 offset = 0;
 	Uint16 xors = 0;
 	Uint16 i = 0;
+	readHall1();
 	*(testBuf + offset) = 0xAA; offset++;
 	*(testBuf + offset) = 0x55; offset++;
 	*(testBuf + offset) = backData.status; offset++;
@@ -325,6 +329,8 @@ void sendTest()
 	*(testBuf + offset) = (Uint16)(speedPID.outMax>>8);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.outMax>>16);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.outMax>>24);offset++;
+	*(testBuf + offset) = (Uint16)(backData.hallPos);offset++;
+	*(testBuf + offset) = (Uint16)(backData.hallPos1);offset++;
 	for (i = 2; i < offset;i++)
 	{
 		xors ^= testBuf[i];
