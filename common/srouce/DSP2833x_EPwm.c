@@ -110,7 +110,7 @@ InitEPwm1Gpio(void)
 
     EDIS;
     EPwm1Regs.AQCSFRC.bit.CSFA = 2;
-    EPwm1Regs.AQCSFRC.bit.CSFB = 2;
+    EPwm1Regs.AQCSFRC.bit.CSFB = 1;
 }
 
 //
@@ -140,7 +140,7 @@ InitEPwm2Gpio(void)
 
     EDIS;
     EPwm2Regs.AQCSFRC.bit.CSFA = 2;
-    EPwm2Regs.AQCSFRC.bit.CSFB = 2;
+    EPwm2Regs.AQCSFRC.bit.CSFB = 1;
 }
 
 //
@@ -170,7 +170,7 @@ InitEPwm3Gpio(void)
 
     EDIS;
     EPwm3Regs.AQCSFRC.bit.CSFA = 2;
-    EPwm3Regs.AQCSFRC.bit.CSFB = 2;
+    EPwm3Regs.AQCSFRC.bit.CSFB = 1;
 }
 
 #if DSP28_EPWM4
