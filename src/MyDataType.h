@@ -55,7 +55,7 @@ typedef struct _command
 
 /*sensor message
   faultCode:
-  B7(default zero) B6(default zero  ) 
+  B7(default zero) B6(default zero  ) B6(over current)
   B5(1:lower over) B4(1:upper over  )
   B3(1:load over ) B2(1:hall error  )
   B1(1:coil error) B0(1:over current)*/
