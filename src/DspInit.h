@@ -4,23 +4,20 @@
 #include "DSP28x_Project.h"
 
 /*debug相关*/
-#define SPEED_CURVE1 0
-
-/**/
-#define POS_THREHOLD 4600
+#define SPEED_CURVE1 1
 /*曲线相关*/
-#define NOMAL_RATE_DOWN 450 //500
-#define NOMAL_RATE_UP 450  //500
+#define NOMAL_RATE_DOWN 350 //500
+#define NOMAL_RATE_UP 350  //500
+#define LOW_RATE 100
 
-#define T_ALL 1000 //800
-#define T_T1  300  //70
-#define T_T2  700  //630
-#define K_UP_10MS 3
-#define K_DOWN_10MS 3
+#define T_ALL 1000
+#define T_T1  200  //70
+#define T_T2  800  //630
+#define K_UP_10MS  1.75
+#define K_DOWN_10MS 1.75
 
-#define T6 600
-#define KR_UP_MS 3
-#define KR_DOWN_MS 7
+#define POS_ALL 4750
+#define POS_SHUT 200
 
 /*PWM相关*/
 #define PWM_PERIOD    3750//10K 5K:7500
@@ -138,11 +135,14 @@ static Uint16 speedCapture();
  * @brief read posCnt
  */
 static void readPulse();
-
 /**
  * @brief filter
  */
-//static int16 filterCurrent(volatile Uint16* pSrc,int16 *pArray);
+static int16 filterCurrent(volatile Uint16* pSrc,int16 *pArray);
+/**
+ * @brief
+ */
+static void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV);
 /**
  * @brief ISR for CAP1
  */
@@ -197,10 +197,13 @@ extern void currentRead(void);
  */
 extern void pwmUpdate();
 /**
- * @brief read hall state
+ * @brief read hall state in ecap
  */
 extern Uint16 readHall();
-
+/***
+ * @brief read hall state 10ms
+ */
 extern void readHall1();
+
 #endif
 

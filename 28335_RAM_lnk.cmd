@@ -117,7 +117,7 @@ PAGE 0 :
    BEGIN      : origin = 0x000000, length = 0x000002     /* Boot to M0 will go here                      */
    RAMM0      : origin = 0x000050, length = 0x0003B0
    RAML0      : origin = 0x008000, length = 0x001000
-   RAML1      : origin = 0x009000, length = 0x002000
+   RAML1      : origin = 0x009000, length = 0x003000
 //   RAML2      : origin = 0x00A000, length = 0x001000
 //   RAML3      : origin = 0x00B000, length = 0x001000
    ZONE7A     : origin = 0x200000, length = 0x00FC00    /* XINTF zone 7 - program space */

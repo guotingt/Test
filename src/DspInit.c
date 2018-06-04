@@ -100,6 +100,12 @@ void ECap1Setup()
 	ECap1Regs.ECCTL1.bit.CAP2POL = ~(GpioDataRegs.GPADAT.bit.GPIO24);
 	ECap1Regs.ECCTL1.bit.CAP3POL = GpioDataRegs.GPADAT.bit.GPIO24;
 	ECap1Regs.ECCTL1.bit.CAP4POL = ~(GpioDataRegs.GPADAT.bit.GPIO24);
+
+//	ECap1Regs.ECCTL1.bit.CAP1POL = 0;
+//	ECap1Regs.ECCTL1.bit.CAP2POL = 1;
+//	ECap1Regs.ECCTL1.bit.CAP3POL = 0;
+//	ECap1Regs.ECCTL1.bit.CAP4POL = 1;
+
 	ECap1Regs.ECCTL1.bit.CTRRST1 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap1Regs.ECCTL1.bit.CTRRST2 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap1Regs.ECCTL1.bit.CTRRST3 = EC_DELTA_MODE;          //difference time stamp operation
@@ -127,6 +133,12 @@ void ECap2Setup()
 	ECap2Regs.ECCTL1.bit.CAP2POL = ~(GpioDataRegs.GPADAT.bit.GPIO25);
 	ECap2Regs.ECCTL1.bit.CAP3POL = GpioDataRegs.GPADAT.bit.GPIO25;
 	ECap2Regs.ECCTL1.bit.CAP4POL = ~(GpioDataRegs.GPADAT.bit.GPIO25);
+
+//	ECap2Regs.ECCTL1.bit.CAP1POL = 0;
+//	ECap2Regs.ECCTL1.bit.CAP2POL = 1;
+//	ECap2Regs.ECCTL1.bit.CAP3POL = 0;
+//	ECap2Regs.ECCTL1.bit.CAP4POL = 1;
+
 	ECap2Regs.ECCTL1.bit.CTRRST1 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap2Regs.ECCTL1.bit.CTRRST2 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap2Regs.ECCTL1.bit.CTRRST3 = EC_DELTA_MODE;          //difference time stamp operation
@@ -154,6 +166,12 @@ void ECap3Setup()
 	ECap3Regs.ECCTL1.bit.CAP2POL = ~(GpioDataRegs.GPADAT.bit.GPIO26);
 	ECap3Regs.ECCTL1.bit.CAP3POL = GpioDataRegs.GPADAT.bit.GPIO26;
 	ECap3Regs.ECCTL1.bit.CAP4POL = ~(GpioDataRegs.GPADAT.bit.GPIO26);
+
+//	ECap3Regs.ECCTL1.bit.CAP1POL = 0;
+//	ECap3Regs.ECCTL1.bit.CAP2POL = 1;
+//	ECap3Regs.ECCTL1.bit.CAP3POL = 0;
+//	ECap3Regs.ECCTL1.bit.CAP4POL = 1;
+
 	ECap3Regs.ECCTL1.bit.CTRRST1 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap3Regs.ECCTL1.bit.CTRRST2 = EC_DELTA_MODE;          //difference time stamp operation
 	ECap3Regs.ECCTL1.bit.CTRRST3 = EC_DELTA_MODE;          //difference time stamp operation
@@ -468,7 +486,7 @@ void dsp28335Init()
     IER |= M_INT4;   							  //使能第四组中断
     IER |= M_INT9;   							  //使能第九组中断
     IER |= M_INT13; 						      //使能中断13
-    IER |= M_INT7; 						          //使能第七组中断
+    //IER |= M_INT7; 						          //使能第七组中断
 
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
     PieCtrlRegs.PIEIER1.bit.INTx4 = 1;			  //使能第一组中断里的第1个中断--UP中断
@@ -582,128 +600,40 @@ interrupt void ISRTimer0(void)
 				moveCnt++;
 				if(FOREWARD == backData.motorDir)
 				{
-					if(backData.posCntUp >= POS_THRESHOLD)
+					if((POS_ALL - backData.posCntUp <  POS_SHUT)||((backData.posCntDown > backData.posCntUp) && (backData.posCntDown - backData.posCntUp) < POS_SHUT))
 					{
-						speedPID.setPoint = 100;
-						speedPID.input = backData.speedCapture;
-						pidCalc(&speedPID);
-						SET_PWM(3750 - speedPID.sumOut);
-						duty = (Uint16)(speedPID.sumOut * 100/3750);
+						speedPID.setPoint = LOW_RATE;
 					}
 					else
 					{
-						if(moveCnt <= T_T1)
-						{
-							speedPID.setPoint =(Uint16)(K_UP_10MS * moveCnt);
-							speedPID.input = backData.speedCapture;
-							pidCalc(&speedPID);
-							SET_PWM(3750 - speedPID.sumOut);
-							duty = (Uint16)(speedPID.sumOut * 100/3750);
-						}
-						else if(moveCnt <= T_T2)
-						{
-							speedPID.setPoint = NOMAL_RATE_UP;
-							speedPID.input = backData.speedCapture;
-							pidCalc(&speedPID);
-							SET_PWM(3750 - speedPID.sumOut);
-							duty = (Uint16)(speedPID.sumOut * 100/3750);
-						}
-						else //if(moveCnt < T_ALL)
-						{
-							if((NOMAL_RATE_UP - (Uint16)(K_UP_10MS * (moveCnt - T_T2))) < 100)
-							{
-								speedPID.setPoint = 100;
-							}
-							else
-							{
-								speedPID.setPoint = NOMAL_RATE_UP - (Uint16)(K_UP_10MS * (moveCnt - T_T2));
-							}
-							speedPID.input = backData.speedCapture;
-							pidCalc(&speedPID);
-							SET_PWM(3750 - speedPID.sumOut);
-							duty = (Uint16)(speedPID.sumOut * 100/3750);
-						}
-//						else if(moveCnt == T_ALL)
-//						{
-//							backData.status = STOP_STA;
-//							pidReset(&speedPID);
-//							SET_PWM(3750 - speedPID.sumOut);
-//							duty = (Uint16)(speedPID.sumOut * 100/3750);
-//							moveCnt = 0;
-//						}
+					    setVCurve(T_T1,T_T2,T_ALL,K_UP_10MS,NOMAL_RATE_UP,LOW_RATE);
 					}
 				}
 				else
 				{
-					if(backData.posCntDwon >= POS_THRESHOLD)
+					if((POS_ALL - backData.posCntDown <  POS_SHUT)||((backData.posCntUp > backData.posCntDown) && (backData.posCntUp - backData.posCntDown) < POS_SHUT))
 					{
-						speedPID.setPoint = 100;
-						speedPID.input = backData.speedCapture;
-						pidCalc(&speedPID);
-						SET_PWM(3750 - speedPID.sumOut);
-						duty = (Uint16)(speedPID.sumOut * 100/3750);
+						speedPID.setPoint = LOW_RATE;
 					}
 					else
 					{
-						if(moveCnt <= T_T1)
-						{
-							speedPID.setPoint =(Uint16)(K_DOWN_10MS * moveCnt);
-							speedPID.input = backData.speedCapture;
-							pidCalc(&speedPID);
-							SET_PWM(3750 - speedPID.sumOut);
-							duty = (Uint16)(speedPID.sumOut * 100/3750);
-						}
-						else if(moveCnt <= T_T2)
-						{
-							speedPID.setPoint = NOMAL_RATE_DOWN;
-							speedPID.input = backData.speedCapture;
-							pidCalc(&speedPID);
-							SET_PWM(3750 - speedPID.sumOut);
-							duty = (Uint16)(speedPID.sumOut * 100/3750);
-						}
-						else //if(moveCnt < T_ALL)
-						{
-							if((NOMAL_RATE_DOWN - (Uint16)(K_DOWN_10MS * (moveCnt - T_T2))) < 100)
-							{
-								speedPID.setPoint = 100;
-							}
-							else
-							{
-								speedPID.setPoint = NOMAL_RATE_DOWN - (Uint16)(K_DOWN_10MS * (moveCnt - T_T2));
-							}
-							speedPID.input = backData.speedCapture;
-							pidCalc(&speedPID);
-							SET_PWM(3750 - speedPID.sumOut);
-							duty = (Uint16)(speedPID.sumOut * 100/3750);
-						}
-//						else if(moveCnt == T_ALL)
-//						{
-//							backData.status = STOP_STA;
-//							pidReset(&speedPID);
-//							SET_PWM(3750 - speedPID.sumOut);
-//							duty = (Uint16)(speedPID.sumOut * 100/3750);
-//							moveCnt = 0;
-//						}
+						setVCurve(T_T1,T_T2,T_ALL,K_UP_10MS,NOMAL_RATE_UP,LOW_RATE);
 					}
 				}
 			}
 			else if(CHECK_STA == backData.status)
 			{
-				speedPID.setPoint = 100;
-				speedPID.input = backData.speedCapture;
-				pidCalc(&speedPID);
-				SET_PWM(3750 - speedPID.sumOut);
-				duty = (Uint16)(speedPID.sumOut * 100/3750);
+				speedPID.setPoint = LOW_RATE;
 			}
 		}
 		else
 		{
-			speedPID.setPoint = 100;
-			speedPID.input = backData.speedCapture;
-			pidCalc(&speedPID);
-			SET_PWM(3750 - speedPID.sumOut);
-			duty = (Uint16)(speedPID.sumOut * 100/3750);
+			speedPID.setPoint = LOW_RATE;
 		}
+		speedPID.input = backData.speedCapture;
+		pidCalc(&speedPID);
+		SET_PWM(3750 - speedPID.sumOut);
+		duty = (Uint16)(speedPID.sumOut * 100/3750);
 #endif
 		msCnt100++;
 		if(msCnt100 >= 10)
@@ -719,7 +649,7 @@ interrupt void ISRTimer0(void)
 			if(msCnt1000 >= 2)
 			{
 			  msCnt1000 = 0;
-			  LED_TOGGLE;
+			 // LED_TOGGLE;
 			  flag1000msW = 0xffff;//1s
 
 			}
@@ -735,7 +665,6 @@ interrupt void ISRCap1(void)
 	cap1OverCnt = 0;
     if(1 == ECap1Regs.ECFLG.bit.CEVT1)
     {
-    	backData.hallPos &= (~(0x0001<<0));
     	ECap1Regs.ECCLR.bit.CEVT1 = 1;
 
     	tx[0] = ECap1Regs.CAP1 / 6 ;
@@ -749,7 +678,6 @@ interrupt void ISRCap1(void)
     }
     if(1 == ECap1Regs.ECFLG.bit.CEVT2)
     {
-    	backData.hallPos |= (0x0001<<0);
     	ECap1Regs.ECCLR.bit.CEVT2 = 1;
     	readPulse();
     	readHall();
@@ -757,7 +685,6 @@ interrupt void ISRCap1(void)
     }
     if(1 == ECap1Regs.ECFLG.bit.CEVT3)
     {
-    	backData.hallPos &= (~(0x0001<<0));
     	ECap1Regs.ECCLR.bit.CEVT3 = 1;
     	readPulse();
     	readHall();
@@ -765,7 +692,6 @@ interrupt void ISRCap1(void)
     }
     if(1 == ECap1Regs.ECFLG.bit.CEVT4)
     {
-    	backData.hallPos |= (0x0001<<0);
     	ECap1Regs.ECCLR.bit.CEVT4 = 1;
     	readPulse();
     	readHall();
@@ -783,7 +709,6 @@ interrupt void ISRCap2(void)
 {
 	if(1 == ECap2Regs.ECFLG.bit.CEVT1)
 	{
-		backData.hallPos &= (~(0x0001<<1));
 		ECap2Regs.ECCLR.bit.CEVT1 = 1;
 
 		tx[2] = ECap2Regs.CAP1 / 6;
@@ -796,7 +721,6 @@ interrupt void ISRCap2(void)
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT2)
 	{
-		backData.hallPos |= (0x0001<<1);
 		ECap2Regs.ECCLR.bit.CEVT2 = 1;
 		readPulse();
 		readHall();
@@ -804,7 +728,6 @@ interrupt void ISRCap2(void)
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT3)
 	{
-		backData.hallPos &= (~(0x0001<<1));
 		ECap2Regs.ECCLR.bit.CEVT3 = 1;
 		readPulse();
 		readHall();
@@ -812,7 +735,6 @@ interrupt void ISRCap2(void)
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT4)
 	{
-		backData.hallPos |= (0x0001<<1);
 		ECap2Regs.ECCLR.bit.CEVT4 = 1;
 		readPulse();
 		readHall();
@@ -830,7 +752,6 @@ interrupt void ISRCap3(void)
 {
     if(1 == ECap3Regs.ECFLG.bit.CEVT1)
 	{
-    	backData.hallPos &= (~(0x0001<<2));
     	ECap3Regs.ECCLR.bit.CEVT1 = 1;
 
     	tx[4] = ECap3Regs.CAP1 / 6 ;
@@ -843,7 +764,6 @@ interrupt void ISRCap3(void)
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CEVT2)
 	{
-		backData.hallPos |= (0x0001<<2);
 		ECap3Regs.ECCLR.bit.CEVT2 = 1;
 		readPulse();
 		readHall();
@@ -851,7 +771,6 @@ interrupt void ISRCap3(void)
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CEVT3)
 	{
-		backData.hallPos &= (~(0x0001<<2));
 		ECap3Regs.ECCLR.bit.CEVT3 = 1;
 		readPulse();
 		readHall();
@@ -859,7 +778,6 @@ interrupt void ISRCap3(void)
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CEVT4)
 	{
-		backData.hallPos |= (0x0001<<2);
 		ECap3Regs.ECCLR.bit.CEVT4 = 1;
 		readPulse();
 		readHall();
@@ -875,6 +793,7 @@ interrupt void ISRCap3(void)
 
 interrupt void local_DINTCH1_ISR(void)
 {
+	LED_TOGGLE;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP7;
 }
 
@@ -883,9 +802,7 @@ interrupt void xintUp_isr(void)
 	PWM_OFF;
 	backData.upperOver = 1;
 	backData.faultCode |= (0x0001<<4);//bit4 upper over
-	/*test*/
-	moveCn = 0;
-	backData.posCntUp = 0;
+	backData.status = STOP_STA;
 
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
 
@@ -895,10 +812,7 @@ interrupt void xintDown_isr(void)
 	PWM_OFF;
 	backData.lowerOver = 1;
 	backData.faultCode |= (0x0001<<5);//bit5 lower over
-	/*test*/
-	moveCn = 0;
-	backData.posCntDown = 0;
-
+	backData.status = STOP_STA;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP2;
 }
 
@@ -1102,5 +1016,31 @@ void readPulse()
 	{
 		backData.posCnt--;
 		backData.posCntDown++;
+	}
+}
+void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV)
+{
+	if(moveCnt <= t1)
+	{
+		speedPID.setPoint =(Uint16)(k * moveCnt);
+	}
+	else if(moveCnt <= t2)
+	{
+		speedPID.setPoint = maxV;
+	}
+	else if(moveCnt <= tAll)
+	{
+		if((maxV - (Uint16)(k * (moveCnt - t2))) < lowV)
+		{
+			speedPID.setPoint = lowV;
+		}
+		else
+		{
+			speedPID.setPoint = maxV - (Uint16)(k * (moveCnt - t2));
+		}
+	}
+	else
+	{
+		speedPID.setPoint = lowV;
 	}
 }

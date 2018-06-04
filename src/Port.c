@@ -9,6 +9,7 @@ Uint16 sendBuf[10] = {0};
 Uint16 testBuf[80] = {0};
 Uint16 reciveBuf[20] = {0};
 BACK_DATA backData;
+Uint16 currentOver;
 
 void readSensor()
 {
@@ -30,7 +31,6 @@ void readSensor()
 	{
 		backData.lowerOver = 1;
 		backData.faultCode |= (0x0001<<5);//bit5 lower over
-
 	}
 	/*ÉÏÏÞÎ»¼ì²â*/
 	if(GpioDataRegs.GPADAT.bit.GPIO23)
@@ -43,23 +43,25 @@ void readSensor()
 		backData.upperOver = 1;
 		backData.faultCode |= (0x0001<<4);//bit4 upper over
 	}
-	/*Read GPIOX to define status*/
-	if (abs(backData.current) >= CURRENT_THRESHOLD_1)
+
+	if (abs(backData.current) >= CURRENT_THRESHOLD_3)
 	{
-		backData.faultCode |= (0x0000<<0);//bit0 over current_todo
-		//PWM_OFF;
-	}
-	else if (abs(backData.current) >= CURRENT_THRESHOLD_2)
-	{
-		backData.faultCode |= (0x0000<<3);//bit3 over load_todo
-		//PWM_OFF;
+		currentOver++;
+		if (currentOver > 60)
+		{
+			backData.faultCode |= (0x0001);
+			PWM_OFF;
+			backData.status = STOP_STA;
+		}
 	}
 	else
 	{
+		currentOver = 0;
 		backData.faultCode |= 0x0000;
 	}
+
 	/*hall×´Ì¬Òì³£¼ì²â*/
-	if ((0x0007 == (backData.hallPos&0x0007)) || (0x0000 == backData.hallPos) )
+	if ((0x0007 == (backData.hallPos&0x0007)) || (0x0000 == backData.hallPos))
 	{
 		backData.faultCode |= (0x0001<<2);//bit2 hall error
 		PWM_OFF;
@@ -174,12 +176,12 @@ void unPackMsg2()
 				if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
 				{
 					backData.posFlag = 1;
-					backData.posCntUp = 0;
+					backData.posCntDown = 0;
 				}
 				else if(FOREWARD_STA == backData.status)
 				{
 					backData.posFlag = 2;
-					backData.posCntDown = 0;
+					backData.posCntUp = 0;
 				}
 				else
 				{
@@ -196,7 +198,7 @@ void unPackMsg2()
 				{
 					backData.status = BACKWARD_STA;
 					backData.motorDir = BACKWARD;
-					moveCnt =0;
+					moveCnt = 0;
 					readHall();
 					pwmUpdate();
 				}
@@ -230,7 +232,7 @@ void unPackMsg2()
 				if((STOP_STA  == backData.status) || (CHECK_STA  == backData.status))
 				{
 					backData.status = CHECK_STA;
-					backData.motorDir = FOREWARD;
+					backData.motorDir = BACKWARD;
 					readHall();
 					pwmUpdate();
 				}
@@ -307,6 +309,8 @@ void sendTest()
 	*(testBuf + offset) = 0x55; offset++;
 	*(testBuf + offset) = backData.status; offset++;
 	*(testBuf + offset) = backData.faultCode; offset++;
+//	*(testBuf + offset) = (Uint16)(speedPID.setPoint);offset++;  //
+//	*(testBuf + offset) = (Uint16)(speedPID.setPoint>>8);offset++;
 	*(testBuf + offset) = backData.speedCapture; offset++;
 	*(testBuf + offset) = backData.speedCapture>>8;offset++;
 	*(testBuf + offset) = backData.current; offset++;
@@ -331,6 +335,8 @@ void sendTest()
 	*(testBuf + offset) = (Uint16)(speedPID.outMax>>24);offset++;
 	*(testBuf + offset) = (Uint16)(backData.hallPos);offset++;
 	*(testBuf + offset) = (Uint16)(backData.hallPos1);offset++;
+	*(testBuf + offset) = (Uint16)(speedPID.setPoint);offset++;  //
+	*(testBuf + offset) = (Uint16)(speedPID.setPoint>>8);offset++;
 	for (i = 2; i < offset;i++)
 	{
 		xors ^= testBuf[i];

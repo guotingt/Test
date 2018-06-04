@@ -32,6 +32,7 @@
 /*current threshold*/
 #define CURRENT_THRESHOLD_1 676 //30A
 #define CURRENT_THRESHOLD_2 901 //40A
+#define CURRENT_THRESHOLD_3 2200  //88.77A
 
 extern void readSensor();
 

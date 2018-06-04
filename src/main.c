@@ -7,7 +7,7 @@
 #include "string.h"
 
 #define CURRENT 0
-#define SPEED 1
+#define SPEED 0
 
 /*golbal value def*/
 PID speedPID;
