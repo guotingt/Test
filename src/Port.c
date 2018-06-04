@@ -10,6 +10,9 @@ Uint16 testBuf[80] = {0};
 Uint16 reciveBuf[20] = {0};
 BACK_DATA backData;
 Uint16 currentOver;
+Uint16 currentOverH;
+Uint16 currentOverFlag = 0;
+Uint16 cleraFault;
 
 void readSensor()
 {
@@ -31,6 +34,7 @@ void readSensor()
 	{
 		backData.lowerOver = 1;
 		backData.faultCode |= (0x0001<<5);//bit5 lower over
+
 	}
 	/*上限位检测*/
 	if(GpioDataRegs.GPADAT.bit.GPIO23)
@@ -47,17 +51,47 @@ void readSensor()
 	if (abs(backData.current) >= CURRENT_THRESHOLD_3)
 	{
 		currentOver++;
-		if (currentOver > 60)
+		if (currentOver > CURRENTOVER_TIME)
 		{
 			backData.faultCode |= (0x0001);
 			PWM_OFF;
 			backData.status = STOP_STA;
+			backData.posFlag = 0;//异常位置
+			pidReset(&speedPID);
+			SET_PWM(3750 - speedPID.sumOut);
+			duty = (Uint16)(speedPID.sumOut * 100/3750);
+			currentOverFlag = 1;
 		}
 	}
-	else
+	if (abs(backData.current) >= CURRENT_THRESHOLD_4) //93A
+	{
+		currentOverH++;
+		if (currentOverH > CURRENTOVERH_TIME)
+		{
+			backData.faultCode |= (0x0001);
+			PWM_OFF;
+			backData.status = STOP_STA;
+			backData.posFlag = 0;//异常位置
+			pidReset(&speedPID);
+			SET_PWM(3750 - speedPID.sumOut);
+			duty = (Uint16)(speedPID.sumOut * 100/3750);
+			currentOverFlag = 1;
+		}
+	}
+	if(abs(backData.current) < CURRENT_THRESHOLD_3)
 	{
 		currentOver = 0;
-		backData.faultCode |= 0x0000;
+		currentOverH = 0;
+	}
+	if (1 == currentOverFlag)
+	{
+		cleraFault ++;
+		if(CLEARFAULTTIME == cleraFault)
+		{
+			currentOverFlag = 0;
+			cleraFault = 0;
+			backData.faultCode &= ~0x0001; //清电流溢出错误标志
+		}
 	}
 
 	/*hall状态异常检测*/
@@ -65,6 +99,11 @@ void readSensor()
 	{
 		backData.faultCode |= (0x0001<<2);//bit2 hall error
 		PWM_OFF;
+		backData.status = STOP_STA;
+		backData.posFlag = 0;//异常位置
+		pidReset(&speedPID);
+		SET_PWM(3750 - speedPID.sumOut);
+		duty = (Uint16)(speedPID.sumOut * 100/3750);
 	}
 }
 
@@ -183,10 +222,6 @@ void unPackMsg2()
 					backData.posFlag = 2;
 					backData.posCntUp = 0;
 				}
-				else
-				{
-					backData.posFlag = 0;
-				}
 				PWM_OFF;
 				backData.status = STOP_STA;
 				pidReset(&speedPID);
@@ -194,7 +229,7 @@ void unPackMsg2()
 				duty = (Uint16)(speedPID.sumOut * 100/3750);
 				break;
 			case DO_BACKWARD:
-				if((STOP_STA  == backData.status) || (BACKWARD_STA  == backData.status))
+				if((STOP_STA  == backData.status) || (BACKWARD_STA  == backData.status))//todo
 				{
 					backData.status = BACKWARD_STA;
 					backData.motorDir = BACKWARD;
@@ -205,6 +240,7 @@ void unPackMsg2()
 				else
 				{
 					backData.status = STOP_STA;
+					backData.posFlag = 0;//异常位置
 					pidReset(&speedPID);
 					SET_PWM(3750 - speedPID.sumOut);
 					duty = (Uint16)(speedPID.sumOut * 100/3750);
@@ -223,6 +259,7 @@ void unPackMsg2()
 				{
 					PWM_OFF;
 					backData.status = STOP_STA;
+					backData.posFlag = 0;//异常位置
 					pidReset(&speedPID);
 					SET_PWM(3750 - speedPID.sumOut);
 					duty = (Uint16)(speedPID.sumOut * 100/3750);
@@ -240,6 +277,7 @@ void unPackMsg2()
 				{
 					PWM_OFF;
 					backData.status = STOP_STA;
+					backData.posFlag = 0;//异常位置
 					pidReset(&speedPID);
 					SET_PWM(3750 - speedPID.sumOut);
 					duty = (Uint16)(speedPID.sumOut * 100/3750);
@@ -251,6 +289,9 @@ void unPackMsg2()
 			stmpL = reciveBuf[17];
 			stmpH = reciveBuf[18];
 			speedPID.setPoint = stmpL + (stmpH<<8);
+		//	duty = stmpL + (stmpH<<8);
+		//	SET_PWM_PERCENT(duty);
+
 		}
 	}
 	else
