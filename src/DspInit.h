@@ -4,20 +4,36 @@
 #include "DSP28x_Project.h"
 
 /*debug相关*/
-#define SPEED_CURVE1 1
+#define SPEED_CURVE1 0
 /*曲线相关*/
-#define NOMAL_RATE_DOWN 350 //500
-#define NOMAL_RATE_UP 350  //500
 #define LOW_RATE 100
 
-#define T_ALL 1000
-#define T_T1  200  //70
-#define T_T2  800  //630
-#define K_UP_10MS  1.75
-#define K_DOWN_10MS 1.75
+//#define NOMAL_RATE_UP 450  //450
+//#define TUP_ALL 800
+//#define TUP_T1  100  //70
+//#define TUP_T2  700  //700
+//#define K_UP_10MS  4.5
+//
+//#define NOMAL_RATE_DOWN 500 //500
+//#define TDOWN_ALL 700
+//#define TDOWN_T1 70
+//#define TDOWN_T2 630
+//#define K_DOWN_10MS 7.14
 
-#define POS_ALL 4750
-#define POS_SHUT 200
+#define NOMAL_RATE_UP 350  //450
+#define TUP_ALL 800
+#define TUP_T1  133  //70
+#define TUP_T2  667  //700
+#define K_UP_10MS  2.625
+
+#define NOMAL_RATE_DOWN 350 //500
+#define TDOWN_ALL 800
+#define TDOWN_T1 133
+#define TDOWN_T2 667
+#define K_DOWN_10MS 2.625
+
+#define POS_ALL 3500
+#define POS_SHUT 100
 
 /*PWM相关*/
 #define PWM_PERIOD    3750//10K 5K:7500
@@ -192,6 +208,7 @@ extern void dsp28335Init(void);
  * @brief get current data
  */
 extern void currentRead(void);
+extern void currentBaseRead(void);
 /**
  * @brief PWM update
  */

@@ -18,6 +18,7 @@ TIME_FLAG  flag1000ms;
 volatile Uint16 DMABuf1[20] = {0};///<DMA data
 volatile Uint16 *DMADest;         ///<DMA DST_Addr
 volatile Uint16 *DMASource;       ///<DMA SRC_Addr
+
 volatile Uint16 currentBaseW = 2253; ///<W相基准值 1.65V
 volatile Uint16 currentBaseU = 2253; ///<U相基准值 1.65V
 volatile Uint16 currentBaseV = 2253; ///<V相基准值 1.65V
@@ -288,8 +289,12 @@ void scia_xmit(Uint16 a)
 void currentRead()
 {
 	int16 i,iSum;
-    if(FOREWARD == backData.motorDir)//Forward
-    {
+	if(STOP_STA == backData.status)
+	{
+		currentBaseRead();
+	}
+	if(FOREWARD == backData.motorDir)//Forward
+	{
 		switch(backData.hallPos)
 		{
 		case 5://UV
@@ -298,7 +303,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentV = iSum/10;
-			backData.current = currentBaseV - backData.currentV;
+			backData.current = backData.currentV -currentBaseV;
 			break;
 		case 1://UW
 			for(i = 0,iSum = 0; i < 10; i++)
@@ -311,7 +316,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentV = iSum/10;
-			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.currentW =   backData.currentU - currentBaseU + currentBaseV - backData.currentV;
 			backData.current = backData.currentW;
 			break;
 		case 3://VW
@@ -325,7 +330,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentV = iSum/10;
-			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.currentW = backData.currentU - currentBaseU + currentBaseV - backData.currentV;
 			backData.current = backData.currentW;
 			break;
 		case 2://VU
@@ -334,7 +339,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentU = iSum / 10;
-			backData.current = backData.currentU - currentBaseU;
+			backData.current = currentBaseU - backData.currentU;
 			break;
 		case 6://WU
 			for(i = 0,iSum = 0; i < 10; i++)
@@ -342,7 +347,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentU = iSum / 10;
-			backData.current = backData.currentU - currentBaseU;
+			backData.current = currentBaseU - backData.currentU;
 			break;
 		case 4://WV
 			for(i = 10,iSum = 0;i < 20;i++)
@@ -350,15 +355,15 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentV = iSum/10;
-			backData.current = currentBaseV - backData.currentV;
+			backData.current = backData.currentV - currentBaseV;
 			break;
 		default:
 			break;
 		}
-    }
-    else if(BACKWARD == backData.motorDir)//Backward
-    {
-    	switch(backData.hallPos)
+	}
+	else if(BACKWARD == backData.motorDir)//Backward
+	{
+		switch(backData.hallPos)
 		{
 		case 2://UV
 			for(i = 10,iSum = 0;i < 20;i++)
@@ -366,7 +371,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentV = iSum/10;
-			backData.current = currentBaseV - backData.currentV;
+			backData.current = backData.currentV - currentBaseV;
 			break;
 		case 6://UW
 			for(i = 0,iSum = 0; i < 10; i++)
@@ -379,7 +384,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentV = iSum/10;
-			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.currentW =  backData.currentU - currentBaseU + currentBaseV - backData.currentV;
 			backData.current = backData.currentW;
 			break;
 		case 4://VW
@@ -393,7 +398,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentV = iSum/10;
-			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.currentW =  backData.currentU - currentBaseU + currentBaseV - backData.currentV;
 			backData.current = backData.currentW;
 			break;
 		case 5://VU
@@ -402,7 +407,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentU = iSum / 10;
-			backData.current = backData.currentU - currentBaseU;
+			backData.current = currentBaseU - backData.currentU;
 			break;
 		case 1://WU
 			for(i = 0,iSum = 0; i < 10; i++)
@@ -410,7 +415,7 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentU = iSum / 10;
-			backData.current = backData.currentU - currentBaseU;
+			backData.current = currentBaseU - backData.currentU;
 			break;
 		case 3://WV
 			for(i = 10,iSum = 0;i < 20;i++)
@@ -418,12 +423,30 @@ void currentRead()
 				iSum += DMABuf1[i];
 			}
 			backData.currentV = iSum/10;
-			backData.current = currentBaseV - backData.currentV;
+			backData.current =  backData.currentV - currentBaseV;
 			break;
 		default:
 			break;
 		}
-    }
+	}
+}
+
+void currentBaseRead()
+{
+	 int i;
+	 int iSum;
+	 for(i = 0,iSum = 0; i < 10; i++)
+	 {
+		iSum += DMABuf1[i];
+	 }
+	 currentBaseU = iSum / 10;
+
+	 for(i = 10,iSum = 0; i < 20; i++)
+	 {
+		iSum += DMABuf1[i];
+	 }
+	 currentBaseV = iSum / 10;
+
 }
 void dsp28335Init()
 {
@@ -486,7 +509,7 @@ void dsp28335Init()
     IER |= M_INT4;   							  //使能第四组中断
     IER |= M_INT9;   							  //使能第九组中断
     IER |= M_INT13; 						      //使能中断13
-    //IER |= M_INT7; 						          //使能第七组中断
+ //   IER |= M_INT7; 						          //使能第七组中断
 
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
     PieCtrlRegs.PIEIER1.bit.INTx4 = 1;			  //使能第一组中断里的第1个中断--UP中断
@@ -498,9 +521,12 @@ void dsp28335Init()
     PieCtrlRegs.PIEIER9.bit.INTx1 = 1;            //使能第九组中断里的第一个中断--SCIARX接收中断
 
     dataInit();
+
     /*DMA通道中断在配置中使能*/
     EINT;                                         //中断使能
     ERTM;                                         //使能总实时中断
+    currentBaseRead();
+
 }
 
 interrupt void ISRSCIARX(void)
@@ -593,47 +619,37 @@ interrupt void ISRTimer0(void)
 		msCnt10 = 0;
 		flag10msW = 0xffff; //10ms时间到
 #if SPEED_CURVE1
-		if(0 == backData.loadType)
+		if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
 		{
-			if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
-			{
-				moveCnt++;
-				if(FOREWARD == backData.motorDir)
-				{
-					if((POS_ALL - backData.posCntUp <  POS_SHUT)||((backData.posCntDown > backData.posCntUp) && (backData.posCntDown - backData.posCntUp) < POS_SHUT))
-					{
-						speedPID.setPoint = LOW_RATE;
-					}
-					else
-					{
-					    setVCurve(T_T1,T_T2,T_ALL,K_UP_10MS,NOMAL_RATE_UP,LOW_RATE);
-					}
-				}
-				else
-				{
-					if((POS_ALL - backData.posCntDown <  POS_SHUT)||((backData.posCntUp > backData.posCntDown) && (backData.posCntUp - backData.posCntDown) < POS_SHUT))
-					{
-						speedPID.setPoint = LOW_RATE;
-					}
-					else
-					{
-						setVCurve(T_T1,T_T2,T_ALL,K_UP_10MS,NOMAL_RATE_UP,LOW_RATE);
-					}
-				}
-			}
-			else if(CHECK_STA == backData.status)
+			moveCnt++;
+			if(0 == backData.posFlag)
 			{
 				speedPID.setPoint = LOW_RATE;
 			}
+			else
+			{
+				if(FOREWARD == backData.motorDir)
+				{
+					setVCurve(TUP_T1,TUP_T2,TUP_ALL,K_UP_10MS,NOMAL_RATE_UP,LOW_RATE);
+				}
+				else
+				{
+					setVCurve(TDOWN_T1,TDOWN_T2,TDOWN_ALL,K_DOWN_10MS,NOMAL_RATE_DOWN,LOW_RATE);
+				}
+			}
+			speedPID.input = backData.speedCapture;
+			pidCalc(&speedPID);
+			SET_PWM(3750 - speedPID.sumOut);
+			duty = (Uint16)(speedPID.sumOut * 100/3750);
 		}
-		else
+		else if(CHECK_STA == backData.status)
 		{
 			speedPID.setPoint = LOW_RATE;
+			speedPID.input = backData.speedCapture;
+			pidCalc(&speedPID);
+			SET_PWM(3750 - speedPID.sumOut);
+			duty = (Uint16)(speedPID.sumOut * 100/3750);
 		}
-		speedPID.input = backData.speedCapture;
-		pidCalc(&speedPID);
-		SET_PWM(3750 - speedPID.sumOut);
-		duty = (Uint16)(speedPID.sumOut * 100/3750);
 #endif
 		msCnt100++;
 		if(msCnt100 >= 10)
@@ -649,7 +665,7 @@ interrupt void ISRTimer0(void)
 			if(msCnt1000 >= 2)
 			{
 			  msCnt1000 = 0;
-			 // LED_TOGGLE;
+			  LED_TOGGLE;
 			  flag1000msW = 0xffff;//1s
 
 			}
@@ -665,6 +681,7 @@ interrupt void ISRCap1(void)
 	cap1OverCnt = 0;
     if(1 == ECap1Regs.ECFLG.bit.CEVT1)
     {
+//    	backData.hallPos &= (~(0x0001<<0));
     	ECap1Regs.ECCLR.bit.CEVT1 = 1;
 
     	tx[0] = ECap1Regs.CAP1 / 6 ;
@@ -678,6 +695,7 @@ interrupt void ISRCap1(void)
     }
     if(1 == ECap1Regs.ECFLG.bit.CEVT2)
     {
+//    	backData.hallPos |= (0x0001<<0);
     	ECap1Regs.ECCLR.bit.CEVT2 = 1;
     	readPulse();
     	readHall();
@@ -685,6 +703,7 @@ interrupt void ISRCap1(void)
     }
     if(1 == ECap1Regs.ECFLG.bit.CEVT3)
     {
+//    	backData.hallPos &= (~(0x0001<<0));
     	ECap1Regs.ECCLR.bit.CEVT3 = 1;
     	readPulse();
     	readHall();
@@ -692,6 +711,7 @@ interrupt void ISRCap1(void)
     }
     if(1 == ECap1Regs.ECFLG.bit.CEVT4)
     {
+//    	backData.hallPos |= (0x0001<<0);
     	ECap1Regs.ECCLR.bit.CEVT4 = 1;
     	readPulse();
     	readHall();
@@ -709,6 +729,7 @@ interrupt void ISRCap2(void)
 {
 	if(1 == ECap2Regs.ECFLG.bit.CEVT1)
 	{
+//		backData.hallPos &= (~(0x0001<<1));
 		ECap2Regs.ECCLR.bit.CEVT1 = 1;
 
 		tx[2] = ECap2Regs.CAP1 / 6;
@@ -721,6 +742,7 @@ interrupt void ISRCap2(void)
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT2)
 	{
+//		backData.hallPos |= (0x0001<<1);
 		ECap2Regs.ECCLR.bit.CEVT2 = 1;
 		readPulse();
 		readHall();
@@ -728,6 +750,7 @@ interrupt void ISRCap2(void)
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT3)
 	{
+//		backData.hallPos &= (~(0x0001<<1));
 		ECap2Regs.ECCLR.bit.CEVT3 = 1;
 		readPulse();
 		readHall();
@@ -735,6 +758,7 @@ interrupt void ISRCap2(void)
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT4)
 	{
+//		backData.hallPos |= (0x0001<<1);
 		ECap2Regs.ECCLR.bit.CEVT4 = 1;
 		readPulse();
 		readHall();
@@ -752,6 +776,7 @@ interrupt void ISRCap3(void)
 {
     if(1 == ECap3Regs.ECFLG.bit.CEVT1)
 	{
+//    	backData.hallPos &= (~(0x0001<<2));
     	ECap3Regs.ECCLR.bit.CEVT1 = 1;
 
     	tx[4] = ECap3Regs.CAP1 / 6 ;
@@ -764,6 +789,7 @@ interrupt void ISRCap3(void)
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CEVT2)
 	{
+//		backData.hallPos |= (0x0001<<2);
 		ECap3Regs.ECCLR.bit.CEVT2 = 1;
 		readPulse();
 		readHall();
@@ -771,6 +797,7 @@ interrupt void ISRCap3(void)
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CEVT3)
 	{
+//		backData.hallPos &= (~(0x0001<<2));
 		ECap3Regs.ECCLR.bit.CEVT3 = 1;
 		readPulse();
 		readHall();
@@ -778,6 +805,7 @@ interrupt void ISRCap3(void)
 	}
 	if(1 == ECap3Regs.ECFLG.bit.CEVT4)
 	{
+//		backData.hallPos |= (0x0001<<2);
 		ECap3Regs.ECCLR.bit.CEVT4 = 1;
 		readPulse();
 		readHall();
@@ -793,7 +821,6 @@ interrupt void ISRCap3(void)
 
 interrupt void local_DINTCH1_ISR(void)
 {
-	LED_TOGGLE;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP7;
 }
 
@@ -801,9 +828,12 @@ interrupt void xintUp_isr(void)
 {
 	PWM_OFF;
 	backData.upperOver = 1;
-	backData.faultCode |= (0x0001<<4);//bit4 upper over
 	backData.status = STOP_STA;
-
+	backData.posFlag = 0;//异常位置
+	pidReset(&speedPID);
+	SET_PWM(3750 - speedPID.sumOut);
+	duty = (Uint16)(speedPID.sumOut * 100/3750);
+	backData.faultCode |= (0x0001<<4);//bit4 upper over
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
 
 }
@@ -811,8 +841,12 @@ interrupt void xintDown_isr(void)
 {
 	PWM_OFF;
 	backData.lowerOver = 1;
-	backData.faultCode |= (0x0001<<5);//bit5 lower over
 	backData.status = STOP_STA;
+	backData.posFlag = 0;//异常位置
+	pidReset(&speedPID);
+	SET_PWM(3750 - speedPID.sumOut);
+	duty = (Uint16)(speedPID.sumOut * 100/3750);
+	backData.faultCode |= (0x0001<<5);//bit5 lower over
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP2;
 }
 
