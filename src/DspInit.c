@@ -34,6 +34,10 @@ volatile Uint16 msCnt1000 = 0;///<1s
 volatile Uint16 cap1OverCnt = 0; ///<超时计数
 volatile Uint32 tx[8] = {0}; ///<间隔计时
 
+Uint16 uBuffer[5] = {0};
+Uint16 vBuffer[5] = {0};
+Uint16 wBuffer[5] = {0};
+
 void EPwm1Setup(Uint16 period,Uint16 duty)
 {
 	EPwm1Regs.TBPRD = period;                      // Period = 1600 TBCLK counts,up-down mode
@@ -273,7 +277,6 @@ void scia_xmit(Uint16 a)
 }
 void currentRead()
 {
-	int16 i,iSum;
 	if(STOP_STA == backData.status)
 	{
 		currentBaseRead();
@@ -283,64 +286,32 @@ void currentRead()
 		switch(backData.hallPos)
 		{
 		case 5://UV
-			for(i = 10,iSum = 0;i < 20;i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentV = iSum/10;
-			backData.current = currentBaseV-backData.currentV ;
+			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
+			backData.current = currentBaseU-backData.currentU ;
 			break;
 		case 1://UW
-			for(i = 0,iSum = 0; i < 10; i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentU = iSum / 10;
-			for(i = 10,iSum = 0;i < 20;i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentV = iSum/10;
+			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
+			backData.current = currentBaseU-backData.currentU ;
+			break;
+		case 3://VW
+			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
+			backData.current = currentBaseV - backData.currentV;
+			break;
+		case 2://VU
+			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
+			backData.current = currentBaseV - backData.currentV;
+			break;
+		case 6://WU
+			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
+			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.currentW =   backData.currentU - currentBaseU - currentBaseV + backData.currentV;
 			backData.current = backData.currentW;
 			break;
-		case 3://VW
-			for(i = 0,iSum = 0; i < 10; i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentU = iSum / 10;
-			for(i = 10,iSum = 0;i < 20;i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentV = iSum/10;
+		case 4://WV
+			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
+			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
 			backData.current = backData.currentW;
-			break;
-		case 2://VU
-			for(i = 0,iSum = 0; i < 10; i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentU = iSum / 10;
-			backData.current = currentBaseU - backData.currentU;
-			break;
-		case 6://WU
-			for(i = 0,iSum = 0; i < 10; i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentU = iSum / 10;
-			backData.current = currentBaseU - backData.currentU;
-			break;
-		case 4://WV
-			for(i = 10,iSum = 0;i < 20;i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentV = iSum/10;
-			backData.current = currentBaseV-backData.currentV;
 			break;
 		default:
 			break;
@@ -351,64 +322,32 @@ void currentRead()
 		switch(backData.hallPos)
 		{
 		case 2://UV
-			for(i = 10,iSum = 0;i < 20;i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentV = iSum/10;
-			backData.current = currentBaseV-backData.currentV;
+			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
+			backData.current = currentBaseU-backData.currentU ;
 			break;
 		case 6://UW
-			for(i = 0,iSum = 0; i < 10; i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentU = iSum / 10;
-			for(i = 10,iSum = 0;i < 20;i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentV = iSum/10;
-			backData.currentW =  backData.currentU - currentBaseU - currentBaseV + backData.currentV;
-			backData.current = backData.currentW;
+			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
+			backData.current = currentBaseU-backData.currentU ;
 			break;
 		case 4://VW
-			for(i = 0,iSum = 0; i < 10; i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentU = iSum / 10;
-			for(i = 10,iSum = 0;i < 20;i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentV = iSum/10;
-			backData.currentW =  backData.currentU - currentBaseU - currentBaseV + backData.currentV;
-			backData.current = backData.currentW;
+			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
+			backData.current = currentBaseV - backData.currentV;
 			break;
 		case 5://VU
-			for(i = 0,iSum = 0; i < 10; i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentU = iSum / 10;
-			backData.current = currentBaseU - backData.currentU;
+			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
+			backData.current = currentBaseV - backData.currentV;
 			break;
 		case 1://WU
-			for(i = 0,iSum = 0; i < 10; i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentU = iSum / 10;
-			backData.current = currentBaseU - backData.currentU;
+			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
+			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
+			backData.currentW =   backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.current = backData.currentW;
 			break;
 		case 3://WV
-			for(i = 10,iSum = 0;i < 20;i++)
-			{
-				iSum += DMABuf1[i];
-			}
-			backData.currentV = iSum/10;
-			backData.current =  currentBaseV-backData.currentV;
+			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
+			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
+			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.current = backData.currentW;
 			break;
 		default:
 			break;
@@ -843,7 +782,10 @@ void dataInit()
 	speedPID.kp = 65536;//1
 	speedPID.ki = 3277;//0
 
-	/*Current_Base*/
+	memset(&currentPID,0x00,sizeof(BACK_DATA));
+	currentPID.outMax = 24576000;
+	currentPID.outMin = 12288000;
+	currentPID.kp = 65536;
 }
 Uint16 readHall()
 {
@@ -1082,4 +1024,23 @@ void setVCurve1(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k1,float32 k2,Uint16 max
 	{
 		speedPID.setPoint = lowV;
 	}
+}
+Uint16 currentFilter(Uint16* pBuf, Uint16 newValue)
+{
+	Uint16 i,ret;
+	Uint16 tmp = 0;
+
+	for(i = 4;i > 0; i--)
+	{
+		pBuf[i] = pBuf[i-1];
+	}
+	pBuf[0] = newValue;
+
+	for(i = 0;i < 5; i++)
+	{
+		tmp += pBuf[i];
+	}
+	ret = tmp / 5;
+
+	return ret;
 }

@@ -4,16 +4,16 @@
 #include "DSP28x_Project.h"
 
 /*debug相关*/
-#define SPEED_CURVE1 1
+#define SPEED_CURVE1 0
 /*曲线相关*/
 #define LOW_RATE 100
 
 #define NOMAL_RATE_UP 450
 #define TUP_ALL 600
-#define TUP_T1  188
-#define TUP_T2  506
-#define K_UP_10MS1  2.38
-#define K_UP_10MS2  4.76
+#define TUP_T1  212
+#define TUP_T2  529
+#define K_UP_10MS1  2.12
+#define K_UP_10MS2  6.35
 
 #define NOMAL_RATE_DOWN 450
 #define TDOWN_ALL 600
@@ -201,6 +201,7 @@ extern void dsp28335Init(void);
  * @brief get current data
  */
 extern void currentRead(void);
+
 extern void currentBaseRead(void);
 /**
  * @brief PWM update
@@ -215,5 +216,6 @@ extern Uint16 readHall();
  */
 extern void readHall1();
 
+static Uint16 currentFilter(Uint16 *pBuf,Uint16 newValue);
 #endif
 
