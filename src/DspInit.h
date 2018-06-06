@@ -8,17 +8,18 @@
 /*曲线相关*/
 #define LOW_RATE 100
 
-#define NOMAL_RATE_UP 400
-#define TUP_ALL 550
-#define TUP_T1  109
-#define TUP_T2  441
-#define K_UP_10MS  4.15
+#define NOMAL_RATE_UP 450
+#define TUP_ALL 600
+#define TUP_T1  188
+#define TUP_T2  506
+#define K_UP_10MS1  2.38
+#define K_UP_10MS2  4.76
 
-#define NOMAL_RATE_DOWN 400
-#define TDOWN_ALL 550
-#define TDOWN_T1 109
-#define TDOWN_T2 441
-#define K_DOWN_10MS 4.15
+#define NOMAL_RATE_DOWN 450
+#define TDOWN_ALL 600
+#define TDOWN_T1 141
+#define TDOWN_T2 458
+#define K_DOWN_10MS 3.176
 
 #define POS_ALL 2900
 #define POS_SHUT 100
@@ -144,9 +145,13 @@ static void readPulse();
  */
 static int16 filterCurrent(volatile Uint16* pSrc,int16 *pArray);
 /**
- * @brief
+ * @brief 等腰梯形速度曲线设定
  */
 static void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV);
+/**
+ * @brief 非等腰梯形速度曲线设定
+ */
+static void setVCurve1(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k1,float32 k2,Uint16 maxV,Uint16 lowV);
 /**
  * @brief ISR for CAP1
  */

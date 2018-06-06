@@ -615,7 +615,7 @@ interrupt void ISRTimer0(void)
 			{
 				if(FOREWARD == backData.motorDir)
 				{
-					setVCurve(TUP_T1,TUP_T2,TUP_ALL,K_UP_10MS,NOMAL_RATE_UP,LOW_RATE);
+					setVCurve1(TUP_T1,TUP_T2,TUP_ALL,K_UP_10MS1,K_UP_10MS2,NOMAL_RATE_UP,LOW_RATE);
 				}
 				else
 				{
@@ -1041,7 +1041,7 @@ void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV
 	{
 		speedPID.setPoint = maxV;
 	}
-	else if(moveCnt <= tAll)
+	else if(moveCnt < tAll)
 	{
 		if((maxV - (Uint16)(k * (moveCnt - t2))) < lowV)
 		{
@@ -1050,6 +1050,32 @@ void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV
 		else
 		{
 			speedPID.setPoint = maxV - (Uint16)(k * (moveCnt - t2));
+		}
+	}
+	else
+	{
+		speedPID.setPoint = lowV;
+	}
+}
+void setVCurve1(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k1,float32 k2,Uint16 maxV,Uint16 lowV)
+{
+	if(moveCnt <= t1)
+	{
+		speedPID.setPoint =(Uint16)(k1 * moveCnt);
+	}
+	else if(moveCnt <= t2)
+	{
+		speedPID.setPoint = maxV;
+	}
+	else if(moveCnt < tAll)
+	{
+		if((maxV - (Uint16)(k2 * (moveCnt - t2))) < lowV)
+		{
+			speedPID.setPoint = lowV;
+		}
+		else
+		{
+			speedPID.setPoint = maxV - (Uint16)(k2 * (moveCnt - t2));
 		}
 	}
 	else
