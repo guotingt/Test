@@ -7,7 +7,7 @@
 #include "string.h"
 
 #define CURRENT 0
-#define SPEED 1
+#define SPEED 0
 
 /*golbal value def*/
 PID speedPID;
@@ -24,6 +24,7 @@ int main()
 	dsp28335Init();
 
 	readHall();
+
     SET_PWM_PERCENT(duty);
 
     while (1) 
@@ -43,7 +44,6 @@ int main()
     		speedLoopSample = 0;
  	        if(FOREWARD_STA == backData.status || BACKWARD_STA == backData.status )
 		    {
- 	        	//speedPID.setPoint = 100;
 		    	speedPID.input = backData.speedCapture;
 		    	pidCalc(&speedPID);
 		    	duty = (Uint16)(speedPID.sumOut * 100/3750);
