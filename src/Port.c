@@ -9,17 +9,16 @@ Uint16 sendBuf[10] = {0};
 Uint16 testBuf[80] = {0};
 Uint16 reciveBuf[20] = {0};
 BACK_DATA backData;
-Uint16 currentOver;
-Uint16 currentOverH;
+
+Uint16 currentOver = 0;
+Uint16 currentOverH = 0;
 Uint16 currentOverFlag = 0;
-Uint16 cleraFault;
+Uint16 cleraFault = 0;
 
 void readSensor()
 {
 	currentRead();//Get Current;
 
-	/*Process*/
-    /*mode is manual or automatic*/
 	if(GpioDataRegs.GPADAT.bit.GPIO21)
 	{
 		//backData.status = MANUAL_STA;
@@ -229,7 +228,7 @@ void unPackMsg2()
 				duty = (Uint16)(speedPID.sumOut * 100/3750);
 				break;
 			case DO_BACKWARD:
-				if((STOP_STA  == backData.status) || (BACKWARD_STA  == backData.status))//todo
+				if(STOP_STA  == backData.status)
 				{
 					backData.status = BACKWARD_STA;
 					backData.motorDir = BACKWARD;
@@ -237,7 +236,7 @@ void unPackMsg2()
 					readHall();
 					pwmUpdate();
 				}
-				else
+				else if((CHECK_STA == backData.status)||(FOREWARD_STA == backData.status))
 				{
 					backData.status = STOP_STA;
 					backData.posFlag = 0;//“Ï≥£Œª÷√
@@ -247,7 +246,7 @@ void unPackMsg2()
 				}
 				break;
 			case DO_FOREWARD:
-				if((STOP_STA  == backData.status) || (FOREWARD_STA  == backData.status))
+				if(STOP_STA  == backData.status)
 				{
 					backData.status = FOREWARD_STA;
 					backData.motorDir = FOREWARD;
@@ -255,7 +254,7 @@ void unPackMsg2()
 					readHall();
 					pwmUpdate();
 				}
-				else
+				else if((CHECK_STA == backData.status)||(BACKWARD_STA == backData.status))
 				{
 					PWM_OFF;
 					backData.status = STOP_STA;
@@ -266,14 +265,14 @@ void unPackMsg2()
 				}
 				break;
 			case DO_CHECK:
-				if((STOP_STA  == backData.status) || (CHECK_STA  == backData.status))
+				if(STOP_STA  == backData.status)
 				{
 					backData.status = CHECK_STA;
 					backData.motorDir = BACKWARD;
 					readHall();
 					pwmUpdate();
 				}
-				else
+				else if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
 				{
 					PWM_OFF;
 					backData.status = STOP_STA;
@@ -289,9 +288,6 @@ void unPackMsg2()
 			stmpL = reciveBuf[17];
 			stmpH = reciveBuf[18];
 			speedPID.setPoint = stmpL + (stmpH<<8);
-		//	duty = stmpL + (stmpH<<8);
-		//	SET_PWM_PERCENT(duty);
-
 		}
 	}
 	else
@@ -350,8 +346,6 @@ void sendTest()
 	*(testBuf + offset) = 0x55; offset++;
 	*(testBuf + offset) = backData.status; offset++;
 	*(testBuf + offset) = backData.faultCode; offset++;
-//	*(testBuf + offset) = (Uint16)(speedPID.setPoint);offset++;  //
-//	*(testBuf + offset) = (Uint16)(speedPID.setPoint>>8);offset++;
 	*(testBuf + offset) = backData.speedCapture; offset++;
 	*(testBuf + offset) = backData.speedCapture>>8;offset++;
 	*(testBuf + offset) = backData.current; offset++;

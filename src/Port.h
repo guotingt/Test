@@ -19,15 +19,9 @@
 #define LOW_SPEED  0x01
 #define HIGH_SPEED 0x02
 
-/*microswitch*/
-#define IS_ON  1
-#define IS_OFF 0
-
 /*mode*/
 #define IS_MANUAL    0
 #define IS_AUTOMATIC 1
-
-#define MAX_CNT 4725//(420/8*90) //2925(260/8*90)
 
 /*current threshold*/
 #define CURRENT_THRESHOLD_1 676 //30A
@@ -38,7 +32,6 @@
 #define CURRENTOVER_TIME 10
 #define CURRENTOVERH_TIME 4
 #define CLEARFAULTTIME 4000
-
 
 extern void readSensor();
 
@@ -51,7 +44,6 @@ extern void unPackMsg();
 extern void unPackMsg2();
 
 static Uint16 packMsg();
-
 
 
 #endif
