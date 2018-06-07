@@ -745,6 +745,7 @@ interrupt void xintUp_isr(void)
 		backData.status = STOP_STA;
 		backData.posFlag = 2;//上到位
 		pidReset(&speedPID);
+		pidReset(&currentPID);
 		SET_PWM(3750 - speedPID.sumOut);
 		duty = (Uint16)(speedPID.sumOut * 100/3750);
 		backData.faultCode |= (0x0001<<4);//bit4 upper over
@@ -761,6 +762,7 @@ interrupt void xintDown_isr(void)
 		backData.status = STOP_STA;
 		backData.posFlag = 1;//下到位
 		pidReset(&speedPID);
+		pidReset(&currentPID);
 		SET_PWM(3750 - speedPID.sumOut);
 		duty = (Uint16)(speedPID.sumOut * 100/3750);
 		backData.faultCode |= (0x0001<<5);//bit5 lower over
@@ -777,12 +779,12 @@ void dataInit()
 	backData.motorDir = FOREWARD;//转向为正
 
 	memset(&speedPID,0x00,sizeof(PID));
-	speedPID.outMax = 24576000;//196608000;//%80
-	speedPID.outMin = 12288000;//12288000->5%;
+	speedPID.outMax = 3932160;//60A
+	speedPID.outMin = 0;//12288000->5%;
 	speedPID.kp = 65536;//1
 	speedPID.ki = 3277;//0
 
-	memset(&currentPID,0x00,sizeof(BACK_DATA));
+	memset(&currentPID,0x00,sizeof(PID));
 	currentPID.outMax = 24576000;
 	currentPID.outMin = 12288000;
 	currentPID.kp = 65536;

@@ -57,6 +57,7 @@ void readSensor()
 			backData.status = STOP_STA;
 			backData.posFlag = 0;//异常位置
 			pidReset(&speedPID);
+			pidReset(&currentPID);
 			SET_PWM(3750 - speedPID.sumOut);
 			duty = (Uint16)(speedPID.sumOut * 100/3750);
 			currentOverFlag = 1;
@@ -72,6 +73,7 @@ void readSensor()
 			backData.status = STOP_STA;
 			backData.posFlag = 0;//异常位置
 			pidReset(&speedPID);
+			pidReset(&currentPID);
 			SET_PWM(3750 - speedPID.sumOut);
 			duty = (Uint16)(speedPID.sumOut * 100/3750);
 			currentOverFlag = 1;
@@ -101,6 +103,7 @@ void readSensor()
 		backData.status = STOP_STA;
 		backData.posFlag = 0;//异常位置
 		pidReset(&speedPID);
+		pidReset(&currentPID);
 		SET_PWM(3750 - speedPID.sumOut);
 		duty = (Uint16)(speedPID.sumOut * 100/3750);
 	}
@@ -224,6 +227,7 @@ void unPackMsg2()
 				PWM_OFF;
 				backData.status = STOP_STA;
 				pidReset(&speedPID);
+				pidReset(&currentPID);
 				SET_PWM(3750 - speedPID.sumOut);
 				duty = (Uint16)(speedPID.sumOut * 100/3750);
 				break;
@@ -241,6 +245,7 @@ void unPackMsg2()
 					backData.status = STOP_STA;
 					backData.posFlag = 0;//异常位置
 					pidReset(&speedPID);
+					pidReset(&currentPID);
 					SET_PWM(3750 - speedPID.sumOut);
 					duty = (Uint16)(speedPID.sumOut * 100/3750);
 				}
@@ -260,6 +265,7 @@ void unPackMsg2()
 					backData.status = STOP_STA;
 					backData.posFlag = 0;//异常位置
 					pidReset(&speedPID);
+					pidReset(&currentPID);
 					SET_PWM(3750 - speedPID.sumOut);
 					duty = (Uint16)(speedPID.sumOut * 100/3750);
 				}
@@ -278,6 +284,7 @@ void unPackMsg2()
 					backData.status = STOP_STA;
 					backData.posFlag = 0;//异常位置
 					pidReset(&speedPID);
+					pidReset(&currentPID);
 					SET_PWM(3750 - speedPID.sumOut);
 					duty = (Uint16)(speedPID.sumOut * 100/3750);
 				}

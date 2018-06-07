@@ -46,8 +46,18 @@ int main()
 		    {
 		    	speedPID.input = backData.speedCapture;
 		    	pidCalc(&speedPID);
-		    	duty = (Uint16)(speedPID.sumOut * 100/3750);
-		    	SET_PWM(3750-speedPID.sumOut);
+		    }
+    	}
+    	if(0 != currentLoopSample)
+    	{
+    		currentLoopSample = 0;
+ 	        if(FOREWARD_STA == backData.status || BACKWARD_STA == backData.status )
+		    {
+		    	currentPID.setPoint = speedPID.sumOut;
+		    	currentPID.input = abs(backData.current);
+		    	pidCalc(&currentPID);
+		    	duty = (Uint16)(currentPID.sumOut * 100/3750);
+		    	SET_PWM(3750-currentPID.sumOut);
 		    }
     	}
 #endif
