@@ -7,7 +7,7 @@
 #include "string.h"
 
 #define CURRENT 0
-#define SPEED 1
+#define SPEED 0
 
 /*golbal value def*/
 PID speedPID;
@@ -15,7 +15,7 @@ PID currentPID;
 COMMAND upperCommand;
 Uint16 reciveFlag = 0;
 Uint16 moveCnt = 0;
-Uint16 duty = 0;
+Uint16 duty = 10;
 
 int main()
 {
@@ -27,18 +27,12 @@ int main()
 
     SET_PWM_PERCENT(duty);
 
+    pwmUpdate();
+
     while (1) 
     {
-    	/*read sensor data*/
-    	if(0 != sensorReadSample)
-    	{
-    		sensorReadSample = 0;
-    		/*pid calc mode set*/
-    		currentPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
-    		speedPID.mode = (MANUAL_STA == backData.status) ? MANUAL : AUTOMATIC;
-    	 }
 #if SPEED
-    	/* speed pid */
+    	/* speed PID */
     	if(0 != speedLoopSample)
     	{
     		speedLoopSample = 0;
@@ -48,6 +42,7 @@ int main()
 		    	pidCalc(&speedPID);
 		    }
     	}
+    	/*current PID*/
     	if(0 != currentLoopSample)
     	{
     		currentLoopSample = 0;
@@ -56,24 +51,11 @@ int main()
 		    	currentPID.setPoint = speedPID.sumOut;
 		    	currentPID.input = abs(backData.current);
 		    	pidCalc(&currentPID);
-		    	duty = (Uint16)(currentPID.sumOut * 100/3750);
-		    	SET_PWM(3750-currentPID.sumOut);
+		    	duty = (Uint16)(currentPID.sumOut * 100/PWM_PERIOD);
+		    	SET_PWM(PWM_PERIOD-currentPID.sumOut);
 		    }
     	}
 #endif
-
-#if CURRENT
-        /*current pid */
-		if(0 != currentLoopSample)
-		{
-			currentPID.setPoint = speedPID.sumOut;
-			currentPID.input = backData.current;
-			currentLoopSample = 0;
-			pidCalc(&currentPID);
-			SET_PWM(3750 - currentPID.sumOut);
-		}
-#endif
-
         if (1 == reciveFlag)
         {
             //sendMsg();

@@ -19,10 +19,6 @@
 #define LOW_SPEED  0x01
 #define HIGH_SPEED 0x02
 
-/*mode*/
-#define IS_MANUAL    0
-#define IS_AUTOMATIC 1
-
 /*current threshold*/
 #define CURRENT_THRESHOLD_1 676 //30A
 #define CURRENT_THRESHOLD_2 901 //40A
@@ -44,6 +40,5 @@ extern void unPackMsg();
 extern void unPackMsg2();
 
 static Uint16 packMsg();
-
 
 #endif

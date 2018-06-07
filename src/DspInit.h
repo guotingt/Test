@@ -5,6 +5,7 @@
 
 /*debug相关*/
 #define SPEED_CURVE1 0
+
 /*曲线相关*/
 #define LOW_RATE 100
 
@@ -21,12 +22,10 @@
 #define TDOWN_T2 458
 #define K_DOWN_10MS 3.176
 
-#define POS_ALL 2900
-#define POS_SHUT 100
 
 /*PWM相关*/
-#define PWM_PERIOD    3750//10K 5K:7500
-#define PWM_DUTY      3375//%10 6750
+#define PWM_PERIOD    1875//3750//10K 5K:7500
+#define PWM_DUTY      1688//%10 6750
 
 #define PWM_U1_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFA = 0
 #define PWM_U2_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFB = 0
@@ -63,12 +62,12 @@
 					   EPwm3Regs.CMPA.half.CMPA  = n;\
 					   EPwm3Regs.CMPB = n;}
 
-#define SET_PWM_PERCENT(n) {EPwm1Regs.CMPA.half.CMPA  = 75 * (100 -n)/2;\
-					   EPwm1Regs.CMPB = 75 * (100 -n)/2;\
-					   EPwm2Regs.CMPA.half.CMPA  = 75 * (100 -n)/2;\
-					   EPwm2Regs.CMPB = 75 * (100 -n)/2;\
-					   EPwm3Regs.CMPA.half.CMPA  = 75 * (100 -n)/2;\
-					   EPwm3Regs.CMPB = 75 * (100 -n)/2;}
+#define SET_PWM_PERCENT(n) {EPwm1Regs.CMPA.half.CMPA  = (75 * (100 -n)/4);\
+					   EPwm1Regs.CMPB = (75 * (100 -n)/4);\
+					   EPwm2Regs.CMPA.half.CMPA  = (75 * (100 -n)/4);\
+					   EPwm2Regs.CMPB = (75 * (100 -n)/4);\
+					   EPwm3Regs.CMPA.half.CMPA  = (75 * (100 -n)/4);\
+					   EPwm3Regs.CMPB = (75 * (100 -n)/4);}
 
 #define LED_TOGGLE 	  GpioDataRegs.GPCTOGGLE.bit.GPIO87 = 1;
 
@@ -201,7 +200,9 @@ extern void dsp28335Init(void);
  * @brief get current data
  */
 extern void currentRead(void);
-
+/**
+ * @brief 读取电流基准
+ */
 extern void currentBaseRead(void);
 /**
  * @brief PWM update
@@ -215,7 +216,9 @@ extern Uint16 readHall();
  * @brief read hall state 10ms
  */
 extern void readHall1();
-
+/***
+ * @brief 电流均值采样
+ */
 static Uint16 currentFilter(Uint16 *pBuf,Uint16 newValue);
 #endif
 

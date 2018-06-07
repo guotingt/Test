@@ -4,7 +4,6 @@
 #include"DspInit.h"
 #include"Control.h"
 
-
 Uint16 sendBuf[10] = {0};
 Uint16 testBuf[80] = {0};
 Uint16 reciveBuf[20] = {0};
@@ -58,8 +57,8 @@ void readSensor()
 			backData.posFlag = 0;//异常位置
 			pidReset(&speedPID);
 			pidReset(&currentPID);
-			SET_PWM(3750 - speedPID.sumOut);
-			duty = (Uint16)(speedPID.sumOut * 100/3750);
+			SET_PWM(PWM_PERIOD - speedPID.sumOut);
+			duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 			currentOverFlag = 1;
 		}
 	}
@@ -74,8 +73,8 @@ void readSensor()
 			backData.posFlag = 0;//异常位置
 			pidReset(&speedPID);
 			pidReset(&currentPID);
-			SET_PWM(3750 - speedPID.sumOut);
-			duty = (Uint16)(speedPID.sumOut * 100/3750);
+			SET_PWM(PWM_PERIOD - speedPID.sumOut);
+			duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 			currentOverFlag = 1;
 		}
 	}
@@ -104,8 +103,8 @@ void readSensor()
 		backData.posFlag = 0;//异常位置
 		pidReset(&speedPID);
 		pidReset(&currentPID);
-		SET_PWM(3750 - speedPID.sumOut);
-		duty = (Uint16)(speedPID.sumOut * 100/3750);
+		SET_PWM(PWM_PERIOD - speedPID.sumOut);
+		duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 	}
 }
 
@@ -217,19 +216,19 @@ void unPackMsg2()
 				if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
 				{
 					backData.posFlag = 1;
-					backData.posCntDown = 0;
+					//backData.posCntDown = 0;
 				}
 				else if(FOREWARD_STA == backData.status)
 				{
 					backData.posFlag = 2;
-					backData.posCntUp = 0;
+					//backData.posCntUp = 0;
 				}
 				PWM_OFF;
 				backData.status = STOP_STA;
 				pidReset(&speedPID);
 				pidReset(&currentPID);
-				SET_PWM(3750 - speedPID.sumOut);
-				duty = (Uint16)(speedPID.sumOut * 100/3750);
+				SET_PWM(PWM_PERIOD - speedPID.sumOut);
+				duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 				break;
 			case DO_BACKWARD:
 				if(STOP_STA  == backData.status)
@@ -246,8 +245,8 @@ void unPackMsg2()
 					backData.posFlag = 0;//异常位置
 					pidReset(&speedPID);
 					pidReset(&currentPID);
-					SET_PWM(3750 - speedPID.sumOut);
-					duty = (Uint16)(speedPID.sumOut * 100/3750);
+					SET_PWM(PWM_PERIOD - speedPID.sumOut);
+					duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 				}
 				break;
 			case DO_FOREWARD:
@@ -266,8 +265,8 @@ void unPackMsg2()
 					backData.posFlag = 0;//异常位置
 					pidReset(&speedPID);
 					pidReset(&currentPID);
-					SET_PWM(3750 - speedPID.sumOut);
-					duty = (Uint16)(speedPID.sumOut * 100/3750);
+					SET_PWM(PWM_PERIOD - speedPID.sumOut);
+					duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 				}
 				break;
 			case DO_CHECK:
@@ -285,8 +284,8 @@ void unPackMsg2()
 					backData.posFlag = 0;//异常位置
 					pidReset(&speedPID);
 					pidReset(&currentPID);
-					SET_PWM(3750 - speedPID.sumOut);
-					duty = (Uint16)(speedPID.sumOut * 100/3750);
+					SET_PWM(PWM_PERIOD - speedPID.sumOut);
+					duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 				}
 				break;
 			default:

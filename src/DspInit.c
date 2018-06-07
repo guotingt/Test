@@ -528,7 +528,8 @@ interrupt void ISRTimer0(void)
 	if(msCnt1 >= 10)
 	{
 	  msCnt1 = 0;
-	  readSensor();
+	  //readSensor();
+	  currentRead();
 	  cap1OverCnt++;
 	  if(cap1OverCnt > 100)
 	  {
@@ -602,16 +603,19 @@ interrupt void ISRTimer0(void)
 
 interrupt void ISRCap1(void)
 {
+	Uint32 t1,t2,t3,t4;
 	cap1OverCnt = 0;
     if(1 == ECap1Regs.ECFLG.bit.CEVT1)
     {
     	ECap1Regs.ECCLR.bit.CEVT1 = 1;
 
-    	tx[0] = ECap1Regs.CAP1 / 6 ;
-    	tx[1] = ECap1Regs.CAP2 / 6;
+    	t1 = ECap1Regs.CAP1;
+    	t2 = ECap1Regs.CAP2;
+    	t3 = ECap1Regs.CAP3;
+    	t4 = ECap1Regs.CAP4;
+    	backData.speedCapture = (Uint16)(150000000/(t1+t2+t3+t4)*4);
 
     	readPulse();
-    	backData.speedCapture = speedCapture();
     	readHall();
     	pwmUpdate();
 
@@ -650,12 +654,7 @@ interrupt void ISRCap2(void)
 	if(1 == ECap2Regs.ECFLG.bit.CEVT1)
 	{
 		ECap2Regs.ECCLR.bit.CEVT1 = 1;
-
-		tx[2] = ECap2Regs.CAP1 / 6;
-		tx[3] = ECap2Regs.CAP2 / 6;
-
 		readPulse();
-		backData.speedCapture = speedCapture();
 		readHall();
 		pwmUpdate();
 	}
@@ -693,12 +692,7 @@ interrupt void ISRCap3(void)
     if(1 == ECap3Regs.ECFLG.bit.CEVT1)
 	{
     	ECap3Regs.ECCLR.bit.CEVT1 = 1;
-
-    	tx[4] = ECap3Regs.CAP1 / 6 ;
-    	tx[5] = ECap3Regs.CAP2 / 6 ;
-
     	readPulse();
-    	backData.speedCapture = speedCapture();
     	readHall();
     	pwmUpdate();
 	}
@@ -746,8 +740,8 @@ interrupt void xintUp_isr(void)
 		backData.posFlag = 2;//上到位
 		pidReset(&speedPID);
 		pidReset(&currentPID);
-		SET_PWM(3750 - speedPID.sumOut);
-		duty = (Uint16)(speedPID.sumOut * 100/3750);
+		SET_PWM(PWM_PERIOD - speedPID.sumOut);
+		duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 		backData.faultCode |= (0x0001<<4);//bit4 upper over
 	}
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;
@@ -763,8 +757,8 @@ interrupt void xintDown_isr(void)
 		backData.posFlag = 1;//下到位
 		pidReset(&speedPID);
 		pidReset(&currentPID);
-		SET_PWM(3750 - speedPID.sumOut);
-		duty = (Uint16)(speedPID.sumOut * 100/3750);
+		SET_PWM(PWM_PERIOD - speedPID.sumOut);
+		duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 		backData.faultCode |= (0x0001<<5);//bit5 lower over
 	}
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP2;
@@ -847,11 +841,11 @@ void readHall1()
 void pwmUpdate()
 {
 	/*停止状态、手动状态以及过流和霍尔异常状态停止运动*/
-	if((STOP_STA == backData.status)|| (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x000F)))
-	{
-		PWM_OFF;
-		return;
-	}
+//	if((STOP_STA == backData.status)|| (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x000F)))
+//	{
+//		PWM_OFF;
+//		return;
+//	}
 	if(FOREWARD == backData.motorDir)
 	{
 
@@ -895,7 +889,9 @@ void pwmUpdate()
 				PWM_W1_ENABLE;
 				PWM_V2_ON;
 				break;
-			default:;
+			default:
+				PWM_OFF;
+				break;
 			}
 		}
 	}
@@ -942,25 +938,27 @@ void pwmUpdate()
 				PWM_W1_ENABLE;
 				PWM_V2_ON;
 				break;
-			default:;
+			default:
+				PWM_OFF;
+				break;
 			}
 		}
 	}
 }
-Uint16 speedCapture()
-{
-	int16 i;
-	Uint32 tMean = 0;
-
-	Uint16 ret;
-	for(i = 0; i < 6;i++)
-	{
-		tMean += tx[i];
-	}
-	ret =  (Uint16)(75000000/tMean*4);
-
-	return ret;
-}
+//Uint16 speedCapture()
+//{
+//	int16 i;
+//	Uint32 tMean = 0;
+//
+//	Uint16 ret;
+//	for(i = 0; i < 6;i++)
+//	{
+//		tMean += tx[i];
+//	}
+//	ret =  (Uint16)(75000000/tMean*4);
+//
+//	return ret;
+//}
 
 void readPulse()
 {
