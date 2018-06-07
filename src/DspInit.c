@@ -841,11 +841,11 @@ void readHall1()
 void pwmUpdate()
 {
 	/*停止状态、手动状态以及过流和霍尔异常状态停止运动*/
-//	if((STOP_STA == backData.status)|| (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x000F)))
-//	{
-//		PWM_OFF;
-//		return;
-//	}
+	if((STOP_STA == backData.status)|| (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x000F)))
+	{
+		PWM_OFF;
+		return;
+	}
 	if(FOREWARD == backData.motorDir)
 	{
 

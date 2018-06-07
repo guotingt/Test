@@ -7,7 +7,7 @@
 #include "string.h"
 
 #define CURRENT 0
-#define SPEED 0
+#define SPEED 1
 
 /*golbal value def*/
 PID speedPID;
@@ -27,7 +27,7 @@ int main()
 
     SET_PWM_PERCENT(duty);
 
-    pwmUpdate();
+    //pwmUpdate();
 
     while (1) 
     {
