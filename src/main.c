@@ -15,7 +15,7 @@ PID currentPID;
 COMMAND upperCommand;
 Uint16 reciveFlag = 0;
 Uint16 moveCnt = 0;
-Uint16 duty = 10;
+Uint16 duty = 0;
 
 int main()
 {
@@ -25,13 +25,25 @@ int main()
 
 	readHall();
 
-    SET_PWM_PERCENT(duty);
-
-    //pwmUpdate();
 
     while (1) 
     {
+
 #if SPEED
+    	if(0 != speedLoopSample)
+		{
+			speedLoopSample = 0;
+			if(FOREWARD_STA == backData.status || BACKWARD_STA == backData.status )
+			{
+				speedPID.input = backData.speedCapture;
+				pidCalc(&speedPID);
+		    	duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
+		    	SET_PWM(PWM_PERIOD-speedPID.sumOut);
+			}
+		}
+#endif
+
+#if CURRENT
     	/* speed PID */
     	if(0 != speedLoopSample)
     	{

@@ -18,10 +18,16 @@ void readSensor()
 {
 	currentRead();//Get Current;
 
+	/*手动检测*/
 	if(GpioDataRegs.GPADAT.bit.GPIO21)
 	{
-		//backData.status = MANUAL_STA;
+		backData.faultCode |= (0x0001<<6);
 	}
+	else
+	{
+		backData.faultCode &= (~(0x0001<<6));
+	}
+
 	/*下限位检测*/
 	if(GpioDataRegs.GPADAT.bit.GPIO22)
 	{
@@ -34,6 +40,7 @@ void readSensor()
 		backData.faultCode |= (0x0001<<5);//bit5 lower over
 
 	}
+
 	/*上限位检测*/
 	if(GpioDataRegs.GPADAT.bit.GPIO23)
 	{
@@ -46,15 +53,15 @@ void readSensor()
 		backData.faultCode |= (0x0001<<4);//bit4 upper over
 	}
 
-	if (abs(backData.current) >= CURRENT_THRESHOLD_3)
+	if (abs(backData.current) >= CURRENT_THRESHOLD_1)
 	{
 		currentOver++;
 		if (currentOver > CURRENTOVER_TIME)
 		{
-			backData.faultCode |= (0x0001);
+			backData.faultCode |= 0x0001;
 			PWM_OFF;
 			backData.status = STOP_STA;
-			backData.posFlag = 0;//异常位置
+			backData.posFlag = UNKONWN_POS;//异常位置
 			pidReset(&speedPID);
 			pidReset(&currentPID);
 			SET_PWM(PWM_PERIOD - speedPID.sumOut);
@@ -62,15 +69,15 @@ void readSensor()
 			currentOverFlag = 1;
 		}
 	}
-	if (abs(backData.current) >= CURRENT_THRESHOLD_4) //93A
+	if (abs(backData.current) >= CURRENT_THRESHOLD_2)
 	{
 		currentOverH++;
 		if (currentOverH > CURRENTOVERH_TIME)
 		{
-			backData.faultCode |= (0x0001);
+			backData.faultCode |= 0x0001;
 			PWM_OFF;
 			backData.status = STOP_STA;
-			backData.posFlag = 0;//异常位置
+			backData.posFlag = UNKONWN_POS;//异常位置
 			pidReset(&speedPID);
 			pidReset(&currentPID);
 			SET_PWM(PWM_PERIOD - speedPID.sumOut);
@@ -78,7 +85,7 @@ void readSensor()
 			currentOverFlag = 1;
 		}
 	}
-	if(abs(backData.current) < CURRENT_THRESHOLD_3)
+	if(abs(backData.current) < CURRENT_THRESHOLD_1)
 	{
 		currentOver = 0;
 		currentOverH = 0;
@@ -100,7 +107,7 @@ void readSensor()
 		backData.faultCode |= (0x0001<<2);//bit2 hall error
 		PWM_OFF;
 		backData.status = STOP_STA;
-		backData.posFlag = 0;//异常位置
+		backData.posFlag = UNKONWN_POS;//异常位置
 		pidReset(&speedPID);
 		pidReset(&currentPID);
 		SET_PWM(PWM_PERIOD - speedPID.sumOut);
@@ -215,13 +222,11 @@ void unPackMsg2()
 			case DO_STOP:
 				if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
 				{
-					backData.posFlag = 1;
-					//backData.posCntDown = 0;
+					backData.posFlag = DOWN_POS;
 				}
 				else if(FOREWARD_STA == backData.status)
 				{
-					backData.posFlag = 2;
-					//backData.posCntUp = 0;
+					backData.posFlag = UP_POS;
 				}
 				PWM_OFF;
 				backData.status = STOP_STA;
@@ -242,7 +247,7 @@ void unPackMsg2()
 				else if((CHECK_STA == backData.status)||(FOREWARD_STA == backData.status))
 				{
 					backData.status = STOP_STA;
-					backData.posFlag = 0;//异常位置
+					backData.posFlag = UNKONWN_POS;//异常位置
 					pidReset(&speedPID);
 					pidReset(&currentPID);
 					SET_PWM(PWM_PERIOD - speedPID.sumOut);
@@ -262,7 +267,7 @@ void unPackMsg2()
 				{
 					PWM_OFF;
 					backData.status = STOP_STA;
-					backData.posFlag = 0;//异常位置
+					backData.posFlag = UNKONWN_POS;//异常位置
 					pidReset(&speedPID);
 					pidReset(&currentPID);
 					SET_PWM(PWM_PERIOD - speedPID.sumOut);
@@ -281,7 +286,7 @@ void unPackMsg2()
 				{
 					PWM_OFF;
 					backData.status = STOP_STA;
-					backData.posFlag = 0;//异常位置
+					backData.posFlag = UNKONWN_POS;//异常位置
 					pidReset(&speedPID);
 					pidReset(&currentPID);
 					SET_PWM(PWM_PERIOD - speedPID.sumOut);

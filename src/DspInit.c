@@ -547,7 +547,7 @@ interrupt void ISRTimer0(void)
 		if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
 		{
 			moveCnt++;
-			if(0 == backData.posFlag)
+			if(UNKONWN_POS == backData.posFlag)
 			{
 				speedPID.setPoint = LOW_RATE;
 			}
@@ -564,16 +564,16 @@ interrupt void ISRTimer0(void)
 			}
 			speedPID.input = backData.speedCapture;
 			pidCalc(&speedPID);
-			SET_PWM(3750 - speedPID.sumOut);
-			duty = (Uint16)(speedPID.sumOut * 100/3750);
+			SET_PWM(PWM_PERIOD - speedPID.sumOut);
+			duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 		}
 		else if(CHECK_STA == backData.status)
 		{
 			speedPID.setPoint = LOW_RATE;
 			speedPID.input = backData.speedCapture;
 			pidCalc(&speedPID);
-			SET_PWM(3750 - speedPID.sumOut);
-			duty = (Uint16)(speedPID.sumOut * 100/3750);
+			SET_PWM(PWM_PERIOD - speedPID.sumOut);
+			duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 		}
 #endif
 		msCnt100++;
@@ -603,18 +603,10 @@ interrupt void ISRTimer0(void)
 
 interrupt void ISRCap1(void)
 {
-	Uint32 t1,t2,t3,t4;
 	cap1OverCnt = 0;
     if(1 == ECap1Regs.ECFLG.bit.CEVT1)
     {
     	ECap1Regs.ECCLR.bit.CEVT1 = 1;
-
-    	t1 = ECap1Regs.CAP1;
-    	t2 = ECap1Regs.CAP2;
-    	t3 = ECap1Regs.CAP3;
-    	t4 = ECap1Regs.CAP4;
-    	backData.speedCapture = (Uint16)(150000000/(t1+t2+t3+t4)*4);
-
     	readPulse();
     	readHall();
     	pwmUpdate();
@@ -651,33 +643,41 @@ interrupt void ISRCap1(void)
 
 interrupt void ISRCap2(void)
 {
+	Uint32 t1,t2,t3,t4;
 	if(1 == ECap2Regs.ECFLG.bit.CEVT1)
 	{
-		ECap2Regs.ECCLR.bit.CEVT1 = 1;
+		t1 = ECap2Regs.CAP1;
+		t2 = ECap2Regs.CAP2;
+		t3 = ECap2Regs.CAP3;
+		t4 = ECap2Regs.CAP4;
+		backData.speedCapture = (Uint16)(300000000/(t1+t2+t3+t4)*4);
+
 		readPulse();
 		readHall();
 		pwmUpdate();
+		ECap2Regs.ECCLR.bit.CEVT1 = 1;
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT2)
 	{
-		ECap2Regs.ECCLR.bit.CEVT2 = 1;
 		readPulse();
 		readHall();
 		pwmUpdate();
+		ECap2Regs.ECCLR.bit.CEVT2 = 1;
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT3)
 	{
-		ECap2Regs.ECCLR.bit.CEVT3 = 1;
+
 		readPulse();
 		readHall();
 		pwmUpdate();
+		ECap2Regs.ECCLR.bit.CEVT3 = 1;
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CEVT4)
 	{
-		ECap2Regs.ECCLR.bit.CEVT4 = 1;
 		readPulse();
 		readHall();
 		pwmUpdate();
+		ECap2Regs.ECCLR.bit.CEVT4 = 1;
 	}
 	if(1 == ECap2Regs.ECFLG.bit.CTROVF)
 	{
@@ -841,7 +841,7 @@ void readHall1()
 void pwmUpdate()
 {
 	/*停止状态、手动状态以及过流和霍尔异常状态停止运动*/
-	if((STOP_STA == backData.status)|| (MANUAL_STA == backData.status) || (0x0000 != (backData.faultCode&0x000F)))
+	if((STOP_STA == backData.status)||(0x0000 != (backData.faultCode&0x004F)))
 	{
 		PWM_OFF;
 		return;

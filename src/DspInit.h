@@ -24,8 +24,8 @@
 
 
 /*PWM相关*/
-#define PWM_PERIOD    1875//3750//10K 5K:7500
-#define PWM_DUTY      1688//%10 6750
+#define PWM_PERIOD    1875//25K:1500 20K:1875 10K:3750 5K:7500
+#define PWM_DUTY      1875//%0
 
 #define PWM_U1_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFA = 0
 #define PWM_U2_ENABLE   EPwm1Regs.AQCSFRC.bit.CSFB = 0
@@ -62,12 +62,12 @@
 					   EPwm3Regs.CMPA.half.CMPA  = n;\
 					   EPwm3Regs.CMPB = n;}
 
-#define SET_PWM_PERCENT(n) {EPwm1Regs.CMPA.half.CMPA  = (75 * (100 -n)/4);\
-					   EPwm1Regs.CMPB = (75 * (100 -n)/4);\
-					   EPwm2Regs.CMPA.half.CMPA  = (75 * (100 -n)/4);\
-					   EPwm2Regs.CMPB = (75 * (100 -n)/4);\
-					   EPwm3Regs.CMPA.half.CMPA  = (75 * (100 -n)/4);\
-					   EPwm3Regs.CMPB = (75 * (100 -n)/4);}
+//#define SET_PWM_PERCENT(n) {EPwm1Regs.CMPA.half.CMPA  = (15 * (100 -n));\
+//					   EPwm1Regs.CMPB = (215 * (100 -n));\
+//					   EPwm2Regs.CMPA.half.CMPA  = (15 * (100 -n));\
+//					   EPwm2Regs.CMPB = (15 * (100 -n));\
+//					   EPwm3Regs.CMPA.half.CMPA  = (15 * (100 -n));\
+//					   EPwm3Regs.CMPB = (15 * (100 -n));}
 
 #define LED_TOGGLE 	  GpioDataRegs.GPCTOGGLE.bit.GPIO87 = 1;
 
@@ -217,7 +217,7 @@ extern Uint16 readHall();
  */
 extern void readHall1();
 /***
- * @brief 电流均值采样
+ * @brief 电流均值滤波
  */
 static Uint16 currentFilter(Uint16 *pBuf,Uint16 newValue);
 #endif

@@ -19,11 +19,14 @@
 #define LOW_SPEED  0x01
 #define HIGH_SPEED 0x02
 
+/*pos flag*/
+#define UP_POS 2
+#define DOWN_POS 1
+#define UNKONWN_POS 0
+
 /*current threshold*/
-#define CURRENT_THRESHOLD_1 676 //30A
-#define CURRENT_THRESHOLD_2 901 //40A
-#define CURRENT_THRESHOLD_3 1500  //66.77A
-#define CURRENT_THRESHOLD_4 2100  //93.21A
+#define CURRENT_THRESHOLD_1 1690  //75A
+#define CURRENT_THRESHOLD_2 2027  //90A
 
 #define CURRENTOVER_TIME 10
 #define CURRENTOVERH_TIME 4

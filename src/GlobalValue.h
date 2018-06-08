@@ -14,10 +14,11 @@ extern TIME_FLAG  flagDot1ms;
 extern TIME_FLAG  flag1ms;
 #define flag1msW flag1ms.word
 #define currentLoopSample flag1ms.bit.bit0
+#define speedLoopSample flag10ms.bit.bit0
 
 extern TIME_FLAG  flag10ms;
 #define flag10msW flag10ms.word
-#define speedLoopSample flag10ms.bit.bit0
+
 #define testSendSample flag10ms.bit.bit1
 
 extern TIME_FLAG  flag100ms;
