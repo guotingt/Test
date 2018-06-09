@@ -8,6 +8,7 @@
 
 #define CURRENT 0
 #define SPEED 1
+#define CURRENT2 0
 
 /*golbal value def*/
 PID speedPID;
@@ -25,6 +26,7 @@ int main()
 
 	readHall();
 
+	pwmUpdate();//test
 
     while (1) 
     {
@@ -35,6 +37,7 @@ int main()
 			speedLoopSample = 0;
 			if(FOREWARD_STA == backData.status || BACKWARD_STA == backData.status )
 			{
+				speedPID.setPoint = 100;//test
 				speedPID.input = backData.speedCapture;
 				pidCalc(&speedPID);
 		    	duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
@@ -68,6 +71,22 @@ int main()
 		    }
     	}
 #endif
+
+#if CURRENT2
+    	if(0 != currentLoopSample)
+    	{
+    		currentLoopSample = 0;
+ 	        if(FOREWARD_STA == backData.status || BACKWARD_STA == backData.status )
+		    {
+		    	currentPID.setPoint = speedPID.setPoint;
+		    	currentPID.input = abs(backData.current);
+		    	pidCalc(&currentPID);
+		    	duty = (Uint16)(currentPID.sumOut * 100/PWM_PERIOD);
+		    	SET_PWM(PWM_PERIOD-currentPID.sumOut);
+		    }
+    	}
+#endif
+
         if (1 == reciveFlag)
         {
             //sendMsg();

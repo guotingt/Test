@@ -34,9 +34,8 @@ volatile Uint16 msCnt1000 = 0;///<1s
 volatile Uint16 cap1OverCnt = 0; ///<超时计数
 volatile Uint32 tx[8] = {0}; ///<间隔计时
 
-Uint16 uBuffer[5] = {0};
-Uint16 vBuffer[5] = {0};
-Uint16 wBuffer[5] = {0};
+Uint16 uBuffer[FILTER_LEN] = {0};
+Uint16 vBuffer[FILTER_LEN] = {0};
 
 void EPwm1Setup(Uint16 period,Uint16 duty)
 {
@@ -296,21 +295,26 @@ void currentRead()
 		case 3://VW
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.current = currentBaseV - backData.currentV;
+			//backData.current = backData.currentV - currentBaseV;
+
 			break;
 		case 2://VU
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.current = currentBaseV - backData.currentV;
+			//backData.current = backData.currentV - currentBaseV;//old
 			break;
 		case 6://WU
 			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.currentW =   backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			//backData.currentW = backData.currentU - currentBaseU + currentBaseV - backData.currentV;//old
 			backData.current = backData.currentW;
 			break;
 		case 4://WV
 			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			//backData.currentW = backData.currentU - currentBaseU + currentBaseV - backData.currentV;//old
 			backData.current = backData.currentW;
 			break;
 		default:
@@ -332,21 +336,25 @@ void currentRead()
 		case 4://VW
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.current = currentBaseV - backData.currentV;
+			//backData.current = backData.currentV - currentBaseV;//old
 			break;
 		case 5://VU
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.current = currentBaseV - backData.currentV;
+			//backData.current = backData.currentV - currentBaseV;//old
 			break;
 		case 1://WU
 			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
-			backData.currentW =   backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			//backData.currentW = backData.currentU - currentBaseU + currentBaseV - backData.currentV;//old
 			backData.current = backData.currentW;
 			break;
 		case 3://WV
 			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
+			//backData.currentW = backData.currentU - currentBaseU + currentBaseV - backData.currentV;//old
 			backData.current = backData.currentW;
 			break;
 		default:
@@ -479,12 +487,12 @@ interrupt void ISRSCIARX(void)
 //		  reciveBuf[ptr++] = tmpChar;
 //		  xors ^= tmpChar;
 //		}
-		else if(ptr < 20)
+		else if(ptr < 32)
 		{
 		  reciveBuf[ptr++] = tmpChar;
-		  if(ptr == 20)
+		  if(ptr == 32)
 		  {
-			  if(0x00BF == (0x00BF&reciveBuf[19]))
+			  if(0x00BF == (0x00BF&reciveBuf[31]))
 			  {
 				  //unPackMsg();
 				  unPackMsg2();
@@ -525,11 +533,12 @@ interrupt void ISRTimer0(void)
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
     flagDot1msW = 0xffff; //100us时间到
     msCnt1++;
+    //currentRead();
+    readSensor();
 	if(msCnt1 >= 10)
 	{
 	  msCnt1 = 0;
 	  //readSensor();
-	  currentRead();
 	  cap1OverCnt++;
 	  if(cap1OverCnt > 100)
 	  {
@@ -555,11 +564,14 @@ interrupt void ISRTimer0(void)
 			{
 				if(FOREWARD == backData.motorDir)
 				{
-					setVCurve1(TUP_T1,TUP_T2,TUP_ALL,K_UP_10MS1,K_UP_10MS2,NOMAL_RATE_UP,LOW_RATE);
+
+					setVCurve2(20,25,500);
+					//setVCurve1(TUP_T1,TUP_T2,TUP_ALL,K_UP_10MS1,K_UP_10MS2,NOMAL_RATE_UP,LOW_RATE);
 				}
 				else
 				{
-					setVCurve(TDOWN_T1,TDOWN_T2,TDOWN_ALL,K_DOWN_10MS,NOMAL_RATE_DOWN,LOW_RATE);
+					setVCurve2(20,25,500);
+					//setVCurve1(TDOWN_T1,TDOWN_T2,TDOWN_ALL,K_DOWN_10MS1,K_DOWN_10MS2,NOMAL_RATE_DOWN,LOW_RATE);
 				}
 			}
 			speedPID.input = backData.speedCapture;
@@ -773,15 +785,16 @@ void dataInit()
 	backData.motorDir = FOREWARD;//转向为正
 
 	memset(&speedPID,0x00,sizeof(PID));
-	speedPID.outMax = 3932160;//60A
-	speedPID.outMin = 0;//12288000->5%;
+	speedPID.outMax = 36864000;//73819750;
+	speedPID.outMin = 0;
 	speedPID.kp = 65536;//1
-	speedPID.ki = 3277;//0
+	speedPID.ki = 3277;//
 
 	memset(&currentPID,0x00,sizeof(PID));
-	currentPID.outMax = 24576000;
-	currentPID.outMin = 12288000;
-	currentPID.kp = 65536;
+	currentPID.outMax = 98304000;//375
+	currentPID.outMin = 0;
+	currentPID.kp = 131072;//1
+	currentPID.ki = 0;//655;//0.01
 }
 Uint16 readHall()
 {
@@ -1025,22 +1038,48 @@ void setVCurve1(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k1,float32 k2,Uint16 max
 		speedPID.setPoint = lowV;
 	}
 }
+void setVCurve2(Uint16 t1,float32 k1,Uint16 maxV)
+{
+	if(moveCnt < t1)
+	{
+		speedPID.setPoint =(Uint16)(k1 * moveCnt);
+	}
+//	else if(moveCnt <= t2)
+//	{
+//		speedPID.setPoint = maxV;
+//	}
+//	else if(moveCnt < tAll)
+//	{
+//		if((maxV - (Uint16)(k2 * (moveCnt - t2))) < lowV)
+//		{
+//			speedPID.setPoint = lowV;
+//		}
+//		else
+//		{
+//			speedPID.setPoint = maxV - (Uint16)(k2 * (moveCnt - t2));
+//		}
+//	}
+	else
+	{
+		speedPID.setPoint = maxV;
+	}
+}
 Uint16 currentFilter(Uint16* pBuf, Uint16 newValue)
 {
 	Uint16 i,ret;
-	Uint16 tmp = 0;
+	Uint32 tmp = 0;
 
-	for(i = 4;i > 0; i--)
+	for(i = FILTER_LEN-1;i > 0; i--)
 	{
 		pBuf[i] = pBuf[i-1];
 	}
 	pBuf[0] = newValue;
 
-	for(i = 0;i < 5; i++)
+	for(i = 0;i < FILTER_LEN; i++)
 	{
 		tmp += pBuf[i];
 	}
-	ret = tmp / 5;
+	ret = (Uint16)(tmp / FILTER_LEN);
 
 	return ret;
 }

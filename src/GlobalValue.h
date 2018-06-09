@@ -9,12 +9,12 @@
 /*Time Interrupt*/
 extern TIME_FLAG  flagDot1ms;
 #define flagDot1msW flagDot1ms.word
-#define sensorReadSample flagDot1ms.bit.bit1
+#define sensorReadSample flag1ms.bit.bit1
+#define currentLoopSample flagDot1ms.bit.bit0
 
 extern TIME_FLAG  flag1ms;
 #define flag1msW flag1ms.word
-#define currentLoopSample flag1ms.bit.bit0
-#define speedLoopSample flag10ms.bit.bit0
+#define speedLoopSample flag1ms.bit.bit2
 
 extern TIME_FLAG  flag10ms;
 #define flag10msW flag10ms.word

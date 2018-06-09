@@ -6,10 +6,12 @@
 /*debug相关*/
 #define SPEED_CURVE1 0
 
+#define OLD_BAOD 0
+
 /*曲线相关*/
 #define LOW_RATE 100
 
-#define NOMAL_RATE_UP 450
+#define NOMAL_RATE_UP 450//
 #define TUP_ALL 600
 #define TUP_T1  212
 #define TUP_T2  529
@@ -18,10 +20,10 @@
 
 #define NOMAL_RATE_DOWN 450
 #define TDOWN_ALL 600
-#define TDOWN_T1 141
-#define TDOWN_T2 458
-#define K_DOWN_10MS 3.176
-
+#define TDOWN_T1 212
+#define TDOWN_T2 529
+#define K_DOWN_10MS1 2.12
+#define K_DOWN_10MS2  6.35
 
 /*PWM相关*/
 #define PWM_PERIOD    1875//25K:1500 20K:1875 10K:3750 5K:7500
@@ -71,6 +73,8 @@
 
 #define LED_TOGGLE 	  GpioDataRegs.GPCTOGGLE.bit.GPIO87 = 1;
 
+/*电流相关*/
+#define FILTER_LEN 6
 /**
  * @brief EPWM1 initialize
  * @param period
@@ -220,5 +224,7 @@ extern void readHall1();
  * @brief 电流均值滤波
  */
 static Uint16 currentFilter(Uint16 *pBuf,Uint16 newValue);
+
+void setVCurve2(Uint16 t1,float32 k1,Uint16 maxV);
 #endif
 
