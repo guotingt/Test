@@ -295,26 +295,21 @@ void currentRead()
 		case 3://VW
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.current = currentBaseV - backData.currentV;
-			//backData.current = backData.currentV - currentBaseV;
-
 			break;
 		case 2://VU
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.current = currentBaseV - backData.currentV;
-			//backData.current = backData.currentV - currentBaseV;//old
 			break;
 		case 6://WU
 			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.currentW =   backData.currentU - currentBaseU - currentBaseV + backData.currentV;
-			//backData.currentW = backData.currentU - currentBaseU + currentBaseV - backData.currentV;//old
 			backData.current = backData.currentW;
 			break;
 		case 4://WV
 			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
-			//backData.currentW = backData.currentU - currentBaseU + currentBaseV - backData.currentV;//old
 			backData.current = backData.currentW;
 			break;
 		default:
@@ -336,25 +331,21 @@ void currentRead()
 		case 4://VW
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.current = currentBaseV - backData.currentV;
-			//backData.current = backData.currentV - currentBaseV;//old
 			break;
 		case 5://VU
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.current = currentBaseV - backData.currentV;
-			//backData.current = backData.currentV - currentBaseV;//old
 			break;
 		case 1://WU
 			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
-			//backData.currentW = backData.currentU - currentBaseU + currentBaseV - backData.currentV;//old
 			backData.current = backData.currentW;
 			break;
 		case 3://WV
 			backData.currentU = currentFilter(uBuffer,DMABuf1[0]);
 			backData.currentV = currentFilter(vBuffer,DMABuf1[10]);
 			backData.currentW = backData.currentU - currentBaseU - currentBaseV + backData.currentV;
-			//backData.currentW = backData.currentU - currentBaseU + currentBaseV - backData.currentV;//old
 			backData.current = backData.currentW;
 			break;
 		default:
@@ -785,16 +776,23 @@ void dataInit()
 	backData.motorDir = FOREWARD;//转向为正
 
 	memset(&speedPID,0x00,sizeof(PID));
+	memset(&currentPID,0x00,sizeof(PID));
+#if SPEED
+	speedPID.outMax = 86016000;//%70 1875*0.7*65536
+	speedPID.outMin = 0;
+	speedPID.kp = 65536;//1*6536
+	speedPID.ki = 20316;//0.031*65336:1k 0.15*65536:0.1k
+#else
 	speedPID.outMax = 36864000;//73819750;
 	speedPID.outMin = 0;
 	speedPID.kp = 65536;//1
 	speedPID.ki = 3277;//
 
-	memset(&currentPID,0x00,sizeof(PID));
 	currentPID.outMax = 98304000;//375
 	currentPID.outMin = 0;
 	currentPID.kp = 131072;//1
 	currentPID.ki = 0;//655;//0.01
+#endif
 }
 Uint16 readHall()
 {

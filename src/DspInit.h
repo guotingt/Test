@@ -5,8 +5,9 @@
 
 /*debug相关*/
 #define SPEED_CURVE1 0
-
-#define OLD_BAOD 0
+#define CURRENT 0
+#define SPEED 1
+#define CURRENT2 0
 
 /*曲线相关*/
 #define LOW_RATE 100
