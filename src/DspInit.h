@@ -12,7 +12,11 @@
 /*曲线相关*/
 #define LOW_RATE 100
 
-#define NOMAL_RATE_UP 450//
+// 450 600 212 529 2.12 6.35 开关门
+// 450 800 133 733 3.375 6.75 运弹上
+// 500 700 70  630 7.14  7.14 运弹下
+
+#define NOMAL_RATE_UP 450
 #define TUP_ALL 600
 #define TUP_T1  212
 #define TUP_T2  529
@@ -151,7 +155,7 @@ static int16 filterCurrent(volatile Uint16* pSrc,int16 *pArray);
 /**
  * @brief 等腰梯形速度曲线设定
  */
-static void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV);
+//static void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV);
 /**
  * @brief 非等腰梯形速度曲线设定
  */
@@ -226,6 +230,6 @@ extern void readHall1();
  */
 static Uint16 currentFilter(Uint16 *pBuf,Uint16 newValue);
 
-void setVCurve2(Uint16 t1,float32 k1,Uint16 maxV);
+//void setVCurve2(Uint16 t1,float32 k1,Uint16 maxV);
 #endif
 

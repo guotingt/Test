@@ -395,8 +395,8 @@ void dsp28335Init()
 	IFR = 0x0000;
 	InitPieVectTable();                           //PIE 向量表指针指向中断服务程(ISR)完成其初始化.
 
-//	MemCopy(&RamfuncsLoadStart,&RamfuncsLoadEnd,&RamfuncsRunStart);
-//	InitFlash();
+	MemCopy(&RamfuncsLoadStart,&RamfuncsLoadEnd,&RamfuncsRunStart);
+	InitFlash();
 
 	InitAdc();                                    //ADC复位
 	EALLOW;                                       //This is needed to write to EALLOW protected registers
@@ -529,7 +529,6 @@ interrupt void ISRTimer0(void)
 	if(msCnt1 >= 10)
 	{
 	  msCnt1 = 0;
-	  //readSensor();
 	  cap1OverCnt++;
 	  if(cap1OverCnt > 100)
 	  {
@@ -556,13 +555,11 @@ interrupt void ISRTimer0(void)
 				if(FOREWARD == backData.motorDir)
 				{
 
-					setVCurve2(20,25,500);
-					//setVCurve1(TUP_T1,TUP_T2,TUP_ALL,K_UP_10MS1,K_UP_10MS2,NOMAL_RATE_UP,LOW_RATE);
+					setVCurve1(TUP_T1,TUP_T2,TUP_ALL,K_UP_10MS1,K_UP_10MS2,NOMAL_RATE_UP,LOW_RATE);
 				}
 				else
 				{
-					setVCurve2(20,25,500);
-					//setVCurve1(TDOWN_T1,TDOWN_T2,TDOWN_ALL,K_DOWN_10MS1,K_DOWN_10MS2,NOMAL_RATE_DOWN,LOW_RATE);
+					setVCurve1(TDOWN_T1,TDOWN_T2,TDOWN_ALL,K_DOWN_10MS1,K_DOWN_10MS2,NOMAL_RATE_DOWN,LOW_RATE);
 				}
 			}
 			speedPID.input = backData.speedCapture;
@@ -775,6 +772,7 @@ void dataInit()
 	backData.status = STOP_STA;//状态默认停止
 	backData.motorDir = FOREWARD;//转向为正
 
+	//单闭环 kp = 1; ki = 0.15; max = %70
 	memset(&speedPID,0x00,sizeof(PID));
 	memset(&currentPID,0x00,sizeof(PID));
 #if SPEED
@@ -984,32 +982,32 @@ void readPulse()
 		backData.posCntDown++;
 	}
 }
-void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV)
-{
-	if(moveCnt <= t1)
-	{
-		speedPID.setPoint =(Uint16)(k * moveCnt);
-	}
-	else if(moveCnt <= t2)
-	{
-		speedPID.setPoint = maxV;
-	}
-	else if(moveCnt < tAll)
-	{
-		if((maxV - (Uint16)(k * (moveCnt - t2))) < lowV)
-		{
-			speedPID.setPoint = lowV;
-		}
-		else
-		{
-			speedPID.setPoint = maxV - (Uint16)(k * (moveCnt - t2));
-		}
-	}
-	else
-	{
-		speedPID.setPoint = lowV;
-	}
-}
+//void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV)
+//{
+//	if(moveCnt <= t1)
+//	{
+//		speedPID.setPoint =(Uint16)(k * moveCnt);
+//	}
+//	else if(moveCnt <= t2)
+//	{
+//		speedPID.setPoint = maxV;
+//	}
+//	else if(moveCnt < tAll)
+//	{
+//		if((maxV - (Uint16)(k * (moveCnt - t2))) < lowV)
+//		{
+//			speedPID.setPoint = lowV;
+//		}
+//		else
+//		{
+//			speedPID.setPoint = maxV - (Uint16)(k * (moveCnt - t2));
+//		}
+//	}
+//	else
+//	{
+//		speedPID.setPoint = lowV;
+//	}
+//}
 void setVCurve1(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k1,float32 k2,Uint16 maxV,Uint16 lowV)
 {
 	if(moveCnt <= t1)
@@ -1036,12 +1034,12 @@ void setVCurve1(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k1,float32 k2,Uint16 max
 		speedPID.setPoint = lowV;
 	}
 }
-void setVCurve2(Uint16 t1,float32 k1,Uint16 maxV)
-{
-	if(moveCnt < t1)
-	{
-		speedPID.setPoint =(Uint16)(k1 * moveCnt);
-	}
+//void setVCurve2(Uint16 t1,float32 k1,Uint16 maxV)
+//{
+//	if(moveCnt < t1)
+//	{
+//		speedPID.setPoint =(Uint16)(k1 * moveCnt);
+//	}
 //	else if(moveCnt <= t2)
 //	{
 //		speedPID.setPoint = maxV;
@@ -1057,11 +1055,11 @@ void setVCurve2(Uint16 t1,float32 k1,Uint16 maxV)
 //			speedPID.setPoint = maxV - (Uint16)(k2 * (moveCnt - t2));
 //		}
 //	}
-	else
-	{
-		speedPID.setPoint = maxV;
-	}
-}
+//	else
+//	{
+//		speedPID.setPoint = maxV;
+//	}
+//}
 Uint16 currentFilter(Uint16* pBuf, Uint16 newValue)
 {
 	Uint16 i,ret;

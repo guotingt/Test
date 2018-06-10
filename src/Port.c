@@ -14,6 +14,10 @@ Uint16 currentOverH = 0;
 Uint16 currentOverFlag = 0;
 Uint16 cleraFault = 0;
 
+Uint16 timeDelayDown = 0;
+Uint16 timeDelayUp = 0;
+Uint16 cycleMoveCnt = 0;
+
 void readSensor()
 {
 	currentRead();//Get Current;
@@ -36,11 +40,23 @@ void readSensor()
 	}
 	else
 	{
+		timeDelayDown++;
 		backData.lowerOver = 1;
 		backData.faultCode |= (0x0001<<5);//bit5 lower over
-
 	}
-
+	if(60000 == timeDelayDown)
+	{
+		timeDelayDown = 0;
+		if((STOP_STA == backData.status) && (backData.posFlag != 0))
+		{
+			cycleMoveCnt++;
+//			backData.status = FOREWARD_STA;
+//			backData.motorDir = FOREWARD;
+//			moveCnt = 0;
+//			readHall();
+//			pwmUpdate();
+		}
+	}
 	/*ÉÏÏÞÎ»¼ì²â*/
 	if(GpioDataRegs.GPADAT.bit.GPIO23)
 	{
@@ -49,10 +65,23 @@ void readSensor()
 	}
 	else
 	{
+		timeDelayUp++;
 		backData.upperOver = 1;
 		backData.faultCode |= (0x0001<<4);//bit4 upper over
 	}
-
+	if(60000 == timeDelayUp)
+	{
+		timeDelayUp = 0;
+		if((STOP_STA == backData.status) && (backData.posFlag != 0))
+		{
+			cycleMoveCnt++;
+//			backData.status = BACKWARD_STA;
+//			backData.motorDir = BACKWARD;
+//			moveCnt = 0;
+//			readHall();
+//			pwmUpdate();
+		}
+	}
 	if (abs(backData.current) >= CURRENT_THRESHOLD_1)
 	{
 		currentOver++;
@@ -112,10 +141,6 @@ void readSensor()
 		pidReset(&currentPID);
 		SET_PWM(PWM_PERIOD - speedPID.sumOut);
 		duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
-	}
-	else
-	{
-		backData.faultCode &= (~(0x0001<<2));
 	}
 }
 
