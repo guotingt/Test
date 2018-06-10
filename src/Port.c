@@ -113,6 +113,10 @@ void readSensor()
 		SET_PWM(PWM_PERIOD - speedPID.sumOut);
 		duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 	}
+	else
+	{
+		backData.faultCode &= (~(0x0001<<2));
+	}
 }
 
 void sendMsg()
