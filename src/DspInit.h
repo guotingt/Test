@@ -4,16 +4,15 @@
 #include "DSP28x_Project.h"
 
 /*debug相关*/
-#define SPEED_CURVE1 0
+#define SPEED_CURVE1 1
 #define CURRENT 0
-#define SPEED 1
+#define SPEED 0
 #define CURRENT2 0
 
 /*曲线相关*/
 #define LOW_RATE 100
 
-// 450 600 212 529 2.12 6.35 开关门  7jws20c-v2-2
-// 450 800 133 733 3.375 6.75 运弹上
+// 450 800 133 733 3.375 6.75 运弹上 7jws20c-v2-1
 // 500 700 70  630 7.14  7.14 运弹下
 
 #define NOMAL_RATE_UP 450
@@ -29,6 +28,22 @@
 #define TDOWN_T2 630
 #define K_DOWN_10MS1 7.14
 #define K_DOWN_10MS2  7.14
+
+// 450 600 212 529 2.12 6.35 开关门  7jws20c-v2-2
+
+//#define NOMAL_RATE_UP 450
+//#define TUP_ALL 600
+//#define TUP_T1  212
+//#define TUP_T2  529
+//#define K_UP_10MS1  2.12
+//#define K_UP_10MS2  6.35
+//
+//#define NOMAL_RATE_DOWN 450
+//#define TDOWN_ALL 600
+//#define TDOWN_T1 212
+//#define TDOWN_T2 529
+//#define K_DOWN_10MS1 2.12
+//#define K_DOWN_10MS2  6.35
 
 /*PWM相关*/
 #define PWM_PERIOD    1875//25K:1500 20K:1875 10K:3750 5K:7500
