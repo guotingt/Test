@@ -22,7 +22,7 @@ int main()
 
 	readHall();
 
-	//pwmUpdate();//test
+//	pwmUpdate();//test
 
     while (1) 
     {
@@ -33,7 +33,7 @@ int main()
 			speedLoopSample = 0;
 			if(FOREWARD_STA == backData.status || BACKWARD_STA == backData.status )
 			{
-				//speedPID.setPoint = 100;//test
+//				speedPID.setPoint = 50;//test
 				speedPID.input = backData.speedCapture;
 				pidCalc(&speedPID);
 		    	duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);

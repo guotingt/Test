@@ -395,8 +395,8 @@ void dsp28335Init()
 	IFR = 0x0000;
 	InitPieVectTable();                           //PIE 向量表指针指向中断服务程(ISR)完成其初始化.
 
-	MemCopy(&RamfuncsLoadStart,&RamfuncsLoadEnd,&RamfuncsRunStart);
-	InitFlash();
+//	MemCopy(&RamfuncsLoadStart,&RamfuncsLoadEnd,&RamfuncsRunStart);
+//	InitFlash();
 
 	InitAdc();                                    //ADC复位
 	EALLOW;                                       //This is needed to write to EALLOW protected registers
@@ -405,7 +405,7 @@ void dsp28335Init()
     PieVectTable.ECAP3_INT = &ISRCap3;   	      //将CAP3中断添加都中断向量表里
     PieVectTable.TINT0 = &ISRTimer0;              //将定时器0中断添加都中断向量表里
     PieVectTable.SCIRXINTA = &ISRSCIARX;          //将串口接收中断添加都中断向量表里
-    PieVectTable.DINTCH1= &local_DINTCH1_ISR;
+//    PieVectTable.DINTCH1= &local_DINTCH1_ISR;
     PieVectTable.XINT1 = &xintDown_isr;           //外部中断GPIO22
     PieVectTable.XINT2 = &xintUp_isr;             //外部中断GPIO23
 
@@ -431,7 +431,7 @@ void dsp28335Init()
     IER |= M_INT1;   							  //使能第一组中断
     IER |= M_INT4;   							  //使能第四组中断
     IER |= M_INT9;   							  //使能第九组中断
-    IER |= M_INT13; 						      //使能中断13
+//    IER |= M_INT13; 						      //使能中断13
 
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
     PieCtrlRegs.PIEIER1.bit.INTx4 = 1;			  //使能第一组中断里的第1个中断--UP中断
@@ -478,12 +478,12 @@ interrupt void ISRSCIARX(void)
 //		  reciveBuf[ptr++] = tmpChar;
 //		  xors ^= tmpChar;
 //		}
-		else if(ptr < 32)
+		else if(ptr < 38)
 		{
 		  reciveBuf[ptr++] = tmpChar;
-		  if(ptr == 32)
+		  if(ptr == 38)
 		  {
-			  if(0x00BF == (0x00BF&reciveBuf[31]))
+			  if(0x00BF == (0x00BF&reciveBuf[37]))
 			  {
 				  //unPackMsg();
 				  unPackMsg2();
@@ -524,11 +524,10 @@ interrupt void ISRTimer0(void)
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
     flagDot1msW = 0xffff; //100us时间到
     msCnt1++;
-    //currentRead();
-    readSensor();
 	if(msCnt1 >= 10)
 	{
 	  msCnt1 = 0;
+	  readSensor();
 	  cap1OverCnt++;
 	  if(cap1OverCnt > 100)
 	  {
@@ -537,11 +536,19 @@ interrupt void ISRTimer0(void)
 	  }
 	  flag1msW = 0xffff;  //1ms时间到
 	  msCnt10++;
+#if SPEED_CURVE1
+	  if(STOP_STA != backData.status)
+	  {
+		  speedPID.input = backData.speedCapture;
+		  pidCalc(&speedPID);
+		  SET_PWM(PWM_PERIOD - speedPID.sumOut);
+		  duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
+	  }
+#endif
 	  if(msCnt10 >= 10)
 	  {
 		msCnt10 = 0;
 		flag10msW = 0xffff; //10ms时间到
-
 #if SPEED_CURVE1
 		if((FOREWARD_STA == backData.status)||(BACKWARD_STA == backData.status))
 		{
@@ -562,18 +569,10 @@ interrupt void ISRTimer0(void)
 					setVCurve1(TDOWN_T1,TDOWN_T2,TDOWN_ALL,K_DOWN_10MS1,K_DOWN_10MS2,NOMAL_RATE_DOWN,LOW_RATE);
 				}
 			}
-			speedPID.input = backData.speedCapture;
-			pidCalc(&speedPID);
-			SET_PWM(PWM_PERIOD - speedPID.sumOut);
-			duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 		}
 		else if(CHECK_STA == backData.status)
 		{
 			speedPID.setPoint = LOW_RATE;
-			speedPID.input = backData.speedCapture;
-			pidCalc(&speedPID);
-			SET_PWM(PWM_PERIOD - speedPID.sumOut);
-			duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
 		}
 #endif
 		msCnt100++;
@@ -769,28 +768,37 @@ void dataInit()
 	memset(&backData,0x00,sizeof(BACK_DATA));//清空反馈数据
 	memset(&upperCommand,0x00,sizeof(BACK_DATA));//清空上位机指令
 	upperCommand.motionCmd = DO_STOP;//指令默认停止
-	backData.status = STOP_STA;//状态默认停止
-	backData.motorDir = FOREWARD;//转向为正
+	backData.status = STOP_STA;//状态默认停止//test
+	backData.motorDir = FOREWARD;//转向为正//test
 
-	//单闭环 kp = 1; ki = 0.15; max = %70
 	memset(&speedPID,0x00,sizeof(PID));
 	memset(&currentPID,0x00,sizeof(PID));
 #if SPEED
 	speedPID.outMax = 86016000;//%70 1875*0.7*65536
 	speedPID.outMin = 0;
 	speedPID.kp = 65536;//1*6536
-	speedPID.ki = 20316;//0.031*65336:1k 0.15*65536:0.1k
-#else
+	speedPID.ki = 2032;//0.031*65336:1k 0.15*65536:0.1k
+#endif
+
+#if CURRENT
 	speedPID.outMax = 36864000;//73819750;
 	speedPID.outMin = 0;
 	speedPID.kp = 65536;//1
 	speedPID.ki = 3277;//
 
 	currentPID.outMax = 98304000;//375
-	currentPID.outMin = 0;
+	currentPID.outMin = 0;//12320768
 	currentPID.kp = 131072;//1
 	currentPID.ki = 0;//655;//0.01
 #endif
+
+#if SPEED_CURVE1
+	speedPID.outMax = 86016000;//%70 1875*0.7*65536
+	speedPID.outMin = 0;
+	speedPID.kp = 65536;//1*6536
+	speedPID.ki = 2032;//0.031*65336:1k 0.15*65536:0.1k
+#endif
+
 }
 Uint16 readHall()
 {

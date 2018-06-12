@@ -10,7 +10,7 @@
 extern TIME_FLAG  flagDot1ms;
 #define flagDot1msW flagDot1ms.word
 #define sensorReadSample flag1ms.bit.bit1
-#define currentLoopSample flagDot1ms.bit.bit0
+#define currentLoopSample flag1ms.bit.bit0
 
 extern TIME_FLAG  flag1ms;
 #define flag1msW flag1ms.word

@@ -6,7 +6,7 @@
 
 Uint16 sendBuf[10] = {0};
 Uint16 testBuf[80] = {0};
-Uint16 reciveBuf[32] = {0};
+Uint16 reciveBuf[38] = {0};
 BACK_DATA backData;
 
 Uint16 currentOver = 0;
@@ -17,6 +17,11 @@ Uint16 cleraFault = 0;
 Uint16 timeDelayDown = 0;
 Uint16 timeDelayUp = 0;
 Uint16 cycleMoveCnt = 0;
+
+Uint16 iThL = 1690;//75A
+Uint16 iThH = 2027;//90A
+Uint16 tL = 10;//10ms
+Uint16 tH = 4;//4ms
 
 void readSensor()
 {
@@ -44,7 +49,7 @@ void readSensor()
 		backData.lowerOver = 1;
 		backData.faultCode |= (0x0001<<5);//bit5 lower over
 	}
-	if(60000 == timeDelayDown)
+	if(6000 == timeDelayDown)
 	{
 		timeDelayDown = 0;
 		if((STOP_STA == backData.status) && (backData.posFlag != 0))
@@ -69,7 +74,7 @@ void readSensor()
 		backData.upperOver = 1;
 		backData.faultCode |= (0x0001<<4);//bit4 upper over
 	}
-	if(60000 == timeDelayUp)
+	if(6000 == timeDelayUp)
 	{
 		timeDelayUp = 0;
 		if((STOP_STA == backData.status) && (backData.posFlag != 0))
@@ -82,10 +87,10 @@ void readSensor()
 //			pwmUpdate();
 		}
 	}
-	if (abs(backData.current) >= CURRENT_THRESHOLD_1)
+	if (abs(backData.current) >= iThL)
 	{
 		currentOver++;
-		if (currentOver > CURRENTOVER_TIME)
+		if (currentOver > tL)
 		{
 			backData.faultCode |= 0x0001;
 			PWM_OFF;
@@ -98,10 +103,10 @@ void readSensor()
 			currentOverFlag = 1;
 		}
 	}
-	if (abs(backData.current) >= CURRENT_THRESHOLD_2)
+	if (abs(backData.current) >= iThH)
 	{
 		currentOverH++;
-		if (currentOverH > CURRENTOVERH_TIME)
+		if (currentOverH > tH)
 		{
 			backData.faultCode |= 0x0001;
 			PWM_OFF;
@@ -114,7 +119,7 @@ void readSensor()
 			currentOverFlag = 1;
 		}
 	}
-	if(abs(backData.current) < CURRENT_THRESHOLD_1)
+	if(abs(backData.current) < iThL)
 	{
 		currentOver = 0;
 		currentOverH = 0;
@@ -141,6 +146,10 @@ void readSensor()
 		pidReset(&currentPID);
 		SET_PWM(PWM_PERIOD - speedPID.sumOut);
 		duty = (Uint16)(speedPID.sumOut * 100/PWM_PERIOD);
+	}
+	else
+	{
+		backData.faultCode &= (~(0x0001<<2));
 	}
 }
 
@@ -243,6 +252,9 @@ void unPackMsg2()
 		offset = 2;
 		upperCommand.motionCmd = *(reciveBuf + offset);offset++;//2
 		upperCommand.speedMode = *(reciveBuf + offset);offset++;//3
+		stmpL = reciveBuf[35];
+		stmpH = reciveBuf[36];
+		speedPID.setPoint = stmpL + (stmpH<<8);
 		if(MANUAL_STA != backData.status)
 		{
 			/*Process*/
@@ -325,9 +337,6 @@ void unPackMsg2()
 			default:
 				break;
 			}
-			stmpL = reciveBuf[29];
-			stmpH = reciveBuf[30];
-			speedPID.setPoint = stmpL + (stmpH<<8);
 		}
 	}
 	else
@@ -380,6 +389,17 @@ void unPackMsg2()
 		stmpH = reciveBuf[offset]; offset++;
 		ltmpH = stmpL + (stmpH<<8);
 		currentPID.outMax = ltmpL + (ltmpH<<16);
+
+		stmpL = reciveBuf[offset]; offset++;
+		stmpH = reciveBuf[offset]; offset++;
+		iThL = stmpL + (stmpH<<8);
+
+		stmpL = reciveBuf[offset]; offset++;
+		stmpH = reciveBuf[offset]; offset++;
+		iThH = stmpL + (stmpH<<8);
+
+		tL = reciveBuf[offset]; offset++;
+		tH = reciveBuf[offset]; offset++;
 	}
 }
 Uint16 packMsg()
@@ -414,8 +434,8 @@ void sendTest()
 	*(testBuf + offset) = backData.speedCapture>>8;offset++;
 	*(testBuf + offset) = backData.current; offset++;
 	*(testBuf + offset) = backData.current>>8; offset++;
-	*(testBuf + offset) = (Uint16)(duty);offset++;
-	*(testBuf + offset) = (Uint16)(duty>>8);offset++;
+	*(testBuf + offset) = duty;offset++;
+	*(testBuf + offset) = duty>>8;offset++;
 	*(testBuf + offset) = speedPID.sumOut;offset++;
 	*(testBuf + offset) = speedPID.sumOut>>8;offset++;
 	*(testBuf + offset) = speedPID.sumOut>>16;offset++;
@@ -448,6 +468,12 @@ void sendTest()
 	*(testBuf + offset) = (Uint16)(backData.hallPos1);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.setPoint);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.setPoint>>8);offset++;
+	*(testBuf + offset) = (Uint16)(iThL);offset++;
+	*(testBuf + offset) = (Uint16)(iThL>>8);offset++;
+	*(testBuf + offset) = (Uint16)(iThH);offset++;
+	*(testBuf + offset) = (Uint16)(iThH>>8);offset++;
+	*(testBuf + offset) = (Uint16)(tL);offset++;
+	*(testBuf + offset) = (Uint16)(tH);offset++;
 	for (i = 2; i < offset;i++)
 	{
 		xors ^= testBuf[i];
