@@ -261,14 +261,15 @@ void unPackMsg2()
 			switch (upperCommand.motionCmd)
 			{
 			case DO_STOP:
-				if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
-				{
-					backData.posFlag = DOWN_POS;
-				}
-				else if(FOREWARD_STA == backData.status)
-				{
-					backData.posFlag = UP_POS;
-				}
+//				if((BACKWARD_STA == backData.status) || (CHECK_STA == backData.status))
+//				{
+//					backData.posFlag = DOWN_POS;
+//				}
+//				else if(FOREWARD_STA == backData.status)
+//				{
+//					backData.posFlag = UP_POS;
+//				}
+				backData.posFlag = UNKONWN_POS;
 				PWM_OFF;
 				backData.status = STOP_STA;
 				pidReset(&speedPID);

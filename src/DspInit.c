@@ -555,7 +555,7 @@ interrupt void ISRTimer0(void)
 			moveCnt++;
 			if(UNKONWN_POS == backData.posFlag)
 			{
-				speedPID.setPoint = LOW_RATE;
+				//speedPID.setPoint = LOW_RATE;
 			}
 			else
 			{
