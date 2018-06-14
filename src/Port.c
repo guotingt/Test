@@ -466,7 +466,7 @@ void sendTest()
 	*(testBuf + offset) = (Uint16)(currentPID.outMax>>16);offset++;
 	*(testBuf + offset) = (Uint16)(currentPID.outMax>>24);offset++;
 	*(testBuf + offset) = (Uint16)(backData.hallPos);offset++;
-	*(testBuf + offset) = (Uint16)(backData.hallPos1);offset++;
+	*(testBuf + offset) = (Uint16)(backData.posFlag);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.setPoint);offset++;
 	*(testBuf + offset) = (Uint16)(speedPID.setPoint>>8);offset++;
 	*(testBuf + offset) = (Uint16)(iThL);offset++;
