@@ -5,13 +5,13 @@
 #include "Control.h"
 
 /*=========全局变量定义==========*/
-/*时间分频*/
-TIME_FLAG  flagDot1ms;
-TIME_FLAG  flag1ms;
-TIME_FLAG  flag10ms;
-TIME_FLAG  flag100ms;
-TIME_FLAG  flag500ms;
-TIME_FLAG  flag1000ms;
+/*时间分频，主函数while轮询，有一定的计时误差*/
+TIME_FLAG  flagDot1ms;///<0.1ms时间标志
+TIME_FLAG  flag1ms;   //<1ms时间标志
+TIME_FLAG  flag10ms;  //<10ms时间标志
+TIME_FLAG  flag100ms; ///<100ms时间标志
+TIME_FLAG  flag500ms; ///<500ms时间标志
+TIME_FLAG  flag1000ms;///<1s时间标志
 
 /*==========局部变量定义=========*/
 /*ADC读取相关*/
@@ -23,7 +23,10 @@ volatile Uint16 currentBaseW = 2253; ///<W相基准值 1.65V
 volatile Uint16 currentBaseU = 2253; ///<U相基准值 1.65V
 volatile Uint16 currentBaseV = 2253; ///<V相基准值 1.65V
 
-/*分频计数*/
+Uint16 uBuffer[FILTER_LEN] = {0};///<U相电流均值滤波缓冲
+Uint16 vBuffer[FILTER_LEN] = {0};///<V相电流均值吕布缓冲
+
+/*分频计数 对应时间分频标志*/
 volatile Uint16 msCnt1 = 0;   ///<1ms
 volatile Uint16 msCnt10 = 0;  ///<10ms
 volatile Uint16 msCnt100 = 0; ///<100ms
@@ -31,11 +34,7 @@ volatile Uint16 msCnt500 = 0; ///<0.5s
 volatile Uint16 msCnt1000 = 0;///<1s
 
 /*速度读取相关*/
-volatile Uint16 cap1OverCnt = 0; ///<超时计数
-volatile Uint32 tx[8] = {0}; ///<间隔计时
-
-Uint16 uBuffer[FILTER_LEN] = {0};
-Uint16 vBuffer[FILTER_LEN] = {0};
+volatile Uint16 cap1OverCnt = 0; ///<计算速度超时计数
 
 void EPwm1Setup(Uint16 period,Uint16 duty)
 {
@@ -123,7 +122,7 @@ void ECap1Setup()
 	ECap1Regs.ECEINT.bit.CEVT2=1;
 	ECap1Regs.ECEINT.bit.CEVT3=1;
 	ECap1Regs.ECEINT.bit.CEVT4=1;  	                     // Enable cevt4 interrupt
-	ECap1Regs.ECEINT.bit.CTROVF=1;                       //Enable CTROVF interrupt
+	ECap1Regs.ECEINT.bit.CTROVF=0;                       // Disable CTROVF interrupt
 	ECap1Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;             // start to run ECap1
 }
 void ECap2Setup()
@@ -151,7 +150,7 @@ void ECap2Setup()
 	ECap2Regs.ECEINT.bit.CEVT2=1;
 	ECap2Regs.ECEINT.bit.CEVT3=1;
 	ECap2Regs.ECEINT.bit.CEVT4 = 1;						 //Enable cevt4 interrupt
-	ECap2Regs.ECEINT.bit.CTROVF = 1;					 //Enable CTROVF interrupt
+	ECap2Regs.ECEINT.bit.CTROVF = 0;					 // CTROVF interrupt
 	ECap2Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;		     //start to run ECap2
 }
 void ECap3Setup()
@@ -179,7 +178,7 @@ void ECap3Setup()
 	ECap3Regs.ECEINT.bit.CEVT2=1;
 	ECap3Regs.ECEINT.bit.CEVT3=1;
 	ECap3Regs.ECEINT.bit.CEVT4 = 1;  					//Enable cevt4 interrupt
-	ECap3Regs.ECEINT.bit.CTROVF = 1; 				    //Enable CTROVF interrupt
+	ECap3Regs.ECEINT.bit.CTROVF = 0; 				    //Disable CTROVF interrupt
 	ECap3Regs.ECCTL2.bit.TSCTRSTOP = EC_RUN;            //start to run ECap3
 }
 void DMASetup()
@@ -276,7 +275,7 @@ void scia_xmit(Uint16 a)
 }
 void currentRead()
 {
-	if(STOP_STA == backData.status)
+	if(STOP_STA == backData.status)//停止状态下更新电流基准值
 	{
 		currentBaseRead();
 	}
@@ -371,6 +370,7 @@ void currentBaseRead()
 	 currentBaseV = iSum / 10;
 
 }
+
 void dsp28335Init()
 {
 
@@ -405,7 +405,6 @@ void dsp28335Init()
     PieVectTable.ECAP3_INT = &ISRCap3;   	      //将CAP3中断添加都中断向量表里
     PieVectTable.TINT0 = &ISRTimer0;              //将定时器0中断添加都中断向量表里
     PieVectTable.SCIRXINTA = &ISRSCIARX;          //将串口接收中断添加都中断向量表里
-//    PieVectTable.DINTCH1= &local_DINTCH1_ISR;
     PieVectTable.XINT1 = &xintDown_isr;           //外部中断GPIO22
     PieVectTable.XINT2 = &xintUp_isr;             //外部中断GPIO23
 
@@ -431,7 +430,6 @@ void dsp28335Init()
     IER |= M_INT1;   							  //使能第一组中断
     IER |= M_INT4;   							  //使能第四组中断
     IER |= M_INT9;   							  //使能第九组中断
-//    IER |= M_INT13; 						      //使能中断13
 
     PieCtrlRegs.PIECTRL.bit.ENPIE = 1;            //使能PIE总中断
     PieCtrlRegs.PIEIER1.bit.INTx4 = 1;			  //使能第一组中断里的第1个中断--UP中断
@@ -442,12 +440,10 @@ void dsp28335Init()
     PieCtrlRegs.PIEIER4.bit.INTx3 = 1;            //使能第四组中断里的第三个中断--CAP3中断
     PieCtrlRegs.PIEIER9.bit.INTx1 = 1;            //使能第九组中断里的第一个中断--SCIARX接收中断
 
-    dataInit();
+    dataInit();                                   //数据初始化
 
-    /*DMA通道中断在配置中使能*/
     EINT;                                         //中断使能
     ERTM;                                         //使能总实时中断
-    currentBaseRead();
 
 }
 
@@ -511,11 +507,10 @@ interrupt void ISRSCIARX(void)
 		  //xors = 0;
 		}
 	}
-    SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;      // Clear Overflow flag
-    SciaRegs.SCIFFRX.bit.RXFFINTCLR=1;      // Clear Interrupt flag
-    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9;        //Acknowledge this interrupt to receive more interrupts from group 1
+    SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;        // Clear Overflow flag
+    SciaRegs.SCIFFRX.bit.RXFFINTCLR=1;        // Clear Interrupt flag
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9;  //Acknowledge this interrupt to receive more interrupts from group 1
 }
-
 
 interrupt void ISRTimer0(void)
 {
@@ -524,12 +519,13 @@ interrupt void ISRTimer0(void)
     CpuTimer0Regs.TCR.bit.TRB = 1;           // 重载Timer0的定时数据
     flagDot1msW = 0xffff; //100us时间到
     msCnt1++;
+    currentRead();//Get Current;
 	if(msCnt1 >= 10)
 	{
 	  msCnt1 = 0;
 	  readSensor();
 	  cap1OverCnt++;
-	  if(cap1OverCnt > 100)
+	  if(cap1OverCnt > 100)//100ms无脉冲捕获即视为零速
 	  {
 		 cap1OverCnt = 101;
 	     backData.speedCapture = 0;
@@ -555,13 +551,13 @@ interrupt void ISRTimer0(void)
 			moveCnt++;
 			if(UNKONWN_POS == backData.posFlag)
 			{
+				/*UNKONW_POS下修改为速度伺服可由上位机设定速度*/
 				//speedPID.setPoint = LOW_RATE;
 			}
 			else
 			{
 				if(FOREWARD == backData.motorDir)
 				{
-
 					setVCurve1(TUP_T1,TUP_T2,TUP_ALL,K_UP_10MS1,K_UP_10MS2,NOMAL_RATE_UP,LOW_RATE);
 				}
 				else
@@ -589,7 +585,7 @@ interrupt void ISRTimer0(void)
 			if(msCnt1000 >= 2)
 			{
 			  msCnt1000 = 0;
-			  LED_TOGGLE;
+			  LED_TOGGLE;//LED
 			  flag1000msW = 0xffff;//1s
 
 			}
@@ -632,10 +628,10 @@ interrupt void ISRCap1(void)
     	readHall();
     	pwmUpdate();
     }
-    if(1 == ECap1Regs.ECFLG.bit.CTROVF)
-    {
-    	ECap1Regs.ECCLR.bit.CTROVF = 1;
-    }
+//    if(1 == ECap1Regs.ECFLG.bit.CTROVF)
+//    {
+//    	ECap1Regs.ECCLR.bit.CTROVF = 1;
+//    }
     ECap1Regs.ECCLR.bit.INT = 1;
     PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;
 }
@@ -678,10 +674,10 @@ interrupt void ISRCap2(void)
 		pwmUpdate();
 		ECap2Regs.ECCLR.bit.CEVT4 = 1;
 	}
-	if(1 == ECap2Regs.ECFLG.bit.CTROVF)
-	{
-		ECap2Regs.ECCLR.bit.CTROVF = 1;
-	}
+//	if(1 == ECap2Regs.ECFLG.bit.CTROVF)
+//	{
+//		ECap2Regs.ECCLR.bit.CTROVF = 1;
+//	}
 	ECap2Regs.ECCLR.bit.INT = 1;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;
 }
@@ -716,10 +712,10 @@ interrupt void ISRCap3(void)
 		readHall();
 		pwmUpdate();
 	}
-	if(1 == ECap3Regs.ECFLG.bit.CTROVF)
-	{
-		ECap3Regs.ECCLR.bit.CTROVF = 1;
-	}
+//	if(1 == ECap3Regs.ECFLG.bit.CTROVF)//转动时不会响应基本可关闭
+//	{
+//		ECap3Regs.ECCLR.bit.CTROVF = 1;
+//	}
 	ECap3Regs.ECCLR.bit.INT = 1;
 	PieCtrlRegs.PIEACK.all |= PIEACK_GROUP4;
 }
@@ -773,6 +769,7 @@ void dataInit()
 
 	memset(&speedPID,0x00,sizeof(PID));
 	memset(&currentPID,0x00,sizeof(PID));
+
 #if SPEED
 	speedPID.outMax = 86016000;//%70 1875*0.7*65536
 	speedPID.outMin = 0;
@@ -798,8 +795,8 @@ void dataInit()
 	speedPID.kp = 65536;//1*6536
 	speedPID.ki = 2032;//0.031*65336:1k 0.15*65536:0.1k
 #endif
-
 }
+
 Uint16 readHall()
 {
 	if(GpioDataRegs.GPADAT.bit.GPIO24)
@@ -962,60 +959,19 @@ void pwmUpdate()
 		}
 	}
 }
-//Uint16 speedCapture()
-//{
-//	int16 i;
-//	Uint32 tMean = 0;
-//
-//	Uint16 ret;
-//	for(i = 0; i < 6;i++)
-//	{
-//		tMean += tx[i];
-//	}
-//	ret =  (Uint16)(75000000/tMean*4);
-//
-//	return ret;
-//}
 
 void readPulse()
 {
 	if(0 == backData.motorDir)
 	{
-		backData.posCnt++;
 		backData.posCntUp++;
 	}
 	else
 	{
-		backData.posCnt--;
 		backData.posCntDown++;
 	}
 }
-//void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV)
-//{
-//	if(moveCnt <= t1)
-//	{
-//		speedPID.setPoint =(Uint16)(k * moveCnt);
-//	}
-//	else if(moveCnt <= t2)
-//	{
-//		speedPID.setPoint = maxV;
-//	}
-//	else if(moveCnt < tAll)
-//	{
-//		if((maxV - (Uint16)(k * (moveCnt - t2))) < lowV)
-//		{
-//			speedPID.setPoint = lowV;
-//		}
-//		else
-//		{
-//			speedPID.setPoint = maxV - (Uint16)(k * (moveCnt - t2));
-//		}
-//	}
-//	else
-//	{
-//		speedPID.setPoint = lowV;
-//	}
-//}
+
 void setVCurve1(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k1,float32 k2,Uint16 maxV,Uint16 lowV)
 {
 	if(moveCnt <= t1)
@@ -1042,32 +998,6 @@ void setVCurve1(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k1,float32 k2,Uint16 max
 		speedPID.setPoint = lowV;
 	}
 }
-//void setVCurve2(Uint16 t1,float32 k1,Uint16 maxV)
-//{
-//	if(moveCnt < t1)
-//	{
-//		speedPID.setPoint =(Uint16)(k1 * moveCnt);
-//	}
-//	else if(moveCnt <= t2)
-//	{
-//		speedPID.setPoint = maxV;
-//	}
-//	else if(moveCnt < tAll)
-//	{
-//		if((maxV - (Uint16)(k2 * (moveCnt - t2))) < lowV)
-//		{
-//			speedPID.setPoint = lowV;
-//		}
-//		else
-//		{
-//			speedPID.setPoint = maxV - (Uint16)(k2 * (moveCnt - t2));
-//		}
-//	}
-//	else
-//	{
-//		speedPID.setPoint = maxV;
-//	}
-//}
 Uint16 currentFilter(Uint16* pBuf, Uint16 newValue)
 {
 	Uint16 i,ret;

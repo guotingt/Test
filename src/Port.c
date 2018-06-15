@@ -4,33 +4,32 @@
 #include"DspInit.h"
 #include"Control.h"
 
-Uint16 sendBuf[10] = {0};
-Uint16 testBuf[80] = {0};
-Uint16 reciveBuf[38] = {0};
-BACK_DATA backData;
+BACK_DATA backData;         ///<反馈数据
+Uint16 reciveBuf[38] = {0}; ///<接收缓冲
+Uint16 sendBuf[10] = {0};   ///<发送缓冲
+Uint16 testBuf[80] = {0};   ///<发送调试数据
 
-Uint16 currentOver = 0;
-Uint16 currentOverH = 0;
-Uint16 currentOverFlag = 0;
-Uint16 cleraFault = 0;
+/*电流保护功能参数*/
+Uint16 currentOver = 0;     ///<低阈值电流超限计数
+Uint16 currentOverH = 0;    ///<高阈值电流超限计数
+Uint16 currentOverFlag = 0; ///<电流超限标志
+Uint16 cleraFault = 0;      ///<电流恢复计数
+Uint16 iThL = 1690;        ///<低阈值75A
+Uint16 iThH = 2027;        ///<高阈值90A
+Uint16 tL = 10;            ///<低阈值持续时间10ms
+Uint16 tH = 4;             ///<高阈值持续时间4ms
 
-Uint16 timeDelayDown = 0;
-Uint16 timeDelayUp = 0;
-Uint16 cycleMoveCnt = 0;
-
-Uint16 iThL = 1690;//75A
-Uint16 iThH = 2027;//90A
-Uint16 tL = 10;//10ms
-Uint16 tH = 4;//4ms
+/*循环动作测试*/
+Uint16 timeDelayDown = 0;  ///<下到位停止时间
+Uint16 timeDelayUp = 0;    ///<上到位停止时间
+Uint16 cycleMoveCnt = 0;   ///<循环次数
 
 void readSensor()
 {
-	currentRead();//Get Current;
-
 	/*手动检测*/
 	if(!GpioDataRegs.GPADAT.bit.GPIO21)
 	{
-		backData.faultCode |= (0x0001<<6);
+		backData.faultCode |= (0x0001<<6);//手动标志
 	}
 	else
 	{
@@ -134,7 +133,6 @@ void readSensor()
 			backData.faultCode &= ~0x0001; //清电流溢出错误标志
 		}
 	}
-
 	/*hall状态异常检测*/
 	if ((0x0007 == (backData.hallPos&0x0007)) || (0x0000 == backData.hallPos))
 	{
@@ -255,7 +253,7 @@ void unPackMsg2()
 		stmpL = reciveBuf[35];
 		stmpH = reciveBuf[36];
 		speedPID.setPoint = stmpL + (stmpH<<8);
-		if(MANUAL_STA != backData.status)
+		if(GpioDataRegs.GPADAT.bit.GPIO21)
 		{
 			/*Process*/
 			switch (upperCommand.motionCmd)
@@ -269,7 +267,7 @@ void unPackMsg2()
 //				{
 //					backData.posFlag = UP_POS;
 //				}
-				backData.posFlag = UNKONWN_POS;
+				backData.posFlag = UNKONWN_POS; //上位机控制为转速设定模式
 				PWM_OFF;
 				backData.status = STOP_STA;
 				pidReset(&speedPID);
@@ -403,6 +401,7 @@ void unPackMsg2()
 		tH = reciveBuf[offset]; offset++;
 	}
 }
+
 Uint16 packMsg()
 {
 	Uint16 offset = 0;
@@ -421,6 +420,7 @@ Uint16 packMsg()
     *(sendBuf + offset) = 0xBF; offset++;
     return offset;
 }
+
 void sendTest()
 {
 	Uint16 offset = 0;

@@ -4,13 +4,13 @@
 #include "DSP28x_Project.h"
 
 /*debug相关*/
-#define SPEED_CURVE1 1
-#define CURRENT 0
-#define SPEED 0
-#define CURRENT2 0
+#define SPEED_CURVE1 1 ///<速度曲线跟踪模式
+#define CURRENT 0      ///<双闭环模式
+#define SPEED 0        ///<速度单闭环
+#define CURRENT2 0     ///<电流单闭环
 
 /*曲线相关*/
-#define LOW_RATE 100
+#define LOW_RATE 100  ///<设定低速态转速 寻零
 
 // 450 800 133 733 3.375 6.75 运弹上 7jws20c-v2-1
 // 500 700 70  630 7.14  7.14 运弹下
@@ -37,7 +37,7 @@
 //#define TUP_T2  529
 //#define K_UP_10MS1  2.12
 //#define K_UP_10MS2  6.35
-//
+
 //#define NOMAL_RATE_DOWN 450
 //#define TDOWN_ALL 600
 //#define TDOWN_T1 212
@@ -84,17 +84,11 @@
 					   EPwm3Regs.CMPA.half.CMPA  = n;\
 					   EPwm3Regs.CMPB = n;}
 
-//#define SET_PWM_PERCENT(n) {EPwm1Regs.CMPA.half.CMPA  = (15 * (100 -n));\
-//					   EPwm1Regs.CMPB = (215 * (100 -n));\
-//					   EPwm2Regs.CMPA.half.CMPA  = (15 * (100 -n));\
-//					   EPwm2Regs.CMPB = (15 * (100 -n));\
-//					   EPwm3Regs.CMPA.half.CMPA  = (15 * (100 -n));\
-//					   EPwm3Regs.CMPB = (15 * (100 -n));}
-
 #define LED_TOGGLE 	  GpioDataRegs.GPCTOGGLE.bit.GPIO87 = 1;
 
 /*电流相关*/
 #define FILTER_LEN 6
+
 /**
  * @brief EPWM1 initialize
  * @param period
@@ -168,10 +162,6 @@ static void readPulse();
  */
 static int16 filterCurrent(volatile Uint16* pSrc,int16 *pArray);
 /**
- * @brief 等腰梯形速度曲线设定
- */
-//static void setVCurve(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k,Uint16 maxV,Uint16 lowV);
-/**
  * @brief 非等腰梯形速度曲线设定
  */
 static void setVCurve1(Uint16 t1,Uint16 t2,Uint16 tAll,float32 k1,float32 k2,Uint16 maxV,Uint16 lowV);
@@ -233,7 +223,7 @@ extern void currentBaseRead(void);
  */
 extern void pwmUpdate();
 /**
- * @brief read hall state in ecap
+ * @brief read hall state in capture module
  */
 extern Uint16 readHall();
 /***
@@ -245,6 +235,5 @@ extern void readHall1();
  */
 static Uint16 currentFilter(Uint16 *pBuf,Uint16 newValue);
 
-//void setVCurve2(Uint16 t1,float32 k1,Uint16 maxV);
 #endif
 

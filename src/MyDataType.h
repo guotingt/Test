@@ -34,23 +34,22 @@ typedef union _time_flag
 typedef struct _pid
 {
     int16 setPoint; ///<expectation_value
-    int16 input; ///<back_value
-    int16 err; ///<error
-    int32 kp; ///<proportion
-    int32 ki; ///<integral
-    int32 pOut; ///<proportion_out
-    int32 iOut; ///<integral_out
-    int32 sumOut; ///<output_value
-    int32 outMax; ///<amplitude_limiting
-    int32 outMin; ///<amplitude_limiting
-    int16 mode; ///<manual_or_automatic
+    int16 input;    ///<back_value
+    int16 err;      ///<error
+    int32 kp;       ///<proportion
+    int32 ki;       ///<integral
+    int32 pOut;     ///<proportion_out
+    int32 iOut;     ///<integral_out
+    int32 sumOut;   ///<output_value
+    int32 outMax;   ///<amplitude_limiting
+    int32 outMin;   ///<amplitude_limiting
 }PID;
 
 /*upper computer command*/
 typedef struct _command
 {
-    int16 motionCmd;
-    int16 speedMode;
+    int16 motionCmd; ///<动作
+    int16 speedMode; ///<速度模式(多余,不做解析)
 }COMMAND;
 
 /*sensor message
@@ -61,24 +60,21 @@ typedef struct _command
   B1(1:coil error) B0(1:over current)*/
 typedef struct _back_Data
 {
-    int16 current;
-    int16 currentU;
-    int16 currentV;
-    int16 currentW;
-    Uint16 speedCapture;
-    Uint16 hallPos;
-    Uint16 hallPos1;
-    Uint16 upperOver;
-    Uint16 lowerOver;
-    Uint16 faultCode;
-    Uint16 status;
-    Uint16 motorDir;
-    Uint16 motorRuning;
-    Uint16 posFlag;
-    int32  posCnt;
-    Uint16 loadType;
-    Uint16 posCntUp;
-    Uint16 posCntDown;
+    int16 current;       ///<导通相电流
+    int16 currentU;      ///<U相电流
+    int16 currentV;      ///<V相电流
+    int16 currentW;      ///<W相电流
+    Uint16 speedCapture; ///<速度获取
+    Uint16 hallPos;      ///<捕获时刻读取的霍尔值
+    Uint16 hallPos1;     ///<发送时刻读取的霍尔值
+    Uint16 upperOver;    ///<上限位标志
+    Uint16 lowerOver;    ///<下限位标志
+    Uint16 faultCode;    ///<故障代码 用于错误集中处理和反馈上位机
+    Uint16 status;       ///<工作状态 控制响应流程和反馈上位机
+    Uint16 motorDir;     ///<电机换相顺序
+    Uint16 posFlag;      ///<是否是正常位置 最好协调系统发送标志
+    Uint16 posCntUp;     ///<上升、开门计数表示位置
+    Uint16 posCntDown;   ///<下降、关门计数表示位置
 }BACK_DATA;
 
 #endif

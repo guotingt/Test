@@ -7,12 +7,12 @@
 #include "string.h"
 
 /*golbal value def*/
-PID speedPID;
-PID currentPID;
-COMMAND upperCommand;
-Uint16 reciveFlag = 0;
-Uint16 moveCnt = 0;
-Uint16 duty = 0;
+PID speedPID;          ///<速度PID参数
+PID currentPID;        ///<电流PID参数
+COMMAND upperCommand;  ///<上位机指令
+Uint16 reciveFlag = 0; ///<接收标志
+Uint16 moveCnt = 0;    ///<运动计数
+Uint16 duty = 0;       ///<占空比
 
 int main()
 {
@@ -20,6 +20,7 @@ int main()
     /*initialize DSP */
 	dsp28335Init();
 
+	/*读取霍尔状态*/
 	readHall();
 
 //	pwmUpdate();//test
@@ -83,6 +84,7 @@ int main()
     	}
 #endif
 
+    	/*接收到系统信息后返回状态*/
         if (1 == reciveFlag)
         {
             //sendMsg();
